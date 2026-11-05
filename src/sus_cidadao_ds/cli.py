@@ -15,6 +15,7 @@ from sus_cidadao_ds.core.mlflow_tracker import MLflowTracker
 from sus_cidadao_ds.eda.analyzer import EDAAnalyzer
 from sus_cidadao_ds.evaluation.ragas_benchmark import RAGASBenchmarkRunner
 from sus_cidadao_ds.ingestion.infosaude_client import InfoSaudeLiveClient
+from sus_cidadao_ds.ingestion.pdf_pipeline import UnifiedPDFPipeline
 from sus_cidadao_ds.retrieval.chroma_indexer import ChromaVectorStoreManager
 from sus_cidadao_ds.retrieval.retrievers import (
     BM25Retriever,
@@ -131,7 +132,12 @@ def main(argv: list[str] | None = None) -> int:
     p_chroma.add_argument("query", type=str, help="Pergunta ou termo de busca")
     p_chroma.add_argument(
         "--collection",
-        choices=["ceaf_live_stock", "df_pharmacies", "sus_normative_protocols"],
+        choices=[
+            "ceaf_live_stock",
+            "df_pharmacies",
+            "sus_normative_protocols",
+            "sus_unified_pdf_corpus",
+        ],
         default="ceaf_live_stock",
         help="Coleção do ChromaDB para consulta",
     )
@@ -146,6 +152,12 @@ def main(argv: list[str] | None = None) -> int:
         "--somente-com-estoque",
         action="store_true",
         help="Filtra apenas registros com estoque disponível",
+    )
+
+    # 11. pipeline-pdf (SPEC-08)
+    subparsers.add_parser(
+        "pipeline-pdf",
+        help="Executa o pipeline unificado: coleta PDFs, converte JSON->PDF, extrai chunks e indexa no ChromaDB",
     )
 
     args = parser.parse_args(argv)
@@ -347,6 +359,32 @@ def main(argv: list[str] | None = None) -> int:
             top_k=args.top_k,
         )
         print(json.dumps([h.to_dict() for h in hits], ensure_ascii=False, indent=2))
+        return 0
+
+    if args.command == "pipeline-pdf":
+        pipeline = UnifiedPDFPipeline(paths)
+        summary = pipeline.run()
+        manager = ChromaVectorStoreManager(vectorstore_dir=paths.data_dir / "vectorstore")
+        n_indexed = manager.index_unified_pdf_chunks(paths.silver_dir / "unified_pdf_chunks.json")
+        tracker.log_experiment_run(
+            run_name="SPEC08_Unified_PDF_Pipeline_Ingestion",
+            params={
+                "official_pdfs": summary.official_pdfs_count,
+                "converted_pdfs": summary.converted_pdfs_count,
+                "total_pdfs": summary.total_pdfs_processed,
+            },
+            metrics={
+                "chunks_extracted": float(summary.total_chunks_extracted),
+                "chunks_indexed_chroma": float(n_indexed),
+            },
+            tags={
+                "spec_id": "SPEC-08",
+                "backend": "pypdf_reportlab_chromadb",
+            },
+        )
+        res = summary.to_dict()
+        res["chroma_indexed_chunks"] = n_indexed
+        print(json.dumps(res, ensure_ascii=False, indent=2))
         return 0
 
     return 1

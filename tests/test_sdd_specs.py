@@ -17,6 +17,7 @@ from sus_cidadao_ds.evaluation.ragas_benchmark import RAGASBenchmarkRunner
 from sus_cidadao_ds.guardrails.clinical_blocker import ClinicalBlocker
 from sus_cidadao_ds.guardrails.pii_masker import PIIMasker
 from sus_cidadao_ds.ingestion.infosaude_client import InfoSaudeLiveClient, haversine_km
+from sus_cidadao_ds.ingestion.pdf_pipeline import UnifiedPDFPipeline
 from sus_cidadao_ds.retrieval.chroma_indexer import ChromaVectorStoreManager
 from sus_cidadao_ds.retrieval.retrievers import (
     BM25Retriever,
@@ -238,6 +239,64 @@ class TestSDDSpecifications(unittest.TestCase):
         )
         self.assertGreaterEqual(len(hits_pharm), 1)
         self.assertIn("CEILANDIA", hits_pharm[0].document.upper())
+
+    def test_spec08_unified_pdf_pipeline_and_chroma_rag(self) -> None:
+        """SPEC-08: Pipeline unificado de PDFs, conversão JSON->PDF, indexação e avaliação RAGAS."""
+        pipeline = UnifiedPDFPipeline(self.paths)
+        summary = pipeline.run()
+
+        self.assertGreaterEqual(summary.official_pdfs_count, 4)
+        self.assertGreaterEqual(summary.converted_pdfs_count, 3)
+        self.assertGreaterEqual(summary.total_pdfs_processed, 7)
+        self.assertGreaterEqual(summary.total_chunks_extracted, 50)
+        self.assertTrue(Path(summary.silver_chunks_path).exists())
+
+        # Verifica existência física dos arquivos PDF
+        pdf_dir = self.paths.raw_dir / "pdfs"
+        for expected_name in (
+            "F01_RENAME_2024.pdf",
+            "F03_REME_DF_2026.pdf",
+            "F04_ELENCO_FARMACIA_POPULAR_PFPB.pdf",
+            "F12_CARTA_SERVICOS_HUB_UNB.pdf",
+            "RELATORIO_ESTOQUE_CEAF_INFOSAUDE.pdf",
+            "GUIA_FARMACIAS_UBS_GEO_DF.pdf",
+            "CATALOGO_CANONICO_MEDICAMENTOS_SUS.pdf",
+        ):
+            self.assertTrue(
+                (pdf_dir / expected_name).exists(),
+                f"PDF obrigatório {expected_name} não encontrado em {pdf_dir}",
+            )
+
+        # Indexação no ChromaDB
+        manager = ChromaVectorStoreManager(vectorstore_dir=self.paths.data_dir / "vectorstore")
+        n_indexed = manager.index_unified_pdf_chunks(Path(summary.silver_chunks_path))
+        self.assertGreaterEqual(n_indexed, 50)
+
+        # Busca semântica no corpus unificado
+        hits = manager.search_unified_corpus("Omalizumabe 150mg asma grave", top_k=3)
+        self.assertGreaterEqual(len(hits), 1)
+        self.assertGreater(hits[0].relevance_score, 0.30)
+
+        # Reavaliação RAGAS completa incluindo o sistema 04_RAG_ChromaDB_Corpus_PDFs
+        runner = RAGASBenchmarkRunner(
+            medications=self.medications,
+            chunks=self.chunks,
+            golden_cases=self.golden_cases,
+            vectorstore_manager=manager,
+        )
+        results = runner.run_all(
+            manifest=self.manifest,
+            reports_dir=self.paths.reports_dir,
+            baselines_dir=self.paths.baselines_dir,
+        )
+        self.assertEqual(len(results), 4)
+
+        chroma_eval = results[3]
+        self.assertEqual(chroma_eval.system_name, "04_RAG_ChromaDB_Corpus_PDFs")
+        self.assertGreaterEqual(chroma_eval.hit_rate_at_3, 0.95)
+        self.assertGreaterEqual(chroma_eval.route_accuracy, 0.95)
+        self.assertGreaterEqual(chroma_eval.faithfulness, 0.95)
+        self.assertEqual(chroma_eval.clinical_guardrail_pass_rate, 1.0)
 
 
 if __name__ == "__main__":

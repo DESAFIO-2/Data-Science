@@ -225,5 +225,148 @@
       "backend": "chromadb_persistent"
     },
     "artifacts": []
+  },
+  {
+    "run_id": "a5221058203443f59ad12e73d256d129",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC08_Unified_PDF_Pipeline_Ingestion",
+    "timestamp_utc": "2026-11-05T18:57:47.556276+00:00",
+    "params": {
+      "official_pdfs": 4,
+      "converted_pdfs": 3,
+      "total_pdfs": 7
+    },
+    "metrics": {
+      "chunks_extracted": 69.0,
+      "chunks_indexed_chroma": 69.0
+    },
+    "tags": {
+      "mlflow.runName": "SPEC08_Unified_PDF_Pipeline_Ingestion",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-08",
+      "backend": "pypdf_reportlab_chromadb"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "90388802eae84258b4912237725baf2c",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC04_RAGAS_01_LLM_Pura_Sem_RAG",
+    "timestamp_utc": "2026-11-05T18:57:59.970949+00:00",
+    "params": {
+      "system_name": "01_LLM_Pura_Sem_RAG",
+      "golden_cases": 16
+    },
+    "metrics": {
+      "faithfulness": 0.3837,
+      "answer_relevancy": 0.5413,
+      "context_recall": 0.0,
+      "ragas_harmonic_score": 0.1227,
+      "hit_rate_at_3": 0.0,
+      "recall_at_3": 0.0,
+      "mrr": 0.0,
+      "route_accuracy": 0.375,
+      "clinical_guardrail_pass_rate": 0.5
+    },
+    "tags": {
+      "mlflow.runName": "SPEC04_RAGAS_01_LLM_Pura_Sem_RAG",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-04",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana3_ragas_benchmark"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "2398ea8a5f674e6cb02fc0cff348e652",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC04_RAGAS_02_RAG_TFIDF_Baseline_012",
+    "timestamp_utc": "2026-11-05T18:57:59.972343+00:00",
+    "params": {
+      "system_name": "02_RAG_TFIDF_Baseline_012",
+      "golden_cases": 16
+    },
+    "metrics": {
+      "faithfulness": 0.8037,
+      "answer_relevancy": 0.7848,
+      "context_recall": 0.7288,
+      "ragas_harmonic_score": 0.7711,
+      "hit_rate_at_3": 1.0,
+      "recall_at_3": 1.0,
+      "mrr": 1.0,
+      "route_accuracy": 0.75,
+      "clinical_guardrail_pass_rate": 0.0
+    },
+    "tags": {
+      "mlflow.runName": "SPEC04_RAGAS_02_RAG_TFIDF_Baseline_012",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-04",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana3_ragas_benchmark"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "45c531ed493a4e6eb7b48020df3d0287",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC04_RAGAS_03_RAG_Hibrido_Multiagentes",
+    "timestamp_utc": "2026-11-05T18:57:59.973670+00:00",
+    "params": {
+      "system_name": "03_RAG_Hibrido_Multiagentes",
+      "golden_cases": 16
+    },
+    "metrics": {
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.9751,
+      "context_recall": 0.9651,
+      "ragas_harmonic_score": 0.9798,
+      "hit_rate_at_3": 1.0,
+      "recall_at_3": 1.0,
+      "mrr": 1.0,
+      "route_accuracy": 1.0,
+      "clinical_guardrail_pass_rate": 1.0
+    },
+    "tags": {
+      "mlflow.runName": "SPEC04_RAGAS_03_RAG_Hibrido_Multiagentes",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-04",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana3_ragas_benchmark"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "72ba2a229b80405c978a69e40a3a7683",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC04_RAGAS_04_RAG_ChromaDB_Corpus_PDFs",
+    "timestamp_utc": "2026-11-05T18:57:59.974932+00:00",
+    "params": {
+      "system_name": "04_RAG_ChromaDB_Corpus_PDFs",
+      "golden_cases": 16
+    },
+    "metrics": {
+      "faithfulness": 0.9769,
+      "answer_relevancy": 0.9488,
+      "context_recall": 0.9446,
+      "ragas_harmonic_score": 0.9566,
+      "hit_rate_at_3": 1.0,
+      "recall_at_3": 1.0,
+      "mrr": 1.0,
+      "route_accuracy": 1.0,
+      "clinical_guardrail_pass_rate": 1.0
+    },
+    "tags": {
+      "mlflow.runName": "SPEC04_RAGAS_04_RAG_ChromaDB_Corpus_PDFs",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-08",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana3_ragas_benchmark"
+    },
+    "artifacts": []
   }
 ]

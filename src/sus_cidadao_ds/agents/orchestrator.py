@@ -19,6 +19,7 @@ from sus_cidadao_ds.contracts.schemas import (
 )
 from sus_cidadao_ds.guardrails.clinical_blocker import ClinicalBlocker
 from sus_cidadao_ds.guardrails.pii_masker import PIIMasker
+from sus_cidadao_ds.retrieval.chroma_indexer import ChromaVectorStoreManager
 from sus_cidadao_ds.retrieval.retrievers import (
     HybridRetriever,
     TabularDCBMatcher,
@@ -120,10 +121,12 @@ class MultiAgentOrchestrator:
         medications: list[CanonicalMedication],
         chunks: list[NormativeChunk],
         min_score: float = 0.18,
+        vectorstore_manager: ChromaVectorStoreManager | None = None,
     ) -> None:
         self.medications = medications
         self.chunks = chunks
         self.min_score = min_score
+        self.vectorstore_manager = vectorstore_manager
         self.pii_masker = PIIMasker()
         self.clinical_blocker = ClinicalBlocker()
         self.tabular_matcher = TabularDCBMatcher(medications)
@@ -194,6 +197,28 @@ class MultiAgentOrchestrator:
         hits = self.hybrid_retriever.search(
             state.sanitized_input, top_k=3, min_score=self.min_score
         )
+
+        # Se houver gerenciador vetorial ChromaDB, enriquece com busca semântica sobre o corpus de PDFs
+        if self.vectorstore_manager is not None:
+            try:
+                chroma_hits = self.vectorstore_manager.search_unified_corpus(
+                    state.sanitized_input, top_k=3
+                )
+                for ch in chroma_hits:
+                    if ch.relevance_score >= 0.22:
+                        hits.append(
+                            RetrievalHit(
+                                chunk_id=ch.id,
+                                document_title=str(ch.metadata.get("source_pdf", "PDF Oficial SUS")),
+                                section=f"Pág. {ch.metadata.get('page_number', 1)} ({ch.metadata.get('category', 'normativo')})",
+                                route_category=str(ch.metadata.get("category", "normativo")),
+                                text=ch.document,
+                                score=ch.relevance_score,
+                            )
+                        )
+            except Exception:
+                pass
+
         state.retrieved_hits = hits
 
         med_matches = self.tabular_matcher.match_medications(state.sanitized_input)
@@ -212,8 +237,23 @@ class MultiAgentOrchestrator:
                     "(item exclusivo da Atenção Primária — não disponível na rede privada Farmácia Popular)."
                 )
             else:
+                live_stock_info = ""
+                if self.vectorstore_manager is not None:
+                    try:
+                        stock_hits = self.vectorstore_manager.search(
+                            query=f"{med.dcb_name} {ceaf_unit}",
+                            collection_name=self.vectorstore_manager.COLLECTION_STOCK,
+                            top_k=1,
+                        )
+                        if stock_hits and stock_hits[0].relevance_score > 0.40:
+                            live_disp = stock_hits[0].metadata.get("disp_estoque", "")
+                            if live_disp:
+                                live_stock_info = f" [InfoSaúde em Tempo Real: {live_disp}]"
+                    except Exception:
+                        pass
+
                 where = (
-                    f"{ceaf_unit} — Componente Especializado da Assistência Farmacêutica (CEAF), "
+                    f"{ceaf_unit} — Componente Especializado da Assistência Farmacêutica (CEAF){live_stock_info}, "
                     "mediante abertura/renovação de processo com LME."
                 )
 

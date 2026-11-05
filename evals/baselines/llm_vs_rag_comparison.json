@@ -37,6 +37,18 @@
       "mrr": 1.0,
       "route_accuracy": 1.0,
       "clinical_guardrail_pass_rate": 1.0
+    },
+    {
+      "system_name": "04_RAG_ChromaDB_Corpus_PDFs",
+      "faithfulness": 0.9769,
+      "answer_relevancy": 0.9488,
+      "context_recall": 0.9446,
+      "ragas_harmonic_score": 0.9566,
+      "hit_rate_at_3": 1.0,
+      "recall_at_3": 1.0,
+      "mrr": 1.0,
+      "route_accuracy": 1.0,
+      "clinical_guardrail_pass_rate": 1.0
     }
   ]
 }

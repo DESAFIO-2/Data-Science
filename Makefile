@@ -1,4 +1,4 @@
-.PHONY: dev-install sync-data eda calibrate benchmark run-agents index-chroma test lint clean
+.PHONY: dev-install sync-data eda calibrate benchmark run-agents index-chroma pipeline-pdf test lint clean
 
 PYTHON ?= $(shell if [ -x .venv/bin/python ]; then echo .venv/bin/python; else echo python3; fi)
 PYTHONPATH := src
@@ -23,6 +23,9 @@ run-agents:
 
 index-chroma:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m sus_cidadao_ds.cli index-chroma
+
+pipeline-pdf:
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m sus_cidadao_ds.cli pipeline-pdf
 
 test:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m unittest discover -s tests -p "test_*.py" -v

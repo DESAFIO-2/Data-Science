@@ -41,6 +41,7 @@ class ChromaIndexingSummary:
     stock_count: int
     pharmacies_count: int
     protocols_count: int
+    unified_pdf_count: int
     total_indexed: int
 
     def to_dict(self) -> dict[str, Any]:
@@ -53,6 +54,7 @@ class ChromaVectorStoreManager:
     COLLECTION_STOCK = "ceaf_live_stock"
     COLLECTION_PHARMACIES = "df_pharmacies"
     COLLECTION_PROTOCOLS = "sus_normative_protocols"
+    COLLECTION_UNIFIED_PDF_CORPUS = "sus_unified_pdf_corpus"
 
     def __init__(self, vectorstore_dir: Path | None = None) -> None:
         if vectorstore_dir is None:
@@ -254,23 +256,77 @@ class ChromaVectorStoreManager:
         self._batch_upsert(col, ids, documents, metadatas)
         return len(ids)
 
+    def index_unified_pdf_chunks(self, chunks_json_path: Path) -> int:
+        """Textualiza e indexa em lote os chunks extraídos de todos os PDFs oficiais e convertidos (SPEC-08)."""
+        if not chunks_json_path.exists():
+            return 0
+        chunks = json.loads(chunks_json_path.read_text(encoding="utf-8"))
+        if not chunks:
+            return 0
+
+        col = self._get_or_create_col(self.COLLECTION_UNIFIED_PDF_CORPUS)
+        ids: list[str] = []
+        documents: list[str] = []
+        metadatas: list[dict[str, Any]] = []
+
+        for ch in chunks:
+            cid = str(ch["chunk_id"]).strip()
+            content = str(ch["content"]).strip()
+            src_pdf = str(ch.get("source_pdf", "")).strip()
+            category = str(ch.get("category", "documento_geral")).strip()
+            page = int(ch.get("page_number", 1))
+            chars = int(ch.get("char_count", len(content)))
+
+            meta: dict[str, Any] = {
+                "tipo_dado": "pdf_chunk",
+                "source_pdf": src_pdf,
+                "category": category,
+                "page_number": page,
+                "char_count": chars,
+            }
+
+            ids.append(f"PDF_{cid}")
+            documents.append(content)
+            metadatas.append(meta)
+
+        self._batch_upsert(col, ids, documents, metadatas)
+        return len(ids)
+
     def index_all(self, paths: ProjectPaths) -> ChromaIndexingSummary:
-        """Executa a indexação completa das 3 coleções a partir das camadas Silver e Gold."""
+        """Executa a indexação completa de todas as coleções, incluindo o corpus unificado de PDFs."""
         stock_path = paths.gold_dir / "ceaf_live_stock.json"
         pharmacies_path = paths.gold_dir / "df_pharmacies_geolocated.json"
         chunks_path = paths.silver_dir / "normative_chunks.json"
         canonical_path = paths.gold_dir / "medicamentos_sus_canonical.json"
+        unified_chunks_path = paths.silver_dir / "unified_pdf_chunks.json"
 
         n_stock = self.index_ceaf_stock(stock_path)
         n_pharm = self.index_df_pharmacies(pharmacies_path)
         n_proto = self.index_normative_protocols(chunks_path, canonical_path)
+        n_unified = self.index_unified_pdf_chunks(unified_chunks_path)
 
         return ChromaIndexingSummary(
             vectorstore_path=str(self.vectorstore_dir),
             stock_count=n_stock,
             pharmacies_count=n_pharm,
             protocols_count=n_proto,
-            total_indexed=n_stock + n_pharm + n_proto,
+            unified_pdf_count=n_unified,
+            total_indexed=n_stock + n_pharm + n_proto + n_unified,
+        )
+
+    def search_unified_corpus(
+        self,
+        query: str,
+        category: str | None = None,
+        top_k: int = 5,
+    ) -> list[ChromaSearchResult]:
+        """Realiza busca semântica no corpus unificado de PDFs oficiais e relatórios gerados."""
+        where_filter = {"category": category} if category else None
+        return self.search(
+            query=query,
+            collection_name=self.COLLECTION_UNIFIED_PDF_CORPUS,
+            where_filter=where_filter,
+            top_k=top_k,
         )
 
     def search(
