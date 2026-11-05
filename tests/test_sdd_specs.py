@@ -17,6 +17,7 @@ from sus_cidadao_ds.evaluation.ragas_benchmark import RAGASBenchmarkRunner
 from sus_cidadao_ds.guardrails.clinical_blocker import ClinicalBlocker
 from sus_cidadao_ds.guardrails.pii_masker import PIIMasker
 from sus_cidadao_ds.ingestion.infosaude_client import InfoSaudeLiveClient, haversine_km
+from sus_cidadao_ds.retrieval.chroma_indexer import ChromaVectorStoreManager
 from sus_cidadao_ds.retrieval.retrievers import (
     BM25Retriever,
     HybridRetriever,
@@ -209,6 +210,34 @@ class TestSDDSpecifications(unittest.TestCase):
         dist = haversine_km(-15.8055, -47.8900, -15.8132, -48.1035)
         self.assertGreater(dist, 15.0)
         self.assertLess(dist, 30.0)
+
+    def test_spec07_chromadb_vectorstore(self) -> None:
+        """SPEC-07: ChromaVectorStoreManager deve indexar e consultar coleções com filtros."""
+        manager = ChromaVectorStoreManager(vectorstore_dir=self.paths.data_dir / "vectorstore")
+        summary = manager.index_all(self.paths)
+        self.assertGreaterEqual(summary.stock_count, 800)
+        self.assertGreaterEqual(summary.pharmacies_count, 200)
+        self.assertGreaterEqual(summary.protocols_count, 30)
+
+        # Consulta com filtro de metadados na coleção ceaf_live_stock
+        hits_stock = manager.search(
+            query="adalimumabe 40 mg injetavel",
+            collection_name=manager.COLLECTION_STOCK,
+            where_filter={"tem_estoque": True},
+            top_k=3,
+        )
+        self.assertGreaterEqual(len(hits_stock), 1)
+        self.assertTrue(hits_stock[0].metadata["tem_estoque"])
+        self.assertIn("ADALIMUMABE", hits_stock[0].document.upper())
+
+        # Consulta semântica na coleção df_pharmacies
+        hits_pharm = manager.search(
+            query="Farmácia de Alto Custo Ceilândia",
+            collection_name=manager.COLLECTION_PHARMACIES,
+            top_k=2,
+        )
+        self.assertGreaterEqual(len(hits_pharm), 1)
+        self.assertIn("CEILANDIA", hits_pharm[0].document.upper())
 
 
 if __name__ == "__main__":

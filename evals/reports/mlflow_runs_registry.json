@@ -201,5 +201,29 @@
       "maps_sha256": "5915b9faf08bb3a4ef199c71a904891f33862309696f5c8ed9a93c128b6b416f"
     },
     "artifacts": []
+  },
+  {
+    "run_id": "5f7f12dc5fa34223955965c00c3c3ebf",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC07_ChromaDB_MultiCollection_Indexing",
+    "timestamp_utc": "2026-11-05T18:30:31.722739+00:00",
+    "params": {
+      "vectorstore_path": "/Users/aluno2/Data-Science/data/vectorstore",
+      "collections_count": 3
+    },
+    "metrics": {
+      "ceaf_stock_indexed": 857.0,
+      "df_pharmacies_indexed": 231.0,
+      "protocols_indexed": 33.0,
+      "total_indexed": 1121.0
+    },
+    "tags": {
+      "mlflow.runName": "SPEC07_ChromaDB_MultiCollection_Indexing",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-07",
+      "backend": "chromadb_persistent"
+    },
+    "artifacts": []
   }
 ]

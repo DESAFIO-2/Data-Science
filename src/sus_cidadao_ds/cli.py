@@ -15,6 +15,7 @@ from sus_cidadao_ds.core.mlflow_tracker import MLflowTracker
 from sus_cidadao_ds.eda.analyzer import EDAAnalyzer
 from sus_cidadao_ds.evaluation.ragas_benchmark import RAGASBenchmarkRunner
 from sus_cidadao_ds.ingestion.infosaude_client import InfoSaudeLiveClient
+from sus_cidadao_ds.retrieval.chroma_indexer import ChromaVectorStoreManager
 from sus_cidadao_ds.retrieval.retrievers import (
     BM25Retriever,
     HybridRetriever,
@@ -115,6 +116,37 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_stock.add_argument("medication", type=str, help="Nome do medicamento (ex.: adalimumabe)")
     p_stock.add_argument("--ra", type=str, default="Ceilândia", help="Região Administrativa do DF")
+
+    # 9. index-chroma (SPEC-07)
+    subparsers.add_parser(
+        "index-chroma",
+        help="Indexa dados estruturados JSON (estoque, farmácias, protocolos) no ChromaDB",
+    )
+
+    # 10. search-chroma (SPEC-07)
+    p_chroma = subparsers.add_parser(
+        "search-chroma",
+        help="Consulta semântica com filtro por metadados no ChromaDB",
+    )
+    p_chroma.add_argument("query", type=str, help="Pergunta ou termo de busca")
+    p_chroma.add_argument(
+        "--collection",
+        choices=["ceaf_live_stock", "df_pharmacies", "sus_normative_protocols"],
+        default="ceaf_live_stock",
+        help="Coleção do ChromaDB para consulta",
+    )
+    p_chroma.add_argument("--top-k", type=int, default=3, help="Top-K documentos")
+    p_chroma.add_argument(
+        "--unidade",
+        type=str,
+        default=None,
+        help="Filtro de unidade CEAF (ex: Ceilândia, Asa Sul, Gama)",
+    )
+    p_chroma.add_argument(
+        "--somente-com-estoque",
+        action="store_true",
+        help="Filtra apenas registros com estoque disponível",
+    )
 
     args = parser.parse_args(argv)
     paths = ProjectPaths.from_root()
@@ -269,6 +301,52 @@ def main(argv: list[str] | None = None) -> int:
                 indent=2,
             )
         )
+        return 0
+
+    if args.command == "index-chroma":
+        manager = ChromaVectorStoreManager(vectorstore_dir=paths.data_dir / "vectorstore")
+        summary = manager.index_all(paths)
+        tracker.log_experiment_run(
+            run_name="SPEC07_ChromaDB_MultiCollection_Indexing",
+            params={
+                "vectorstore_path": summary.vectorstore_path,
+                "collections_count": 3,
+            },
+            metrics={
+                "ceaf_stock_indexed": float(summary.stock_count),
+                "df_pharmacies_indexed": float(summary.pharmacies_count),
+                "protocols_indexed": float(summary.protocols_count),
+                "total_indexed": float(summary.total_indexed),
+            },
+            tags={
+                "spec_id": "SPEC-07",
+                "backend": "chromadb_persistent",
+            },
+        )
+        print(json.dumps(summary.to_dict(), ensure_ascii=False, indent=2))
+        return 0
+
+    if args.command == "search-chroma":
+        manager = ChromaVectorStoreManager(vectorstore_dir=paths.data_dir / "vectorstore")
+        where_filter: dict[str, Any] = {}
+        filters: list[dict[str, Any]] = []
+        if args.unidade:
+            filters.append({"unidade": args.unidade})
+        if args.somente_com_estoque:
+            filters.append({"tem_estoque": True})
+
+        if len(filters) == 1:
+            where_filter = filters[0]
+        elif len(filters) > 1:
+            where_filter = {"$and": filters}
+
+        hits = manager.search(
+            query=args.query,
+            collection_name=args.collection,
+            where_filter=where_filter if where_filter else None,
+            top_k=args.top_k,
+        )
+        print(json.dumps([h.to_dict() for h in hits], ensure_ascii=False, indent=2))
         return 0
 
     return 1

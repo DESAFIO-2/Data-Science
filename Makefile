@@ -1,4 +1,4 @@
-.PHONY: dev-install sync-data eda calibrate benchmark run-agents test lint clean
+.PHONY: dev-install sync-data eda calibrate benchmark run-agents index-chroma test lint clean
 
 PYTHON ?= $(shell if [ -x .venv/bin/python ]; then echo .venv/bin/python; else echo python3; fi)
 PYTHONPATH := src
@@ -20,6 +20,9 @@ benchmark:
 
 run-agents:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m sus_cidadao_ds.cli audit "Receita: Losartana potássica 50 mg 1 cp 12/12h, Metformina 500 mg e Adalimumabe 40 mg. Solicito Ecocardiograma Transtorácico. Moro em Ceilândia - DF."
+
+index-chroma:
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m sus_cidadao_ds.cli index-chroma
 
 test:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m unittest discover -s tests -p "test_*.py" -v

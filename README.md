@@ -33,6 +33,8 @@ Todas as especificações formais encontram-se em [`specs/`](specs/):
 - [`SPEC-03-hybrid-retrieval.md`](specs/SPEC-03-hybrid-retrieval.md): Baseline `TF-IDF (0.12)` vs. `BM25` vs. `Hybrid Retriever (DCB + RRF)` e calibração de limiar.
 - [`SPEC-04-evaluation-mlflow.md`](specs/SPEC-04-evaluation-mlflow.md): Benchmark **RAGAS** (`Faithfulness`, `Answer Relevancy`, `Context Recall`) + `Hit Rate@3`, `Recall@3`, `MRR` no **MLflow**.
 - [`SPEC-05-multiagent-rag.md`](specs/SPEC-05-multiagent-rag.md): Orquestrador dos 4 Agentes + `PIIMasker` (LGPD) + `ClinicalBlocker` (Preservação do Ato Médico).
+- [`SPEC-06-infosaude-live-api.md`](specs/SPEC-06-infosaude-live-api.md): Ingestão periódica da API Power BI InfoSaúde-DF (estoque CEAF em tempo real e mapas/geolocalização).
+- [`SPEC-07-chromadb-vectorstore.md`](specs/SPEC-07-chromadb-vectorstore.md): Indexação vetorial multi-coleção no ChromaDB (`ceaf_live_stock`, `df_pharmacies`, `sus_normative_protocols`) com busca semântica e filtros por metadados.
 
 ---
 
@@ -78,7 +80,10 @@ make benchmark
 # 5. Executar Orquestrador Multiagentes em uma prescrição completa
 make run-agents
 
-# 6. Executar suíte de testes SDD (SPEC-00 a SPEC-05)
+# 6. Indexar dados estruturados JSON no ChromaDB (Vectorstore)
+make index-chroma
+
+# 7. Executar suíte de testes SDD (SPEC-00 a SPEC-07)
 make test
 ```
 
