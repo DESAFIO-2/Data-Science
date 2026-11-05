@@ -1,0 +1,134 @@
+[
+  {
+    "chunk_id": "CHK-PFPB-001",
+    "source_id": "PFPB_2024",
+    "document_title": "Portaria GM/MS nº 3.677/2024 — Programa Farmácia Popular do Brasil",
+    "section": "Art. 5º — Elenco de Gratuidade Plena (Hipertensão e Diabetes)",
+    "page_number": 11,
+    "text": "Os medicamentos destinados ao tratamento de hipertensão arterial (losartana potássica 50 mg, maleato de enalapril 10 mg, atenolol 25 mg, hidroclorotiazida 25 mg, besilato de anlodipino 5 mg) e diabetes mellitus (cloridrato de metformina 500 mg e 850 mg, glibenclamida 5 mg, insulina humana NPH 100 UI/mL e insulina humana regular) são dispensados com 100% de gratuidade nas drogarias privadas credenciadas ao Programa Farmácia Popular do Brasil (Aqui Tem Farmácia Popular). Para retirada, o paciente deve apresentar documento oficial com foto e número do CPF, acompanhado de receita médica válida emitida por médico do SUS ou particular, com validade de até 180 dias para uso contínuo.",
+    "dcb_mentions": [
+      "losartana potássica",
+      "maleato de enalapril",
+      "atenolol",
+      "hidroclorotiazida",
+      "besilato de anlodipino",
+      "cloridrato de metformina",
+      "glibenclamida",
+      "insulina humana nph"
+    ],
+    "route_category": "FARMACIA_POPULAR",
+    "sha256": "319a06cf37fe7199ccbb43556fc82cfc0d5d8c41dddb474933506713da27d718"
+  },
+  {
+    "chunk_id": "CHK-PFPB-002",
+    "source_id": "PFPB_2024",
+    "document_title": "Portaria GM/MS nº 3.677/2024 — Gratuidade Expandida no Farmácia Popular",
+    "section": "Art. 7º — Asma, Osteoporose, Dislipidemia e Diabetes Associada a Doença Cardiovascular",
+    "page_number": 16,
+    "text": "Passam a contar com 100% de gratuidade no Programa Farmácia Popular do Brasil os medicamentos para asma (sulfato de salbutamol 100 mcg/dose, dipropionato de beclometasona), osteoporose (alendronato de sódio 70 mg), dislipidemia/colesterol alto (sinvastatina 10 mg, 20 mg e 40 mg) e dapagliflozina 10 mg. A retirada ocorre diretamente em qualquer farmácia comercial credenciada mediante apresentação de CPF do titular e receita médica com CRM, assinatura, endereço do estabelecimento ou paciente e data de emissão inferior a 180 dias.",
+    "dcb_mentions": [
+      "sulfato de salbutamol",
+      "alendronato de sódio",
+      "sinvastatina",
+      "dapagliflozina"
+    ],
+    "route_category": "FARMACIA_POPULAR",
+    "sha256": "7b5511ebb329bf6d580dc343b8da29dd02a45744b41b0ecb01075fa6c54befb0"
+  },
+  {
+    "chunk_id": "CHK-RENAME-001",
+    "source_id": "RENAME_2024",
+    "document_title": "RENAME 2024 — Portaria GM/MS nº 6.324/2024 (2ª Edição)",
+    "section": "Anexo I — Componente Básico da Assistência Farmacêutica (Atenção Primária / UBS)",
+    "page_number": 44,
+    "text": "O Componente Básico da Assistência Farmacêutica (CBAF) compreende os medicamentos essenciais dispensados nas farmácias das Unidades Básicas de Saúde (UBS), incluindo omeprazol 20 mg cápsula, levotiroxina sódica 25 mcg, 50 mcg e 100 mcg comprimido, amoxicilina 500 mg cápsula, dipirona sódica 500 mg e paracetamol 500 mg. Estes itens não integram a rede privada do Farmácia Popular e devem ser retirados gratuitamente na UBS de referência da Região Administrativa do cidadão, apresentando Cartão Nacional de Saúde (CNS), CPF e receita válida.",
+    "dcb_mentions": [
+      "omeprazol",
+      "levotiroxina sódica",
+      "amoxicilina"
+    ],
+    "route_category": "UBS_ATENCAO_PRIMARIA",
+    "sha256": "0cdb8783f501744ecd31358b538910e4514e103ad98cb72ce3447328c84635e2"
+  },
+  {
+    "chunk_id": "CHK-REMEDF-001",
+    "source_id": "REME_DF_2024",
+    "document_title": "REME-DF 2024 — Relação de Medicamentos Essenciais da SES-DF",
+    "section": "Capítulo 2 — Dispensação de Controle Especial e Antimicrobianos nas UBS do DF",
+    "page_number": 29,
+    "text": "Nas Unidades Básicas de Saúde (UBS) da Secretaria de Saúde do Distrito Federal (Ceilândia, Taguatinga, Samambaia, Gama, Plano Piloto e demais Regiões Administrativas), medicamentos sujeitos a controle especial da Portaria SVS/MS nº 344/1998, como cloridrato de fluoxetina 20 mg e carbamazepina 200 mg, exigem Receita de Controle Especial em duas vias com validade de 30 dias a contar da data de emissão, ficando a 1ª via retida na farmácia da UBS. Para antimicrobianos como amoxicilina 500 mg, a receita tem validade estrita de 10 dias.",
+    "dcb_mentions": [
+      "cloridrato de fluoxetina",
+      "carbamazepina",
+      "amoxicilina"
+    ],
+    "route_category": "UBS_ATENCAO_PRIMARIA",
+    "sha256": "eb935c043ab22f83c338abad9e167a9473e30c81182c90f94aaf05ba7a791173"
+  },
+  {
+    "chunk_id": "CHK-RENAME-002",
+    "source_id": "RENAME_2024",
+    "document_title": "RENAME 2024 — Portaria GM/MS nº 6.324/2024 (2ª Edição)",
+    "section": "Anexo III — Componente Especializado da Assistência Farmacêutica (CEAF / Alto Custo)",
+    "page_number": 112,
+    "text": "O Componente Especializado da Assistência Farmacêutica (CEAF) garante o acesso gratuito a medicamentos de alto custo e alta complexidade definidos em Protocolos Clínicos e Diretrizes Terapêuticas (PCDT), tais como adalimumabe 40 mg (artrite reumatoide CID M05/M06, espondilite anquilosante CID M45, doença de Crohn CID K50), atorvastatina cálcica 40 mg (dislipidemia grave CID E78), sacubitril valsartana sódica hidratada 97/103 mg (insuficiência cardíaca CID I50.0), fumarato de formoterol di-hidratado + budesonida 12/400 mcg (asma grave CID J45) e hemifumarato de quetiapina 25 mg (esquizofrenia CID F20 e transtorno afetivo bipolar CID F31).",
+    "dcb_mentions": [
+      "adalimumabe",
+      "atorvastatina cálcica",
+      "sacubitril valsartana sódica hidratada",
+      "fumarato de formoterol di-hidratado + budesonida",
+      "hemifumarato de quetiapina"
+    ],
+    "route_category": "ALTO_CUSTO_CEAF",
+    "sha256": "95532be5b0eb1220bf5a9c8c342ed63219303319cbb1010b6bb80be44809b344"
+  },
+  {
+    "chunk_id": "CHK-REMEDF-002",
+    "source_id": "REME_DF_2024",
+    "document_title": "Manual do Componente Especializado (Farmácia de Alto Custo) — SES-DF",
+    "section": "Seção 3 — Abertura e Renovação de Processo com LME nas Unidades do DF",
+    "page_number": 64,
+    "text": "No Distrito Federal, a retirada de medicamentos do Componente Especializado e elenco complementar SES-DF (incluindo adalimumabe 40 mg, sacubitril valsartana, atorvastatina cálcica 40 mg e insulina glargina 100 UI/mL) é realizada nas três unidades da Farmácia de Alto Custo (CEAF-DF): Estação 102 Sul do Metrô (Asa Sul), Ceilândia (EQNN 18/20) e Gama (Praça 1, Setor Leste). O paciente ou cuidador deve apresentar: 1) Laudo para Solicitação, Avaliação e Autorização de Medicamentos (LME) preenchido com CID-10 e válido por 90 dias; 2) Receita médica em duas vias pelo nome genérico (DCB); 3) Exames obrigatórios do PCDT; 4) Documento com foto, CPF, Cartão SUS (CNS) e comprovante de residência no DF.",
+    "dcb_mentions": [
+      "adalimumabe",
+      "sacubitril valsartana sódica hidratada",
+      "atorvastatina cálcica",
+      "insulina glargina"
+    ],
+    "route_category": "ALTO_CUSTO_CEAF",
+    "sha256": "ff9edc7cdf5eee494c2ca81a206a19519dbaa61c8dd2ca3f882188f963485ea3"
+  },
+  {
+    "chunk_id": "CHK-SISREG-001",
+    "source_id": "SISREG_CPPAS_DF",
+    "document_title": "Protocolos de Regulação Ambulatorial SES-DF — SISREG III / CPPAS",
+    "section": "Capítulo 4 — Cardiologia e Exames Cardiovasculares (Ecocardiograma Transtorácico)",
+    "page_number": 21,
+    "text": "O acesso a exames especializados como Ecocardiograma Transtorácico, Teste Ergométrico e Holter 24h, bem como consulta especializada em Cardiologia na rede pública do Distrito Federal, ocorre exclusivamente via regulação pelo sistema SISREG III a partir da Unidade Básica de Saúde (UBS) da Região Administrativa do paciente. Requisitos obrigatórios de inserção no SISREG: pedido médico fundamentado com hipótese diagnóstica (CID-10), descrição de sinais de alarme (dispneia, sopro, suspeita de insuficiência cardíaca ou fração de ejeção reduzida), eletrocardiograma (ECG) prévio anexado e Cartão SUS (CNS) atualizado na UBS.",
+    "dcb_mentions": [],
+    "route_category": "SISREG_EXAME_CONSULTA",
+    "sha256": "50e7ffb054b4db077a929f6f9e1f4f69317991f65008d37eff12c845b492dea2"
+  },
+  {
+    "chunk_id": "CHK-SISREG-002",
+    "source_id": "SISREG_CPPAS_DF",
+    "document_title": "Protocolos de Regulação Ambulatorial SES-DF — SISREG III / CPPAS",
+    "section": "Capítulo 7 — Endoscopia Digestiva Alta, Ressonância Magnética e Reumatologia/Endocrinologia",
+    "page_number": 38,
+    "text": "Para agendamento de Endoscopia Digestiva Alta (EDA), Ressonância Magnética ou consultas especializadas em Reumatologia e Endocrinologia no SUS-DF (SISREG III / Panorama Regulação), o paciente deve comparecer à sala de regulação/acolhimento da sua UBS com o encaminhamento médico contendo justificativa clínica detalhada para classificação de prioridade (Prioridade 1 - Vermelha, Prioridade 2 - Amarela, Prioridade 3 - Verde), resultados de exames laboratoriais básicos (ex.: TSH/T4 livre para endocrinologia; VHS/PCR/Fator Reumatoide para reumatologia), documento com CPF, Cartão SUS (CNS) e telefone atualizado para aviso de marcação.",
+    "dcb_mentions": [],
+    "route_category": "SISREG_EXAME_CONSULTA",
+    "sha256": "8633f9a88a59989890e92430f5e79c8f0af061c764346d26830cbe7784e8a202"
+  },
+  {
+    "chunk_id": "CHK-VALIDADE-001",
+    "source_id": "RENAME_2024",
+    "document_title": "Guia de Gestão de Validade de Receitas e Renovação Contínua no SUS",
+    "section": "Regras Gerais de Vigência e Alertas Preventivos (Carteira Digital RF08)",
+    "page_number": 89,
+    "text": "As receitas de medicamentos de uso contínuo (hipertensão, diabetes, dislipidemia, asma, hipotireoidismo) possuem validade de 180 dias (6 meses) na Farmácia Popular e nas UBS, exceto anticoncepcionais (365 dias), psicotrópicos da Portaria 344/98 (30 dias) e antimicrobianos (10 dias). Processos do Componente Especializado (LME na Farmácia de Alto Custo) possuem vigência trimestral (90 dias), exigindo renovação preventiva com antecedência de 15 e 7 dias antes do vencimento para evitar interrupção do tratamento.",
+    "dcb_mentions": [],
+    "route_category": "GERAL",
+    "sha256": "e12fc5e00640d2b96aa4c6dc7414d8ebebc87e61b3ebbf2fa9b5028f4a717d0d"
+  }
+]

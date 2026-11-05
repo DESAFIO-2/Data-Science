@@ -1,0 +1,28 @@
+experiment_name: "sus_cidadao_rag_benchmarks"
+tracking_uri: "mlruns"
+golden_dataset_path: "evals/datasets/golden_set_v1.json"
+
+retrievers:
+  tfidf_baseline:
+    description: "Linha de base determinística TF-IDF (ADR-003 Engenharia de Dados)"
+    ngram_range: [1, 2]
+    min_score_default: 0.12
+    top_k_default: 3
+  bm25_lexical:
+    description: "Recuperador léxico probabilístico Okapi BM25 com normalização DCB"
+    k1: 1.5
+    b: 0.75
+    min_score_default: 0.15
+    top_k_default: 5
+  hybrid_dcb_rrf:
+    description: "Hybrid Retriever: Busca Tabular Canônica DCB + Portarias com Reciprocal Rank Fusion (RRF)"
+    rrf_k: 60
+    tabular_weight: 0.55
+    lexical_weight: 0.45
+    min_score_default: 0.18
+    top_k_default: 5
+
+calibration:
+  thresholds_grid: [0.02, 0.05, 0.08, 0.10, 0.12, 0.15, 0.18, 0.20, 0.22, 0.25, 0.30, 0.35]
+  target_metric: "abstention_f1"
+

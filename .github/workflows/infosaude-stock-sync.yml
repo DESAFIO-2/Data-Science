@@ -1,0 +1,37 @@
+name: InfoSaúde-DF Periodic Stock & Maps Sync (SPEC-06)
+
+on:
+  schedule:
+    # Diariamente às 06:00 BRT (09:00 UTC) após a carga da meia-noite (00:00 BRT)
+    # e às 15:00 BRT (18:00 UTC) após a carga vespertina (~13:45-14:37 BRT)
+    - cron: "0 9,18 * * 1-5"
+    # Semanalmente às segundas-feiras às 04:00 BRT (07:00 UTC) após atualização do catálogo/mapas (00:19 BRT)
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+jobs:
+  sync-infosaude-powerbi:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch Live Stock & Maps from SES-DF Power BI API (wabi-brazil-south-api)
+        run: |
+          PYTHONPATH=src python3 -m sus_cidadao_ds.cli sync-infosaude --live
+
+      - name: Commit updated Gold Stock & Maps if changed
+        run: |
+          git config user.name "sus-cidadao-bot"
+          git config user.email "bot@sus-cidadao. unb.br"
+          git add data/gold/ceaf_live_stock.json data/gold/df_pharmacies_geolocated.json
+          git diff --staged --quiet || git commit -m "chore(data): atualização periódica estoque CEAF e mapas InfoSaúde-DF"
+          git push
+

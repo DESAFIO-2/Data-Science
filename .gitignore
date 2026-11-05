@@ -1,0 +1,32 @@
+# Python & Ambientes Virtuais
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Artefatos Reconstruíveis (ADR-004 — Artefatos RAG fora do Git)
+.artifacts/
+data/raw/*
+!data/raw/.gitkeep
+data/vectorstore/
+
+# MLflow Tracking Local (runs voláteis; relatórios consolidados ficam em evals/reports/)
+mlruns/
+mlartifacts/
+mlflow.db
+
+# Sistema Operacional & IDEs
+.DS_Store
+.vscode/
+.idea/
+*.swp
+.env
+

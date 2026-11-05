@@ -1,0 +1,595 @@
+[
+  {
+    "medication_id": "MED-LOSARTANA-50MG",
+    "dcb_name": "losartana potássica",
+    "concentration": "50 mg",
+    "pharmaceutical_form": "comprimido",
+    "rename_component": "Básico",
+    "available_pfpb": true,
+    "pfpb_free": true,
+    "available_reme_df": true,
+    "dispensation_route": "FARMACIA_POPULAR",
+    "requires_lme": false,
+    "icd10_codes": [
+      "I10",
+      "I11"
+    ],
+    "required_documents": [
+      "Documento oficial com foto e CPF",
+      "Receita médica válida (SUS ou particular) com CRM, carimbo e data"
+    ],
+    "prescription_validity_days": 180,
+    "source_id": "PFPB_2024",
+    "source_page": 14,
+    "notes": "100% gratuito no Programa Farmácia Popular (drogarias credenciadas) e disponível nas UBS do DF."
+  },
+  {
+    "medication_id": "MED-METFORMINA-500MG",
+    "dcb_name": "cloridrato de metformina",
+    "concentration": "500 mg",
+    "pharmaceutical_form": "comprimido",
+    "rename_component": "Básico",
+    "available_pfpb": true,
+    "pfpb_free": true,
+    "available_reme_df": true,
+    "dispensation_route": "FARMACIA_POPULAR",
+    "requires_lme": false,
+    "icd10_codes": [
+      "E11"
+    ],
+    "required_documents": [
+      "Documento oficial com foto e CPF",
+      "Receita médica válida (SUS ou particular) com CRM, carimbo e data"
+    ],
+    "prescription_validity_days": 180,
+    "source_id": "PFPB_2024",
+    "source_page": 11,
+    "notes": "100% gratuito na Farmácia Popular para Diabetes Mellitus e nas UBS."
+  },
+  {
+    "medication_id": "MED-METFORMINA-850MG",
+    "dcb_name": "cloridrato de metformina",
+    "concentration": "850 mg",
+    "pharmaceutical_form": "comprimido",
+    "rename_component": "Básico",
+    "available_pfpb": true,
+    "pfpb_free": true,
+    "available_reme_df": true,
+    "dispensation_route": "FARMACIA_POPULAR",
+    "requires_lme": false,
+    "icd10_codes": [
+      "E11"
+    ],
+    "required_documents": [
+      "Documento oficial com foto e CPF",
+      "Receita médica válida (SUS ou particular) com CRM, carimbo e data"
+    ],
+    "prescription_validity_days": 180,
+    "source_id": "PFPB_2024",
+    "source_page": 11,
+    "notes": "100% gratuito na Farmácia Popular e UBS."
+  },
+  {
+    "medication_id": "MED-ENALAPRIL-10MG",
+    "dcb_name": "maleato de enalapril",
+    "concentration": "10 mg",
+    "pharmaceutical_form": "comprimido",
+    "rename_component": "Básico",
+    "available_pfpb": true,
+    "pfpb_free": true,
+    "available_reme_df": true,
+    "dispensation_route": "FARMACIA_POPULAR",
+    "requires_lme": false,
+    "icd10_codes": [
+      "I10",
+      "I50"
+    ],
+    "required_documents": [
+      "Documento oficial com foto e CPF",
+      "Receita médica válida (SUS ou particular) com CRM, carimbo e data"
+    ],
+    "prescription_validity_days": 180,
+    "source_id": "PFPB_2024",
+    "source_page": 13,
+    "notes": "100% gratuito na Farmácia Popular para hipertensão arterial."
+  },
+  {
+    "medication_id": "MED-ATENOLOL-25MG",
+    "dcb_name": "atenolol",
+    "concentration": "25 mg",
+    "pharmaceutical_form": "comprimido",
+    "rename_component": "Básico",
+    "available_pfpb": true,
+    "pfpb_free": true,
+    "available_reme_df": true,
+    "dispensation_route": "FARMACIA_POPULAR",
+    "requires_lme": false,
+    "icd10_codes": [
+      "I10",
+      "I20"
+    ],
+    "required_documents": [
+      "Documento oficial com foto e CPF",
+      "Receita médica válida (SUS ou particular) com CRM, carimbo e data"
+    ],
+    "prescription_validity_days": 180,
+    "source_id": "PFPB_2024",
+    "source_page": 12,
+    "notes": "100% gratuito na Farmácia Popular e UBS."
+  },
+  {
+    "medication_id": "MED-HIDROCLOROTIAZIDA-25MG",
+    "dcb_name": "hidroclorotiazida",
+    "concentration": "25 mg",
+    "pharmaceutical_form": "comprimido",
+    "rename_component": "Básico",
+    "available_pfpb": true,
+    "pfpb_free": true,
+    "available_reme_df": true,
+    "dispensation_route": "FARMACIA_POPULAR",
+    "requires_lme": false,
+    "icd10_codes": [
+      "I10"
+    ],
+    "required_documents": [
+      "Documento oficial com foto e CPF",
+      "Receita médica válida (SUS ou particular) com CRM, carimbo e data"
+    ],
+    "prescription_validity_days": 180,
+    "source_id": "PFPB_2024",
+    "source_page": 13,
+    "notes": "Diurético tiazídico 100% gratuito na Farmácia Popular e UBS."
+  },
+  {
+    "medication_id": "MED-ANLODIPINO-5MG",
+    "dcb_name": "besilato de anlodipino",
+    "concentration": "5 mg",
+    "pharmaceutical_form": "comprimido",
+    "rename_component": "Básico",
+    "available_pfpb": true,
+    "pfpb_free": true,
+    "available_reme_df": true,
+    "dispensation_route": "FARMACIA_POPULAR",
+    "requires_lme": false,
+    "icd10_codes": [
+      "I10"
+    ],
+    "required_documents": [
+      "Documento oficial com foto e CPF",
+      "Receita médica válida (SUS ou particular) com CRM, carimbo e data"
+    ],
+    "prescription_validity_days": 180,
+    "source_id": "PFPB_2024",
+    "source_page": 12,
+    "notes": "100% gratuito na Farmácia Popular (elenco de hipertensão)."
+  },
+  {
+    "medication_id": "MED-SINVASTATINA-20MG",
+    "dcb_name": "sinvastatina",
+    "concentration": "20 mg",
+    "pharmaceutical_form": "comprimido",
+    "rename_component": "Básico",
+    "available_pfpb": true,
+    "pfpb_free": true,
+    "available_reme_df": true,
+    "dispensation_route": "FARMACIA_POPULAR",
+    "requires_lme": false,
+    "icd10_codes": [
+      "E78.0",
+      "E78.5"
+    ],
+    "required_documents": [
+      "Documento oficial com foto e CPF",
+      "Receita médica válida (SUS ou particular) com CRM, carimbo e data"
+    ],
+    "prescription_validity_days": 180,
+    "source_id": "PFPB_2024",
+    "source_page": 16,
+    "notes": "Dislipidemia: 100% gratuito no Programa Farmácia Popular (gratuidade expandida)."
+  },
+  {
+    "medication_id": "MED-GLIBENCLAMIDA-5MG",
+    "dcb_name": "glibenclamida",
+    "concentration": "5 mg",
+    "pharmaceutical_form": "comprimido",
+    "rename_component": "Básico",
+    "available_pfpb": true,
+    "pfpb_free": true,
+    "available_reme_df": true,
+    "dispensation_route": "FARMACIA_POPULAR",
+    "requires_lme": false,
+    "icd10_codes": [
+      "E11"
+    ],
+    "required_documents": [
+      "Documento oficial com foto e CPF",
+      "Receita médica válida (SUS ou particular) com CRM, carimbo e data"
+    ],
+    "prescription_validity_days": 180,
+    "source_id": "PFPB_2024",
+    "source_page": 11,
+    "notes": "Hipoglicemiante oral 100% gratuito na Farmácia Popular."
+  },
+  {
+    "medication_id": "MED-INSULINA-NPH-100UI",
+    "dcb_name": "insulina humana nph",
+    "concentration": "100 UI/mL",
+    "pharmaceutical_form": "suspensão injetável",
+    "rename_component": "Básico",
+    "available_pfpb": true,
+    "pfpb_free": true,
+    "available_reme_df": true,
+    "dispensation_route": "FARMACIA_POPULAR",
+    "requires_lme": false,
+    "icd10_codes": [
+      "E10",
+      "E11"
+    ],
+    "required_documents": [
+      "Documento oficial com foto e CPF",
+      "Receita médica válida (SUS ou particular) com CRM, carimbo e data"
+    ],
+    "prescription_validity_days": 180,
+    "source_id": "PFPB_2024",
+    "source_page": 11,
+    "notes": "Insulina NPH 100% gratuita na Farmácia Popular e UBS."
+  },
+  {
+    "medication_id": "MED-SALBUTAMOL-100MCG",
+    "dcb_name": "sulfato de salbutamol",
+    "concentration": "100 mcg/dose",
+    "pharmaceutical_form": "aerossol oral",
+    "rename_component": "Básico",
+    "available_pfpb": true,
+    "pfpb_free": true,
+    "available_reme_df": true,
+    "dispensation_route": "FARMACIA_POPULAR",
+    "requires_lme": false,
+    "icd10_codes": [
+      "J45"
+    ],
+    "required_documents": [
+      "Documento oficial com foto e CPF",
+      "Receita médica válida (SUS ou particular) com CRM, carimbo e data"
+    ],
+    "prescription_validity_days": 180,
+    "source_id": "PFPB_2024",
+    "source_page": 10,
+    "notes": "100% gratuito na Farmácia Popular para tratamento de asma."
+  },
+  {
+    "medication_id": "MED-ALENDRONATO-70MG",
+    "dcb_name": "alendronato de sódio",
+    "concentration": "70 mg",
+    "pharmaceutical_form": "comprimido",
+    "rename_component": "Básico",
+    "available_pfpb": true,
+    "pfpb_free": true,
+    "available_reme_df": true,
+    "dispensation_route": "FARMACIA_POPULAR",
+    "requires_lme": false,
+    "icd10_codes": [
+      "M80",
+      "M81"
+    ],
+    "required_documents": [
+      "Documento oficial com foto e CPF",
+      "Receita médica válida (SUS ou particular) com CRM, carimbo e data"
+    ],
+    "prescription_validity_days": 180,
+    "source_id": "PFPB_2024",
+    "source_page": 17,
+    "notes": "Osteoporose: 100% gratuito na Farmácia Popular (gratuidade expandida)."
+  },
+  {
+    "medication_id": "MED-DAPAGLIFLOZINA-10MG",
+    "dcb_name": "dapagliflozina",
+    "concentration": "10 mg",
+    "pharmaceutical_form": "comprimido",
+    "rename_component": "Especializado",
+    "available_pfpb": true,
+    "pfpb_free": true,
+    "available_reme_df": true,
+    "dispensation_route": "FARMACIA_POPULAR",
+    "requires_lme": false,
+    "icd10_codes": [
+      "E11",
+      "I50"
+    ],
+    "required_documents": [
+      "Documento oficial com foto e CPF",
+      "Receita médica válida (SUS ou particular) com CRM, carimbo e data"
+    ],
+    "prescription_validity_days": 180,
+    "source_id": "PFPB_2024",
+    "source_page": 12,
+    "notes": "Gratuidade na Farmácia Popular para DM2 associada a doença cardiovascular (>= 65 anos) ou via CEAF."
+  },
+  {
+    "medication_id": "MED-OMEPRAZOL-20MG",
+    "dcb_name": "omeprazol",
+    "concentration": "20 mg",
+    "pharmaceutical_form": "cápsula",
+    "rename_component": "Básico",
+    "available_pfpb": false,
+    "pfpb_free": false,
+    "available_reme_df": true,
+    "dispensation_route": "UBS_ATENCAO_PRIMARIA",
+    "requires_lme": false,
+    "icd10_codes": [
+      "K21",
+      "K25",
+      "K29"
+    ],
+    "required_documents": [
+      "Cartão Nacional de Saúde (CNS / Cartão SUS)",
+      "Documento oficial com foto e CPF",
+      "Receita médica válida em duas vias (SUS ou particular)"
+    ],
+    "prescription_validity_days": 180,
+    "source_id": "RENAME_2024",
+    "source_page": 48,
+    "notes": "Não consta na Farmácia Popular. Retirada gratuita exclusivamente na Farmácia da UBS de referência."
+  },
+  {
+    "medication_id": "MED-LEVOTIROXINA-50MCG",
+    "dcb_name": "levotiroxina sódica",
+    "concentration": "50 mcg",
+    "pharmaceutical_form": "comprimido",
+    "rename_component": "Básico",
+    "available_pfpb": false,
+    "pfpb_free": false,
+    "available_reme_df": true,
+    "dispensation_route": "UBS_ATENCAO_PRIMARIA",
+    "requires_lme": false,
+    "icd10_codes": [
+      "E03.9"
+    ],
+    "required_documents": [
+      "Cartão Nacional de Saúde (CNS / Cartão SUS)",
+      "Documento oficial com foto e CPF",
+      "Receita médica válida em duas vias (SUS ou particular)"
+    ],
+    "prescription_validity_days": 180,
+    "source_id": "RENAME_2024",
+    "source_page": 44,
+    "notes": "Componente Básico (RENAME 2024 e REME-DF). Retirada gratuita nas UBS da SES-DF."
+  },
+  {
+    "medication_id": "MED-AMOXICILINA-500MG",
+    "dcb_name": "amoxicilina",
+    "concentration": "500 mg",
+    "pharmaceutical_form": "cápsula",
+    "rename_component": "Básico",
+    "available_pfpb": false,
+    "pfpb_free": false,
+    "available_reme_df": true,
+    "dispensation_route": "UBS_ATENCAO_PRIMARIA",
+    "requires_lme": false,
+    "icd10_codes": [
+      "J01",
+      "J02",
+      "J03"
+    ],
+    "required_documents": [
+      "Cartão Nacional de Saúde (CNS)",
+      "Documento com CPF",
+      "Receita de controle antimicrobiano em 2 vias (validade de 10 dias)"
+    ],
+    "prescription_validity_days": 10,
+    "source_id": "RENAME_2024",
+    "source_page": 32,
+    "notes": "Antimicrobiano do Componente Básico. Receita válida por 10 dias com retenção da 2ª via na UBS."
+  },
+  {
+    "medication_id": "MED-FLUOXETINA-20MG",
+    "dcb_name": "cloridrato de fluoxetina",
+    "concentration": "20 mg",
+    "pharmaceutical_form": "cápsula",
+    "rename_component": "Básico",
+    "available_pfpb": false,
+    "pfpb_free": false,
+    "available_reme_df": true,
+    "dispensation_route": "UBS_ATENCAO_PRIMARIA",
+    "requires_lme": false,
+    "icd10_codes": [
+      "F32",
+      "F33",
+      "F41"
+    ],
+    "required_documents": [
+      "Cartão Nacional de Saúde (CNS) e CPF",
+      "Receita de Controle Especial (Branca em 2 vias - Portaria 344/98, validade 30 dias)"
+    ],
+    "prescription_validity_days": 30,
+    "source_id": "REME_DF_2024",
+    "source_page": 29,
+    "notes": "Psicotrópico (Lista C1). Retirada gratuita na farmácia da UBS com retenção de via."
+  },
+  {
+    "medication_id": "MED-CARBAMAZEPINA-200MG",
+    "dcb_name": "carbamazepina",
+    "concentration": "200 mg",
+    "pharmaceutical_form": "comprimido",
+    "rename_component": "Básico",
+    "available_pfpb": false,
+    "pfpb_free": false,
+    "available_reme_df": true,
+    "dispensation_route": "UBS_ATENCAO_PRIMARIA",
+    "requires_lme": false,
+    "icd10_codes": [
+      "G40",
+      "F31"
+    ],
+    "required_documents": [
+      "Cartão Nacional de Saúde (CNS) e CPF",
+      "Receita de Controle Especial em 2 vias (Portaria 344/98, validade 30 dias)"
+    ],
+    "prescription_validity_days": 30,
+    "source_id": "REME_DF_2024",
+    "source_page": 27,
+    "notes": "Anticonvulsivante do Componente Básico na REME-DF. Dispensado na UBS."
+  },
+  {
+    "medication_id": "MED-ADALIMUMABE-40MG",
+    "dcb_name": "adalimumabe",
+    "concentration": "40 mg",
+    "pharmaceutical_form": "solução injetável",
+    "rename_component": "Especializado",
+    "available_pfpb": false,
+    "pfpb_free": false,
+    "available_reme_df": true,
+    "dispensation_route": "ALTO_CUSTO_CEAF",
+    "requires_lme": true,
+    "icd10_codes": [
+      "M05.0",
+      "M06.0",
+      "M45",
+      "K50.0"
+    ],
+    "required_documents": [
+      "Laudo de Solicitação, Avaliação e Autorização de Medicamento(s) (LME) preenchido pelo médico",
+      "Receita médica em duas vias com DCB (nome genérico)",
+      "Cartão Nacional de Saúde (CNS) e Documento com CPF",
+      "Comprovante de residência no Distrito Federal",
+      "Exames laboratoriais/imagem exigidos pelo PCDT da doença (CID-10)"
+    ],
+    "prescription_validity_days": 90,
+    "source_id": "RENAME_2024",
+    "source_page": 112,
+    "notes": "Componente Especializado (CEAF). Exige abertura de processo com LME (renovação trimestral) nas unidades da Farmácia de Alto Custo do DF (102 Sul, Ceilândia ou Gama)."
+  },
+  {
+    "medication_id": "MED-ATORVASTATINA-40MG",
+    "dcb_name": "atorvastatina cálcica",
+    "concentration": "40 mg",
+    "pharmaceutical_form": "comprimido",
+    "rename_component": "Especializado",
+    "available_pfpb": false,
+    "pfpb_free": false,
+    "available_reme_df": true,
+    "dispensation_route": "ALTO_CUSTO_CEAF",
+    "requires_lme": true,
+    "icd10_codes": [
+      "E78.0",
+      "E78.2"
+    ],
+    "required_documents": [
+      "Laudo de Solicitação, Avaliação e Autorização de Medicamento(s) (LME) preenchido pelo médico",
+      "Receita médica em duas vias com DCB (nome genérico)",
+      "Cartão Nacional de Saúde (CNS) e Documento com CPF",
+      "Comprovante de residência no Distrito Federal",
+      "Exames laboratoriais/imagem exigidos pelo PCDT da doença (CID-10)"
+    ],
+    "prescription_validity_days": 90,
+    "source_id": "RENAME_2024",
+    "source_page": 118,
+    "notes": "Componente Especializado (CEAF). Exige LME e perfil lipídico conforme PCDT de Dislipidemia."
+  },
+  {
+    "medication_id": "MED-SACUBITRIL-VALSARTANA-97-103MG",
+    "dcb_name": "sacubitril valsartana sódica hidratada",
+    "concentration": "97 mg + 103 mg",
+    "pharmaceutical_form": "comprimido",
+    "rename_component": "Especializado",
+    "available_pfpb": false,
+    "pfpb_free": false,
+    "available_reme_df": true,
+    "dispensation_route": "ALTO_CUSTO_CEAF",
+    "requires_lme": true,
+    "icd10_codes": [
+      "I50.0"
+    ],
+    "required_documents": [
+      "Laudo de Solicitação, Avaliação e Autorização de Medicamento(s) (LME) preenchido pelo médico",
+      "Receita médica em duas vias com DCB (nome genérico)",
+      "Cartão Nacional de Saúde (CNS) e Documento com CPF",
+      "Comprovante de residência no Distrito Federal",
+      "Exames laboratoriais/imagem exigidos pelo PCDT da doença (CID-10)"
+    ],
+    "prescription_validity_days": 90,
+    "source_id": "RENAME_2024",
+    "source_page": 141,
+    "notes": "Insuficiência Cardíaca com fração de ejeção reduzida (FEVE <= 35%). Dispensação via Farmácia de Alto Custo mediante LME e Ecocardiograma."
+  },
+  {
+    "medication_id": "MED-FORMOTEROL-BUDESONIDA-12-400MCG",
+    "dcb_name": "fumarato de formoterol di-hidratado + budesonida",
+    "concentration": "12 mcg + 400 mcg",
+    "pharmaceutical_form": "cápsula inalante",
+    "rename_component": "Especializado",
+    "available_pfpb": false,
+    "pfpb_free": false,
+    "available_reme_df": true,
+    "dispensation_route": "ALTO_CUSTO_CEAF",
+    "requires_lme": true,
+    "icd10_codes": [
+      "J45.0",
+      "J44.8"
+    ],
+    "required_documents": [
+      "Laudo de Solicitação, Avaliação e Autorização de Medicamento(s) (LME) preenchido pelo médico",
+      "Receita médica em duas vias com DCB (nome genérico)",
+      "Cartão Nacional de Saúde (CNS) e Documento com CPF",
+      "Comprovante de residência no Distrito Federal",
+      "Exames laboratoriais/imagem exigidos pelo PCDT da doença (CID-10)"
+    ],
+    "prescription_validity_days": 90,
+    "source_id": "RENAME_2024",
+    "source_page": 125,
+    "notes": "Componente Especializado para Asma Persistente Moderada/Grave e DPOC. Exige LME e espirometria."
+  },
+  {
+    "medication_id": "MED-QUETIAPINA-25MG",
+    "dcb_name": "hemifumarato de quetiapina",
+    "concentration": "25 mg",
+    "pharmaceutical_form": "comprimido",
+    "rename_component": "Especializado",
+    "available_pfpb": false,
+    "pfpb_free": false,
+    "available_reme_df": true,
+    "dispensation_route": "ALTO_CUSTO_CEAF",
+    "requires_lme": true,
+    "icd10_codes": [
+      "F20.0",
+      "F31.3"
+    ],
+    "required_documents": [
+      "Laudo de Solicitação, Avaliação e Autorização de Medicamento(s) (LME) preenchido pelo médico",
+      "Receita médica em duas vias com DCB (nome genérico)",
+      "Cartão Nacional de Saúde (CNS) e Documento com CPF",
+      "Comprovante de residência no Distrito Federal",
+      "Exames laboratoriais/imagem exigidos pelo PCDT da doença (CID-10)"
+    ],
+    "prescription_validity_days": 90,
+    "source_id": "RENAME_2024",
+    "source_page": 130,
+    "notes": "Componente Especializado (CEAF). Exige LME + Receita de Controle Especial em duas vias."
+  },
+  {
+    "medication_id": "MED-INSULINA-GLARGINA-100UI",
+    "dcb_name": "insulina glargina",
+    "concentration": "100 UI/mL",
+    "pharmaceutical_form": "solução injetável",
+    "rename_component": "Especializado",
+    "available_pfpb": false,
+    "pfpb_free": false,
+    "available_reme_df": true,
+    "dispensation_route": "ALTO_CUSTO_CEAF",
+    "requires_lme": true,
+    "icd10_codes": [
+      "E10.9"
+    ],
+    "required_documents": [
+      "Laudo de Solicitação, Avaliação e Autorização de Medicamento(s) (LME) preenchido pelo médico",
+      "Receita médica em duas vias com DCB (nome genérico)",
+      "Cartão Nacional de Saúde (CNS) e Documento com CPF",
+      "Comprovante de residência no Distrito Federal",
+      "Exames laboratoriais/imagem exigidos pelo PCDT da doença (CID-10)"
+    ],
+    "prescription_validity_days": 90,
+    "source_id": "REME_DF_2024",
+    "source_page": 64,
+    "notes": "Análogo de insulina de ação prolongada (REME-DF / CEAF). Exige LME e laudo de hemoglobina glicada para Diabetes Tipo 1."
+  }
+]

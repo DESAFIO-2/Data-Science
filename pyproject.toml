@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sus-cidadao-ds"
+version = "0.2.0"
+description = "Frente de Ciência de Dados do SUS Cidadão (NavegaSUS) — EDA, Golden Dataset, RAG Híbrido, Calibração, RAGAS, MLflow e Orquestrador Multiagentes"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "Marlon Dias Marques", email = "143219967+oficialmarlonmd@users.noreply.github.com" },
+    { name = "Esquadrão SUS Cidadão (Desafio 2 - Instituto Eldorado / UnB / Softex)" },
+]
+dependencies = [
+    "pydantic>=2.7.0",
+    "polars>=1.0.0",
+    "scikit-learn>=1.5.0",
+    "mlflow>=2.14.0",
+    "pyyaml>=6.0.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.0",
+    "ruff>=0.5.0",
+    "mypy>=1.10.0",
+]
+ragas = [
+    "ragas>=0.1.10",
+    "datasets>=2.20.0",
+]
+agents = [
+    "langgraph>=0.2.0",
+]
+
+[project.scripts]
+sus-cidadao-ds = "sus_cidadao_ds.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+mypy_path = "src"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-v --tb=short"
+
