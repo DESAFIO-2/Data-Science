@@ -8,8 +8,8 @@ Indexa os dados estruturados em JSON das camadas Silver e Gold em 3 coleções e
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
 import json
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
@@ -348,10 +348,15 @@ class ChromaVectorStoreManager:
         results = col.query(**kwargs)
         search_hits: list[ChromaSearchResult] = []
 
-        ids_list = results.get("ids", [[]])[0]
-        docs_list = results.get("documents", [[]])[0]
-        metas_list = results.get("metadatas", [[]])[0]
-        dists_list = results.get("distances", [[]])[0]
+        ids_raw = results.get("ids") or [[]]
+        docs_raw = results.get("documents") or [[]]
+        metas_raw = results.get("metadatas") or [[]]
+        dists_raw = results.get("distances") or [[]]
+
+        ids_list = ids_raw[0] if ids_raw else []
+        docs_list = docs_raw[0] if docs_raw else []
+        metas_list = metas_raw[0] if metas_raw else []
+        dists_list = dists_raw[0] if dists_raw else []
 
         for doc_id, doc_text, meta, dist in zip(
             ids_list, docs_list, metas_list, dists_list, strict=True
@@ -386,5 +391,5 @@ class ChromaVectorStoreManager:
             col.upsert(
                 ids=b_ids,
                 documents=b_docs,
-                metadatas=b_metas,
+                metadatas=b_metas,  # type: ignore[arg-type]
             )

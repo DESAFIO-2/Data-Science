@@ -1,6 +1,6 @@
 {
   "manifest_version": "2024.2.0",
-  "generated_at_utc": "2026-11-05T18:59:32.916655+00:00",
+  "generated_at_utc": "2026-11-05T19:12:48.937244+00:00",
   "engineering_source": "canonical_materialization_v2024.2",
   "canonical_medications_sha256": "0a531bd8b691adb999c4262d93e2e81a6663529d9c566ed7496b166ee31c9105",
   "normative_chunks_sha256": "be680a203e155d913be66761bfc10825cc86925d8b634c54d96d6c5af416d001",

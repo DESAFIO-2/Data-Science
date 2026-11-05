@@ -23,6 +23,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install dependencies
+        run: |
+          pip install -e .
+
       - name: Fetch Live Stock & Maps from SES-DF Power BI API (wabi-brazil-south-api)
         run: |
           PYTHONPATH=src python3 -m sus_cidadao_ds.cli sync-infosaude --live

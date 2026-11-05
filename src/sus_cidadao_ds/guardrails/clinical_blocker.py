@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass
 
 from sus_cidadao_ds.retrieval.retrievers import normalize_pt_text
 

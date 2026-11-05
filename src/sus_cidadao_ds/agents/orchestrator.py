@@ -209,11 +209,14 @@ class MultiAgentOrchestrator:
                         hits.append(
                             RetrievalHit(
                                 chunk_id=ch.id,
+                                score=ch.relevance_score,
+                                source_id="CHROMA_PDF_CORPUS",
                                 document_title=str(ch.metadata.get("source_pdf", "PDF Oficial SUS")),
                                 section=f"Pág. {ch.metadata.get('page_number', 1)} ({ch.metadata.get('category', 'normativo')})",
+                                page_number=int(ch.metadata.get("page_number", 1)),
                                 route_category=str(ch.metadata.get("category", "normativo")),
                                 text=ch.document,
-                                score=ch.relevance_score,
+                                retriever_name="chroma_dense",
                             )
                         )
             except Exception:

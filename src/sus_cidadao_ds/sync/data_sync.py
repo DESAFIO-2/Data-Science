@@ -8,10 +8,10 @@ Suporta:
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import json
-from pathlib import Path
 import shutil
+from datetime import UTC, datetime
+from pathlib import Path
 
 from sus_cidadao_ds.contracts.schemas import (
     CanonicalMedication,
@@ -721,6 +721,37 @@ class DataSynchronizer:
         silver_raw = silver_path.read_text(encoding="utf-8")
         gold_items = json.loads(gold_raw)
         silver_items = json.loads(silver_raw)
+
+        # Exporta também a versão CSV tabular canônica (Base de Conhecimento Tabular)
+        csv_gold_path = self.paths.gold_dir / "medicamentos_sus_canonical.csv"
+        if gold_items:
+            import csv
+
+            fieldnames = [
+                "medication_id",
+                "dcb_name",
+                "concentration",
+                "pharmaceutical_form",
+                "rename_component",
+                "available_pfpb",
+                "pfpb_free",
+                "available_reme_df",
+                "dispensation_route",
+                "requires_lme",
+                "icd10_codes",
+                "prescription_validity_days",
+                "source_id",
+                "source_page",
+                "notes",
+            ]
+            with open(csv_gold_path, "w", encoding="utf-8", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
+                writer.writeheader()
+                for row in gold_items:
+                    row_copy = dict(row)
+                    if isinstance(row_copy.get("icd10_codes"), list):
+                        row_copy["icd10_codes"] = ";".join(row_copy["icd10_codes"])
+                    writer.writerow(row_copy)
 
         gold_sha = compute_sha256(gold_raw)
         silver_sha = compute_sha256(silver_raw)

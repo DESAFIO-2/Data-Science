@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
+from typing import Any
 
 from sus_cidadao_ds.agents.orchestrator import MultiAgentOrchestrator
 from sus_cidadao_ds.calibration.threshold_optimizer import ThresholdCalibrator
@@ -317,25 +318,25 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "index-chroma":
         manager = ChromaVectorStoreManager(vectorstore_dir=paths.data_dir / "vectorstore")
-        summary = manager.index_all(paths)
+        idx_summary = manager.index_all(paths)
         tracker.log_experiment_run(
             run_name="SPEC07_ChromaDB_MultiCollection_Indexing",
             params={
-                "vectorstore_path": summary.vectorstore_path,
+                "vectorstore_path": idx_summary.vectorstore_path,
                 "collections_count": 3,
             },
             metrics={
-                "ceaf_stock_indexed": float(summary.stock_count),
-                "df_pharmacies_indexed": float(summary.pharmacies_count),
-                "protocols_indexed": float(summary.protocols_count),
-                "total_indexed": float(summary.total_indexed),
+                "ceaf_stock_indexed": float(idx_summary.stock_count),
+                "df_pharmacies_indexed": float(idx_summary.pharmacies_count),
+                "protocols_indexed": float(idx_summary.protocols_count),
+                "total_indexed": float(idx_summary.total_indexed),
             },
             tags={
                 "spec_id": "SPEC-07",
                 "backend": "chromadb_persistent",
             },
         )
-        print(json.dumps(summary.to_dict(), ensure_ascii=False, indent=2))
+        print(json.dumps(idx_summary.to_dict(), ensure_ascii=False, indent=2))
         return 0
 
     if args.command == "search-chroma":
@@ -352,29 +353,29 @@ def main(argv: list[str] | None = None) -> int:
         elif len(filters) > 1:
             where_filter = {"$and": filters}
 
-        hits = manager.search(
+        chroma_hits = manager.search(
             query=args.query,
             collection_name=args.collection,
             where_filter=where_filter if where_filter else None,
             top_k=args.top_k,
         )
-        print(json.dumps([h.to_dict() for h in hits], ensure_ascii=False, indent=2))
+        print(json.dumps([h.to_dict() for h in chroma_hits], ensure_ascii=False, indent=2))
         return 0
 
     if args.command == "pipeline-pdf":
         pipeline = UnifiedPDFPipeline(paths)
-        summary = pipeline.run()
+        pdf_summary = pipeline.run()
         manager = ChromaVectorStoreManager(vectorstore_dir=paths.data_dir / "vectorstore")
         n_indexed = manager.index_unified_pdf_chunks(paths.silver_dir / "unified_pdf_chunks.json")
         tracker.log_experiment_run(
             run_name="SPEC08_Unified_PDF_Pipeline_Ingestion",
             params={
-                "official_pdfs": summary.official_pdfs_count,
-                "converted_pdfs": summary.converted_pdfs_count,
-                "total_pdfs": summary.total_pdfs_processed,
+                "official_pdfs": pdf_summary.official_pdfs_count,
+                "converted_pdfs": pdf_summary.converted_pdfs_count,
+                "total_pdfs": pdf_summary.total_pdfs_processed,
             },
             metrics={
-                "chunks_extracted": float(summary.total_chunks_extracted),
+                "chunks_extracted": float(pdf_summary.total_chunks_extracted),
                 "chunks_indexed_chroma": float(n_indexed),
             },
             tags={
@@ -382,7 +383,7 @@ def main(argv: list[str] | None = None) -> int:
                 "backend": "pypdf_reportlab_chromadb",
             },
         )
-        res = summary.to_dict()
+        res = pdf_summary.to_dict()
         res["chroma_indexed_chunks"] = n_indexed
         print(json.dumps(res, ensure_ascii=False, indent=2))
         return 0

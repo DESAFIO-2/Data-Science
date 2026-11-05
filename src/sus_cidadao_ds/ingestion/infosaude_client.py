@@ -12,15 +12,15 @@ Consome diretamente:
 
 from __future__ import annotations
 
+import json
+import math
+import re
+import urllib.request
 from collections import Counter
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
-import json
-import math
 from pathlib import Path
-import re
 from typing import Any
-import urllib.request
 
 from sus_cidadao_ds.contracts.schemas import compute_sha256
 from sus_cidadao_ds.retrieval.retrievers import normalize_pt_text

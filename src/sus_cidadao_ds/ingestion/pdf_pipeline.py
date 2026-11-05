@@ -10,18 +10,24 @@ Este módulo executa o ciclo completo de ingestão documental uniforme:
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
 import json
 import logging
-from pathlib import Path
 import re
+from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Any
 
 import pypdf
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.platypus import HRFlowable, KeepTogether, PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.platypus import (
+    HRFlowable,
+    Paragraph,
+    SimpleDocTemplate,
+    Table,
+    TableStyle,
+)
 
 from sus_cidadao_ds.core.config import ProjectPaths
 
@@ -816,3 +822,4 @@ class UnifiedPDFPipeline:
             summary.total_chunks_extracted,
         )
         return summary
+

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import json
 from collections import Counter
 from dataclasses import asdict, dataclass
-import json
 from pathlib import Path
 from statistics import median
 from typing import Any

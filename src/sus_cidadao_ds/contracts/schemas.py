@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
 import hashlib
+from dataclasses import asdict, dataclass, field
 from typing import Any
 
 

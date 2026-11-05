@@ -160,3 +160,4 @@ Para comprovar experimentalmente o impacto da base vetorial unificada, reexecuta
 5. O runner de benchmark deve executar contra a base ChromaDB e registrar métricas no MLflow e relatório markdown.
 6. Todos os testes automatizados em `tests/test_sdd_specs.py` devem passar.
 7. Código e documentação devem ser comitados e enviados para `origin/main` no repositório `DESAFIO-2/Data-Science`.
+

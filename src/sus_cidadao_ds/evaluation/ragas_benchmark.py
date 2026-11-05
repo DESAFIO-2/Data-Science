@@ -8,8 +8,8 @@ Calcula:
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
 import json
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
@@ -408,7 +408,6 @@ class RAGASBenchmarkRunner:
                 context_recall_scores.append(1.0 if clin_res.is_blocked else 0.0)
             elif case.should_abstain:
                 hits = mgr.search_unified_corpus(case.query, top_k=3)
-                norm_q = normalize_pt_text(case.query)
                 has_substance_in_hits = any(
                     "tirzepatida" in normalize_pt_text(h.document)
                     or "minoxidil" in normalize_pt_text(h.document)

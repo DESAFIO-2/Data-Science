@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections import Counter
 import math
 import re
 import unicodedata
+from collections import Counter
 
 from sus_cidadao_ds.contracts.schemas import (
     CanonicalMedication,

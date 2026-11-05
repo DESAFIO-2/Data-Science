@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import tempfile
 import unittest
+from pathlib import Path
 
+from sus_cidadao_ds.agents.langgraph_orchestrator import LangGraphMultiAgentOrchestrator
 from sus_cidadao_ds.agents.orchestrator import MultiAgentOrchestrator
 from sus_cidadao_ds.calibration.threshold_optimizer import ThresholdCalibrator
 from sus_cidadao_ds.contracts.schemas import GoldenCase, compute_sha256
@@ -192,6 +193,19 @@ class TestSDDSpecifications(unittest.TestCase):
         self.assertTrue(
             any("ALERTA" in alert for alert in response.validity_alerts)
         )
+
+        # Validação do Orquestrador compilado com LangGraph (StateGraph)
+        lg_orchestrator = LangGraphMultiAgentOrchestrator(
+            medications=self.medications, chunks=self.chunks
+        )
+        lg_resp = lg_orchestrator.run(
+            "Receita médica: losartana potássica 50 mg. Moro em Ceilândia. CPF 123.456.789-00.",
+            days_since_emission=30,
+        )
+        self.assertEqual(lg_resp.primary_route, "FARMACIA_POPULAR")
+        self.assertIn("[CPF_MASCARADO_LGPD]", lg_resp.sanitized_query)
+        self.assertGreaterEqual(len(lg_resp.agent_trace), 4)
+        self.assertTrue(any("LangGraph" in trace for trace in lg_resp.agent_trace))
 
     def test_spec06_infosaude_live_stock_and_maps(self) -> None:
         """SPEC-06: InfoSaudeLiveClient deve decodificar DSR de estoque CEAF e mapas do DF."""

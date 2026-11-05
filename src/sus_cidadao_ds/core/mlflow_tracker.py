@@ -8,13 +8,13 @@ Implementa a governança definida em SPEC-00:
 
 from __future__ import annotations
 
+import json
+import time
+import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
-import json
 from pathlib import Path
-import time
 from typing import Any
-import uuid
 
 
 @dataclass

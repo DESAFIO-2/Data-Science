@@ -368,5 +368,235 @@
       "git_stage": "semana3_ragas_benchmark"
     },
     "artifacts": []
+  },
+  {
+    "run_id": "2eaefc257ad9449e911c8c96c10f28a2",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC01_EDA_Silver_Gold_Profile",
+    "timestamp_utc": "2026-11-05T19:11:51.776605+00:00",
+    "params": {
+      "manifest_version": "2024.2.0",
+      "engineering_source": "canonical_materialization_v2024.2"
+    },
+    "metrics": {
+      "total_medications": 24.0,
+      "unique_dcbs": 23.0,
+      "pfpb_free_rate": 0.5417,
+      "requires_lme_rate": 0.25,
+      "total_chunks": 9.0,
+      "avg_chunk_words": 88.11,
+      "dcb_chunk_coverage_rate": 1.0
+    },
+    "tags": {
+      "mlflow.runName": "SPEC01_EDA_Silver_Gold_Profile",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-01",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana2_eda"
+    },
+    "artifacts": [
+      "eda_summary.json"
+    ]
+  },
+  {
+    "run_id": "f0725ea959424fc7a1a918d18f964d1b",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC03_TFIDF_Baseline_012",
+    "timestamp_utc": "2026-11-05T19:11:59.006879+00:00",
+    "params": {
+      "retriever_type": "tfidf_baseline",
+      "min_score": 0.12,
+      "top_k": 3
+    },
+    "metrics": {
+      "hit_rate_at_3": 1.0,
+      "recall_at_3": 1.0,
+      "mrr": 1.0,
+      "abstention_accuracy": 0.0,
+      "combined_f1": 0.0
+    },
+    "tags": {
+      "mlflow.runName": "SPEC03_TFIDF_Baseline_012",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-03",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana2_baseline"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "f0f475858a844b13b3dc667f5e1c6862",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC03_Hybrid_Calibrated_Best",
+    "timestamp_utc": "2026-11-05T19:11:59.008384+00:00",
+    "params": {
+      "retriever_type": "hybrid_dcb_rrf",
+      "min_score": 0.12,
+      "top_k": 3,
+      "rrf_k": 60
+    },
+    "metrics": {
+      "hit_rate_at_3": 1.0,
+      "recall_at_3": 1.0,
+      "mrr": 1.0,
+      "abstention_accuracy": 1.0,
+      "combined_f1": 1.0
+    },
+    "tags": {
+      "mlflow.runName": "SPEC03_Hybrid_Calibrated_Best",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-03",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana2_hybrid_calibrated"
+    },
+    "artifacts": [
+      "calibration_curve.json"
+    ]
+  },
+  {
+    "run_id": "e9c7d319815b41aeaf41a529fe1ab77f",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC08_Unified_PDF_Pipeline_Ingestion",
+    "timestamp_utc": "2026-11-05T19:12:06.268075+00:00",
+    "params": {
+      "official_pdfs": 4,
+      "converted_pdfs": 3,
+      "total_pdfs": 7
+    },
+    "metrics": {
+      "chunks_extracted": 69.0,
+      "chunks_indexed_chroma": 69.0
+    },
+    "tags": {
+      "mlflow.runName": "SPEC08_Unified_PDF_Pipeline_Ingestion",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-08",
+      "backend": "pypdf_reportlab_chromadb"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "c1299ce6497141c598455183bece7133",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC04_RAGAS_01_LLM_Pura_Sem_RAG",
+    "timestamp_utc": "2026-11-05T19:12:13.965557+00:00",
+    "params": {
+      "system_name": "01_LLM_Pura_Sem_RAG",
+      "golden_cases": 16
+    },
+    "metrics": {
+      "faithfulness": 0.3837,
+      "answer_relevancy": 0.5413,
+      "context_recall": 0.0,
+      "ragas_harmonic_score": 0.1227,
+      "hit_rate_at_3": 0.0,
+      "recall_at_3": 0.0,
+      "mrr": 0.0,
+      "route_accuracy": 0.375,
+      "clinical_guardrail_pass_rate": 0.5
+    },
+    "tags": {
+      "mlflow.runName": "SPEC04_RAGAS_01_LLM_Pura_Sem_RAG",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-04",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana3_ragas_benchmark"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "a411ba51213f4514855ceafc34be5306",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC04_RAGAS_02_RAG_TFIDF_Baseline_012",
+    "timestamp_utc": "2026-11-05T19:12:13.967050+00:00",
+    "params": {
+      "system_name": "02_RAG_TFIDF_Baseline_012",
+      "golden_cases": 16
+    },
+    "metrics": {
+      "faithfulness": 0.8037,
+      "answer_relevancy": 0.7848,
+      "context_recall": 0.7288,
+      "ragas_harmonic_score": 0.7711,
+      "hit_rate_at_3": 1.0,
+      "recall_at_3": 1.0,
+      "mrr": 1.0,
+      "route_accuracy": 0.75,
+      "clinical_guardrail_pass_rate": 0.0
+    },
+    "tags": {
+      "mlflow.runName": "SPEC04_RAGAS_02_RAG_TFIDF_Baseline_012",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-04",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana3_ragas_benchmark"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "0dcb4852c66546b19f056c6b7e9f3bf9",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC04_RAGAS_03_RAG_Hibrido_Multiagentes",
+    "timestamp_utc": "2026-11-05T19:12:13.968316+00:00",
+    "params": {
+      "system_name": "03_RAG_Hibrido_Multiagentes",
+      "golden_cases": 16
+    },
+    "metrics": {
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.9751,
+      "context_recall": 0.9651,
+      "ragas_harmonic_score": 0.9798,
+      "hit_rate_at_3": 1.0,
+      "recall_at_3": 1.0,
+      "mrr": 1.0,
+      "route_accuracy": 1.0,
+      "clinical_guardrail_pass_rate": 1.0
+    },
+    "tags": {
+      "mlflow.runName": "SPEC04_RAGAS_03_RAG_Hibrido_Multiagentes",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-04",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana3_ragas_benchmark"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "389a71e894cb403ca87a011a9805e83b",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC04_RAGAS_04_RAG_ChromaDB_Corpus_PDFs",
+    "timestamp_utc": "2026-11-05T19:12:13.969698+00:00",
+    "params": {
+      "system_name": "04_RAG_ChromaDB_Corpus_PDFs",
+      "golden_cases": 16
+    },
+    "metrics": {
+      "faithfulness": 0.9769,
+      "answer_relevancy": 0.9488,
+      "context_recall": 0.9446,
+      "ragas_harmonic_score": 0.9566,
+      "hit_rate_at_3": 1.0,
+      "recall_at_3": 1.0,
+      "mrr": 1.0,
+      "route_accuracy": 1.0,
+      "clinical_guardrail_pass_rate": 1.0
+    },
+    "tags": {
+      "mlflow.runName": "SPEC04_RAGAS_04_RAG_ChromaDB_Corpus_PDFs",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-08",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana3_ragas_benchmark"
+    },
+    "artifacts": []
   }
 ]
