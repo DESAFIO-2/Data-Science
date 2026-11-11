@@ -2,13 +2,13 @@
   "source_url": "https://info.saude.df.gov.br/saude-do-cidadao/painel-infosaude-farmacias-de-alto-custo/estoque-de-medicamentos/",
   "powerbi_api_endpoint": "https://wabi-brazil-south-api.analysis.windows.net/public/reports/querydata?synchronous=true",
   "resource_key": "a665320c-1f2b-43cd-8380-6d39f535daf9",
-  "panel_updated_at_utc": "2026-11-10T23:07:05.801799+00:00",
+  "panel_updated_at_utc": "2026-11-11T17:01:08.297866+00:00",
   "update_schedule": "Diária (00:00 BRT e atualização intradiária ~13:45-14:37 BRT)",
   "total_records": 857,
   "distinct_medications": 294,
   "stock_by_status": {
-    "SEM ESTOQUE": 86,
-    "COM ESTOQUE": 579,
+    "SEM ESTOQUE": 85,
+    "COM ESTOQUE": 580,
     "SEM DEMANDA": 95,
     "PROGRAMADO - SEM ESTOQUE": 9,
     "PROGRAMADO - COM ESTOQUE": 79,
@@ -17,16 +17,16 @@
   },
   "stock_by_unit": {
     "Asa Sul": {
-      "SEM ESTOQUE": 35,
-      "COM ESTOQUE": 194,
+      "SEM ESTOQUE": 36,
+      "COM ESTOQUE": 193,
       "SEM DEMANDA": 27,
       "PROGRAMADO - SEM ESTOQUE": 5,
       "PROGRAMADO - COM ESTOQUE": 28,
       "RECÉM PADRONIZADO": 2
     },
     "Ceilândia": {
-      "SEM ESTOQUE": 26,
-      "COM ESTOQUE": 194,
+      "SEM ESTOQUE": 24,
+      "COM ESTOQUE": 196,
       "SEM DEMANDA": 32,
       "PROGRAMADO - COM ESTOQUE": 28,
       "RECÉM PADRONIZADO": 2,
@@ -3080,7 +3080,7 @@
       "cod_produto": "7031",
       "desc_produto": "RISPERIDONA 1 MG COMP GRUPO 1.B",
       "unidade": "Ceilândia",
-      "disp_estoque": "SEM ESTOQUE",
+      "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "SES-DF",
       "psicotropico": "Psicotrópicos",
       "ultima_atualizacao": "05/11/2026 13:45:15"
@@ -3107,7 +3107,7 @@
       "cod_produto": "7032",
       "desc_produto": "RISPERIDONA 2 MG COMP GRUPO 1.B",
       "unidade": "Ceilândia",
-      "disp_estoque": "SEM ESTOQUE",
+      "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "SES-DF",
       "psicotropico": "Psicotrópicos",
       "ultima_atualizacao": "05/11/2026 13:45:15"
@@ -5204,7 +5204,7 @@
       "cod_produto": "MS25200",
       "desc_produto": "SOMATROPINA 4 UI SOL INJ OU PÓ LIOF INJ (FR-AMP) GRUPO 1.A",
       "unidade": "Asa Sul",
-      "disp_estoque": "COM ESTOQUE",
+      "disp_estoque": "SEM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
       "ultima_atualizacao": "05/11/2026 13:45:15"
@@ -6044,7 +6044,7 @@
       "disp_estoque": "SEM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "2026-11-10 00:00:00-03"
+      "ultima_atualizacao": "2026-11-11 00:00:00-03"
     },
     {
       "cod_produto": "MS35706",
@@ -6053,7 +6053,7 @@
       "disp_estoque": "SEM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "2026-11-10 00:00:00-03"
+      "ultima_atualizacao": "2026-11-11 00:00:00-03"
     },
     {
       "cod_produto": "MS35706",
@@ -6062,7 +6062,7 @@
       "disp_estoque": "SEM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS36095",
@@ -6071,7 +6071,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS36095",
@@ -6080,7 +6080,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS36095",
@@ -6089,7 +6089,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS36108",
@@ -6098,7 +6098,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS36108",
@@ -6107,7 +6107,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS36108",
@@ -6116,7 +6116,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS36194",
@@ -6125,7 +6125,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS36194",
@@ -6134,7 +6134,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS36194",
@@ -6143,7 +6143,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS36672",
@@ -6152,7 +6152,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS36672",
@@ -6161,7 +6161,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS36672",
@@ -6170,7 +6170,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS37566",
@@ -6179,7 +6179,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS37566",
@@ -6188,7 +6188,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS37566",
@@ -6197,7 +6197,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS37750",
@@ -6206,7 +6206,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS37750",
@@ -6215,7 +6215,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS37750",
@@ -6224,7 +6224,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS37771",
@@ -6233,7 +6233,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS37771",
@@ -6242,7 +6242,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS37771",
@@ -6251,7 +6251,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS37772",
@@ -6260,7 +6260,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS37772",
@@ -6269,7 +6269,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS37772",
@@ -6278,7 +6278,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS37996",
@@ -6287,7 +6287,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS37996",
@@ -6296,7 +6296,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS37996",
@@ -6305,7 +6305,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38146",
@@ -6314,7 +6314,7 @@
       "disp_estoque": "SEM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38146",
@@ -6323,7 +6323,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38146",
@@ -6332,7 +6332,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38244",
@@ -6341,7 +6341,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38244",
@@ -6350,7 +6350,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38244",
@@ -6359,7 +6359,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38245",
@@ -6368,7 +6368,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38245",
@@ -6377,7 +6377,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38245",
@@ -6386,7 +6386,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38249",
@@ -6395,7 +6395,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38249",
@@ -6404,7 +6404,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38250",
@@ -6413,7 +6413,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38250",
@@ -6422,7 +6422,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38250",
@@ -6431,7 +6431,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38404",
@@ -6440,7 +6440,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38404",
@@ -6449,7 +6449,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38404",
@@ -6458,7 +6458,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38406",
@@ -6467,7 +6467,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38406",
@@ -6476,7 +6476,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38406",
@@ -6485,7 +6485,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38407",
@@ -6494,7 +6494,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38407",
@@ -6503,7 +6503,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38407",
@@ -6512,7 +6512,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38425",
@@ -6521,7 +6521,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38425",
@@ -6530,7 +6530,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38425",
@@ -6539,7 +6539,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38473",
@@ -6548,7 +6548,7 @@
       "disp_estoque": "PROGRAMADO - SEM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38473",
@@ -6557,7 +6557,7 @@
       "disp_estoque": "PROGRAMADO - SEM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38473",
@@ -6566,7 +6566,7 @@
       "disp_estoque": "PROGRAMADO - SEM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38502",
@@ -6575,7 +6575,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38502",
@@ -6584,7 +6584,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38502",
@@ -6593,7 +6593,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38515",
@@ -6602,7 +6602,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38515",
@@ -6611,7 +6611,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38515",
@@ -6620,7 +6620,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38515-1",
@@ -6629,7 +6629,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38515-1",
@@ -6638,7 +6638,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38515-1",
@@ -6647,7 +6647,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38518",
@@ -6656,7 +6656,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38518",
@@ -6665,7 +6665,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38518",
@@ -6674,7 +6674,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38519",
@@ -6683,7 +6683,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38519",
@@ -6692,7 +6692,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38519",
@@ -6701,7 +6701,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38520",
@@ -6710,7 +6710,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38520",
@@ -6719,7 +6719,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38520",
@@ -6728,7 +6728,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38711",
@@ -6737,7 +6737,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38711",
@@ -6746,7 +6746,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38711",
@@ -6755,7 +6755,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38720",
@@ -6764,7 +6764,7 @@
       "disp_estoque": "PROGRAMADO - SEM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38720",
@@ -6773,7 +6773,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38720",
@@ -6782,7 +6782,7 @@
       "disp_estoque": "RECÉM PADRONIZADO",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38721",
@@ -6791,7 +6791,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38721",
@@ -6800,7 +6800,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS38721",
@@ -6809,7 +6809,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS4630",
@@ -6818,7 +6818,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Psicotrópicos",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS4630",
@@ -6827,7 +6827,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Psicotrópicos",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS4630",
@@ -6836,7 +6836,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Psicotrópicos",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS4824",
@@ -6845,7 +6845,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS4824",
@@ -6854,7 +6854,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS4824",
@@ -6863,7 +6863,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS52018",
@@ -6872,7 +6872,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS52018",
@@ -6881,7 +6881,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS52018",
@@ -6890,7 +6890,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS5276",
@@ -6899,7 +6899,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS5276",
@@ -6908,7 +6908,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS5276",
@@ -6917,7 +6917,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS538",
@@ -6926,7 +6926,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Psicotrópicos",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS538",
@@ -6935,7 +6935,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Psicotrópicos",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS538",
@@ -6944,7 +6944,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Psicotrópicos",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS542",
@@ -6953,7 +6953,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Psicotrópicos",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS542",
@@ -6962,7 +6962,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Psicotrópicos",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS542",
@@ -6971,7 +6971,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Psicotrópicos",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS5561",
@@ -6980,7 +6980,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS5561",
@@ -6989,7 +6989,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS5561",
@@ -6998,7 +6998,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS5562",
@@ -7007,7 +7007,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS5562",
@@ -7016,7 +7016,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS5562",
@@ -7025,7 +7025,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS5725",
@@ -7034,7 +7034,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS5725",
@@ -7043,7 +7043,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS5725",
@@ -7052,7 +7052,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS5889",
@@ -7061,7 +7061,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Psicotrópicos",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS5889",
@@ -7070,7 +7070,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Psicotrópicos",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS5889",
@@ -7079,7 +7079,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Psicotrópicos",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS5909",
@@ -7088,7 +7088,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS5909",
@@ -7097,7 +7097,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS5909",
@@ -7106,7 +7106,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS607",
@@ -7115,7 +7115,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS607",
@@ -7124,7 +7124,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS607",
@@ -7133,7 +7133,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS623",
@@ -7142,7 +7142,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS623",
@@ -7151,7 +7151,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS623",
@@ -7160,7 +7160,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS6417",
@@ -7169,7 +7169,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "SES-DF",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS6417",
@@ -7178,7 +7178,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "SES-DF",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS6417",
@@ -7187,7 +7187,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "SES-DF",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS648",
@@ -7196,7 +7196,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS648",
@@ -7205,7 +7205,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS648",
@@ -7214,7 +7214,7 @@
       "disp_estoque": "PROGRAMADO - COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS6593",
@@ -7223,7 +7223,7 @@
       "disp_estoque": "SEM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS6593",
@@ -7232,7 +7232,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS6593",
@@ -7241,7 +7241,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS667",
@@ -7250,7 +7250,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS667",
@@ -7259,7 +7259,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS667",
@@ -7268,7 +7268,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS672",
@@ -7277,7 +7277,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS672",
@@ -7286,7 +7286,7 @@
       "disp_estoque": "SEM DEMANDA",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS672",
@@ -7295,7 +7295,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS693",
@@ -7304,7 +7304,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS693",
@@ -7313,7 +7313,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS693",
@@ -7322,7 +7322,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS7056",
@@ -7331,7 +7331,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS7056",
@@ -7340,7 +7340,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS7056",
@@ -7349,7 +7349,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS7057",
@@ -7358,7 +7358,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS7057",
@@ -7367,7 +7367,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS7057",
@@ -7376,7 +7376,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS708",
@@ -7385,7 +7385,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Psicotrópicos",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS708",
@@ -7394,7 +7394,7 @@
       "disp_estoque": "SEM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Psicotrópicos",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS708",
@@ -7403,7 +7403,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Psicotrópicos",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS709",
@@ -7412,7 +7412,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Psicotrópicos",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS709",
@@ -7421,7 +7421,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Psicotrópicos",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS709",
@@ -7430,7 +7430,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Psicotrópicos",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS7762",
@@ -7439,7 +7439,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS7762",
@@ -7448,7 +7448,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS7762",
@@ -7457,7 +7457,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS8759",
@@ -7466,7 +7466,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS8759",
@@ -7475,7 +7475,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS8759",
@@ -7484,7 +7484,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS8784",
@@ -7493,7 +7493,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Psicotrópicos",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS8784",
@@ -7502,7 +7502,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Psicotrópicos",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS8784",
@@ -7511,7 +7511,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Psicotrópicos",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90087",
@@ -7520,7 +7520,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90087",
@@ -7529,7 +7529,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90087",
@@ -7538,7 +7538,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90426",
@@ -7547,7 +7547,7 @@
       "disp_estoque": "SEM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90426",
@@ -7556,7 +7556,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90426",
@@ -7565,7 +7565,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90427",
@@ -7574,7 +7574,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90427",
@@ -7583,7 +7583,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90427",
@@ -7592,7 +7592,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90714",
@@ -7601,7 +7601,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90714",
@@ -7610,7 +7610,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90714",
@@ -7619,7 +7619,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90776",
@@ -7628,7 +7628,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90776",
@@ -7637,7 +7637,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90776",
@@ -7646,7 +7646,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90777",
@@ -7655,7 +7655,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90777",
@@ -7664,7 +7664,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90777",
@@ -7673,7 +7673,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90969",
@@ -7682,7 +7682,7 @@
       "disp_estoque": "SEM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90969",
@@ -7691,7 +7691,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90969",
@@ -7700,7 +7700,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90988",
@@ -7709,7 +7709,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90988",
@@ -7718,7 +7718,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS90988",
@@ -7727,7 +7727,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS999",
@@ -7736,7 +7736,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS999",
@@ -7745,7 +7745,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     },
     {
       "cod_produto": "MS999",
@@ -7754,7 +7754,7 @@
       "disp_estoque": "COM ESTOQUE",
       "origem_abastecimento": "Ministério da Saúde",
       "psicotropico": "Outros",
-      "ultima_atualizacao": "10/11/2026 17:00:57"
+      "ultima_atualizacao": "11/11/2026 13:01:10"
     }
   ]
 }
