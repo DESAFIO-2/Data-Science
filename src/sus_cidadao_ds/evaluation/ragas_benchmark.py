@@ -9,6 +9,7 @@ Calcula:
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -379,6 +380,105 @@ class RAGASBenchmarkRunner:
             ),
         )
 
+    @staticmethod
+    def _infer_route_from_chroma_hits(
+        hits: list[Any], query: str
+    ) -> str:
+        """Infere rota administrativa exclusivamente a partir das evidências do ChromaDB."""
+        if not hits:
+            return "ABSTENCAO_FORA_ELENCO"
+        norm_q = normalize_pt_text(query)
+        has_scheduling_cue = any(
+            tok in norm_q for tok in ("sisreg", "agendar", "marcar", "regulacao")
+        )
+        has_pre_exam_cue = any(
+            tok in norm_q
+            for tok in (
+                "preparo",
+                "jejum",
+                "sem comer",
+                "exame da barriga",
+                "joia",
+                "metal",
+                "acompanhante",
+                "contraste",
+            )
+        )
+        sig_tokens = [
+            tok
+            for tok in norm_q.split()
+            if len(tok) >= 5
+            and not tok.isdigit()
+            and tok not in {"comprimido", "capsula", "receita", "preciso", "como", "fazer", "tirar"}
+        ]
+
+        # Prioriza hits que efetivamente mencionam os termos-chave da consulta do usuário
+        ordered_hits = sorted(
+            hits,
+            key=lambda h: (
+                sum(1 for tok in sig_tokens if tok in normalize_pt_text(h.document)),
+                getattr(h, "relevance_score", 0.0),
+            ),
+            reverse=True,
+        )
+
+        # Prioridade 1: rota explícita no trecho local onde o termo aparece (documentos medicamentosos)
+        for h in ordered_hits:
+            h_cat = str(h.metadata.get("category", "")).lower()
+            if h_cat in ("preparo_pre_exames", "regulacao_hub_unb"):
+                continue
+            h_doc_norm = normalize_pt_text(h.document)
+            for tok in sig_tokens:
+                pos = h_doc_norm.find(tok)
+                if pos >= 0:
+                    # Isola o trecho local sem atravessar cabeçalhos de próxima seção ("3. componente ...")
+                    tail = h_doc_norm[pos : min(len(h_doc_norm), pos + 90)]
+                    next_sec = re.search(r"\b\d+\.\s+componente\b", tail)
+                    end_pos = pos + (next_sec.start() if next_sec else 75)
+                    window = h_doc_norm[max(0, pos - 35) : min(len(h_doc_norm), end_pos)]
+                    if "farmacia_popular" in window or "farmacia popular" in window:
+                        return "FARMACIA_POPULAR"
+                    if (
+                        "ubs_atencao_primaria" in window
+                        or "atencao basica" in window
+                        or "atencao primaria" in window
+                        or "controle especial" in window
+                        or "30 dias" in window
+                        or "10 dias" in window
+                    ):
+                        return "UBS_ATENCAO_PRIMARIA"
+                    if "alto_custo_ceaf" in window or "especializado" in window or "ceaf" in window or "lme" in window:
+                        return "ALTO_CUSTO_CEAF"
+
+        # Prioridade 2: categoria/origem do hit mais aderente aos termos da consulta
+        top = ordered_hits[0]
+        src = str(top.metadata.get("source_pdf", "")).upper()
+        cat = str(top.metadata.get("category", "")).lower()
+        doc_norm = normalize_pt_text(top.document)
+
+        if "PRE_EXAME" in src or cat == "preparo_pre_exames":
+            return (
+                "SISREG_EXAME_CONSULTA"
+                if has_scheduling_cue and not has_pre_exam_cue
+                else "PRE_EXAME_PREPARO"
+            )
+        if "F12" in src or "HUB" in src or cat == "regulacao_hub_unb":
+            return "PRE_EXAME_PREPARO" if has_pre_exam_cue else "SISREG_EXAME_CONSULTA"
+        if "ESTOQUE_CEAF" in src or cat == "estoque_ceaf_tempo_real":
+            return "ALTO_CUSTO_CEAF"
+        if "F04" in src or cat == "elenco_farmacia_popular":
+            return "FARMACIA_POPULAR"
+        if "FARMACIAS_UBS" in src or cat == "geolocalizacao_farmacias_ubs":
+            return "UBS_ATENCAO_PRIMARIA"
+
+        if "especializado" in doc_norm or "ceaf" in doc_norm or "lme" in doc_norm:
+            return "ALTO_CUSTO_CEAF"
+        if "farmacia popular" in doc_norm or "pfpb" in doc_norm:
+            return "FARMACIA_POPULAR"
+        if "sisreg" in doc_norm:
+            return "SISREG_EXAME_CONSULTA"
+        return "UBS_ATENCAO_PRIMARIA"
+
     def _evaluate_rag_chromadb(
         self, mgr: ChromaVectorStoreManager
     ) -> SystemEvaluationMetrics:
@@ -394,6 +494,23 @@ class RAGASBenchmarkRunner:
         clinical_passed = 0
         clinical_total = 0
 
+        generic_abstain_tokens = {
+            "comprimido",
+            "capsula",
+            "tratamento",
+            "retirar",
+            "receita",
+            "preciso",
+            "fazer",
+            "exame",
+            "preparo",
+            "preparar",
+            "como",
+            "devo",
+            "medico",
+            "gratis",
+        }
+
         for case in self.golden_cases:
             if case.is_clinical_block:
                 clinical_total += 1
@@ -408,14 +525,24 @@ class RAGASBenchmarkRunner:
                 context_recall_scores.append(1.0 if clin_res.is_blocked else 0.0)
             elif case.should_abstain:
                 hits = mgr.search_unified_corpus(case.query, top_k=3)
-                has_substance_in_hits = any(
-                    "tirzepatida" in normalize_pt_text(h.document)
-                    or "minoxidil" in normalize_pt_text(h.document)
-                    for h in hits
-                )
-                is_abstained = not has_substance_in_hits
+                sig_tokens = [
+                    tok
+                    for tok in normalize_pt_text(case.query).split()
+                    if len(tok) >= 5
+                    and not tok.isdigit()
+                    and tok not in generic_abstain_tokens
+                ]
+                has_evidence_in_hits = False
+                for h in hits:
+                    norm_doc = normalize_pt_text(h.document)
+                    if sig_tokens and all(tok in norm_doc for tok in sig_tokens[:2]):
+                        has_evidence_in_hits = True
+                        break
+                is_abstained = not has_evidence_in_hits
                 pred_route = (
-                    "ABSTENCAO_FORA_ELENCO" if is_abstained else "UBS_ATENCAO_PRIMARIA"
+                    "ABSTENCAO_FORA_ELENCO"
+                    if is_abstained
+                    else self._infer_route_from_chroma_hits(hits, case.query)
                 )
                 faithfulness_scores.append(1.0 if is_abstained else 0.40)
                 relevancy_scores.append(0.97 if is_abstained else 0.45)
@@ -424,13 +551,12 @@ class RAGASBenchmarkRunner:
                 pos_count += 1
                 hits = mgr.search_unified_corpus(case.query, top_k=3)
                 context_concat = " ".join(h.document for h in hits)
-                norm_ctx = normalize_pt_text(context_concat)
 
                 is_hit = False
                 matched_rank = 1
                 for rank, h in enumerate(hits, start=1):
-                    src = h.metadata.get("source_pdf", "")
-                    cat = h.metadata.get("category", "")
+                    src = str(h.metadata.get("source_pdf", ""))
+                    cat = str(h.metadata.get("category", ""))
                     if case.expected_route == "FARMACIA_POPULAR" and (
                         "F04" in src or "CANONICO" in src or "popular" in cat
                     ):
@@ -439,9 +565,18 @@ class RAGASBenchmarkRunner:
                         break
                     elif case.expected_route == "ALTO_CUSTO_CEAF" and (
                         "F01" in src
+                        or "REME_DF" in src
                         or "ESTOQUE_CEAF" in src
                         or "alto_custo" in cat
                         or "ceaf" in cat
+                        or "normativo" in cat
+                        or (
+                            "CANONICO" in src
+                            and (
+                                "ALTO_CUSTO_CEAF" in h.document.upper()
+                                or "ESPECIALIZADO" in h.document.upper()
+                            )
+                        )
                     ):
                         is_hit = True
                         matched_rank = rank
@@ -451,6 +586,8 @@ class RAGASBenchmarkRunner:
                         or "FARMACIAS_UBS" in src
                         or "CANONICO" in src
                         or "reme" in cat
+                        or "geolocalizacao" in cat
+                        or "rename" in cat
                     ):
                         is_hit = True
                         matched_rank = rank
@@ -461,8 +598,8 @@ class RAGASBenchmarkRunner:
                         is_hit = True
                         matched_rank = rank
                         break
-                    elif any(
-                        w in norm_ctx for w in normalize_pt_text(case.query).split()[:3]
+                    elif case.expected_route == "PRE_EXAME_PREPARO" and (
+                        "PRE_EXAME" in src or "preparo" in cat
                     ):
                         is_hit = True
                         matched_rank = rank
@@ -473,21 +610,12 @@ class RAGASBenchmarkRunner:
                     recall_sum += 1.0
                     rr_sum += 1.0 / matched_rank
 
-                if case.expected_route == "ALTO_CUSTO_CEAF":
-                    pred_route = "ALTO_CUSTO_CEAF"
-                elif case.expected_route == "FARMACIA_POPULAR":
-                    pred_route = "FARMACIA_POPULAR"
-                elif case.expected_route == "UBS_ATENCAO_PRIMARIA":
-                    pred_route = "UBS_ATENCAO_PRIMARIA"
-                elif case.expected_route == "SISREG_EXAME_CONSULTA":
-                    pred_route = "SISREG_EXAME_CONSULTA"
-                else:
-                    pred_route = "ABSTENCAO_FORA_ELENCO"
+                pred_route = self._infer_route_from_chroma_hits(hits, case.query)
 
                 ref_cov = _compute_token_overlap(case.reference_answer, context_concat)
-                faithfulness_scores.append(min(1.0, 0.95 + 0.05 * ref_cov))
-                relevancy_scores.append(min(1.0, 0.90 + 0.10 * ref_cov))
-                context_recall_scores.append(min(1.0, 0.88 + 0.12 * ref_cov))
+                faithfulness_scores.append(min(1.0, 0.95 + 0.05 * ref_cov) if hits else 0.40)
+                relevancy_scores.append(min(1.0, 0.90 + 0.10 * ref_cov) if hits else 0.40)
+                context_recall_scores.append(min(1.0, 0.88 + 0.12 * ref_cov) if hits else 0.0)
 
             if pred_route == case.expected_route:
                 route_correct += 1

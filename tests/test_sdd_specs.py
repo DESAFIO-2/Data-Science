@@ -8,8 +8,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from fastapi.testclient import TestClient
+
 from sus_cidadao_ds.agents.langgraph_orchestrator import LangGraphMultiAgentOrchestrator
 from sus_cidadao_ds.agents.orchestrator import MultiAgentOrchestrator
+from sus_cidadao_ds.api.app import create_app
 from sus_cidadao_ds.calibration.threshold_optimizer import ThresholdCalibrator
 from sus_cidadao_ds.contracts.schemas import GoldenCase, compute_sha256
 from sus_cidadao_ds.core.config import ProjectPaths
@@ -21,6 +24,7 @@ from sus_cidadao_ds.guardrails.pii_masker import PIIMasker
 from sus_cidadao_ds.ingestion.infosaude_client import InfoSaudeLiveClient, haversine_km
 from sus_cidadao_ds.ingestion.pdf_pipeline import UnifiedPDFPipeline
 from sus_cidadao_ds.retrieval.chroma_indexer import ChromaVectorStoreManager
+from sus_cidadao_ds.retrieval.embeddings import PortugueseClinicalEmbeddingFunction
 from sus_cidadao_ds.retrieval.retrievers import (
     BM25Retriever,
     HybridRetriever,
@@ -28,6 +32,7 @@ from sus_cidadao_ds.retrieval.retrievers import (
     TFIDFRetriever,
 )
 from sus_cidadao_ds.sync.data_sync import DataSynchronizer
+from sus_cidadao_ds.voice.audio_engine import VoiceEngine
 
 
 class TestSDDSpecifications(unittest.TestCase):
@@ -89,7 +94,7 @@ class TestSDDSpecifications(unittest.TestCase):
         valid_chunk_ids = {c.chunk_id for c in self.chunks}
         valid_dcbs = {m.dcb_name for m in self.medications}
 
-        self.assertEqual(len(self.golden_cases), 16)
+        self.assertGreaterEqual(len(self.golden_cases), 22)
         for case in self.golden_cases:
             for cid in case.relevant_chunk_ids:
                 self.assertIn(
@@ -388,6 +393,112 @@ class TestSDDSpecifications(unittest.TestCase):
             r4 = orch2.run("E tirzepatida 5 mg?", session_id=sid)
             self.assertTrue(r4.abstained)
             self.assertEqual(r4.primary_route, "ABSTENCAO_FORA_ELENCO")
+
+    def test_spec09_pre_exam_and_production_hybrid(self) -> None:
+        """SPEC-09: Preparo pré-exame, embeddings PT-BR, Hybrid BM25+DCB e guardrail pré-exame."""
+        hybrid = HybridRetriever(self.medications, self.chunks)
+        self.assertFalse(hasattr(hybrid, "tfidf"))
+
+        embed_fn = PortugueseClinicalEmbeddingFunction()
+        v_q, v_pos, v_neg = embed_fn(
+            [
+                "exame da barriga sem comer",
+                "Ultrassonografia de Abdome Total jejum alimentar",
+                "minoxidil capilar estético dermatologia",
+            ]
+        )
+        sim_pos = sum(a * b for a, b in zip(v_q, v_pos, strict=True))
+        sim_neg = sum(a * b for a, b in zip(v_q, v_neg, strict=True))
+        self.assertGreater(sim_pos, sim_neg)
+
+        blocker = ClinicalBlocker()
+        block_res = blocker.inspect(
+            "Vou fazer exame amanhã, posso suspender a metformina e insulina antes?"
+        )
+        self.assertTrue(block_res.is_blocked)
+        self.assertEqual(block_res.reason, "SOLICITACAO_SUSPENSAO_MEDICAMENTO_PRE_EXAME")
+
+        orch = MultiAgentOrchestrator(self.medications, self.chunks)
+        prep_resp = orch.run(
+            "Preciso fazer um exame da barriga no SUS, posso tomar água ou tenho que ir sem comer?"
+        )
+        self.assertEqual(prep_resp.primary_route, "PRE_EXAME_PREPARO")
+        self.assertFalse(prep_resp.abstained)
+        self.assertGreaterEqual(len(prep_resp.sisreg_guidance), 1)
+        self.assertGreaterEqual(len(prep_resp.sisreg_guidance[0].preparation_tips), 2)
+        self.assertIn("jejum", prep_resp.spoken_guidance.lower())
+
+        abst_resp = orch.run("Como devo me preparar para fazer cintilografia miocárdica?")
+        self.assertTrue(abst_resp.abstained)
+        self.assertEqual(abst_resp.primary_route, "ABSTENCAO_FORA_ELENCO")
+
+    def test_spec10_voice_mode_and_fastapi_api(self) -> None:
+        """SPEC-10: spoken_guidance, API FastAPI (/health, /v1/chat, /v1/voice-turn, /voice-demo)."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            session_db = Path(tmpdir) / "voice_sessions.db"
+            orch = LangGraphMultiAgentOrchestrator(
+                medications=self.medications,
+                chunks=self.chunks,
+                session_db_path=session_db,
+            )
+            voice = VoiceEngine(allow_network_tts=False)
+            api_app = create_app(
+                paths=self.paths,
+                orchestrator=orch,
+                voice_engine=voice,
+            )
+            client = TestClient(api_app)
+
+            health_res = client.get("/health")
+            self.assertEqual(health_res.status_code, 200)
+            self.assertEqual(health_res.json()["status"], "ok")
+
+            ui_res = client.get("/voice-demo")
+            self.assertEqual(ui_res.status_code, 200)
+            self.assertIn("Falar no Microfone", ui_res.text)
+
+            sid = "app-voz-helena"
+            chat_res = client.post(
+                "/v1/chat",
+                json={
+                    "text": "Moro em Ceilândia e preciso fazer endoscopia digestiva alta, qual o preparo?",
+                    "session_id": sid,
+                },
+            )
+            self.assertEqual(chat_res.status_code, 200)
+            chat_data = chat_res.json()
+            self.assertEqual(chat_data["primary_route"], "PRE_EXAME_PREPARO")
+            self.assertEqual(chat_data["turn_count"], 1)
+            self.assertTrue(len(chat_data["preparation_tips"]) >= 2)
+            self.assertNotIn("[", chat_data["spoken_guidance"])
+            self.assertNotIn("pág.", chat_data["spoken_guidance"])
+
+            voice_res = client.post(
+                "/v1/voice-turn",
+                data={
+                    "text": "Quais documentos levo e preciso de acompanhante?",
+                    "session_id": sid,
+                    "synthesize_audio": "true",
+                },
+            )
+            self.assertEqual(voice_res.status_code, 200)
+            voice_data = voice_res.json()
+            self.assertEqual(voice_data["turn_count"], 2)
+            self.assertEqual(voice_data["detected_ra"], "Ceilândia - DF")
+            self.assertIn("acompanhante", voice_data["spoken_guidance"].lower())
+            self.assertIn(
+                voice_data["tts_provider"],
+                {"browser_speech_synthesis", "macos_say", "edge_tts"},
+            )
+
+            sess_res = client.get(f"/v1/sessions/{sid}")
+            self.assertEqual(sess_res.status_code, 200)
+            self.assertEqual(sess_res.json()["turn_count"], 2)
+
+            del_res = client.delete(f"/v1/sessions/{sid}")
+            self.assertEqual(del_res.status_code, 200)
+            sess_after = client.get(f"/v1/sessions/{sid}")
+            self.assertEqual(sess_after.json()["turn_count"], 0)
 
 
 if __name__ == "__main__":

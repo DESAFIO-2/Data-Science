@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SUS Cidadão — Assistente de Voz (NavegaSUS)</title>
+  <style>
+    :root {
+      --bg: #f3f7f6;
+      --surface: #ffffff;
+      --primary: #0f5d52;
+      --primary-hover: #0a463d;
+      --accent: #198773;
+      --danger: #b42318;
+      --danger-bg: #fef3f2;
+      --warn: #b54708;
+      --warn-bg: #fffaeb;
+      --text: #102420;
+      --muted: #4b635e;
+      --border: #d5e2df;
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      background: linear-gradient(135deg, #0d4f45, #147463);
+      color: #fff;
+      padding: 18px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 2px 10px rgba(13, 79, 69, 0.18);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+    header p {
+      margin: 2px 0 0;
+      font-size: 0.88rem;
+      opacity: 0.9;
+    }
+    .session-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.16);
+      font-weight: 600;
+    }
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      transition: transform 0.08s ease, background 0.15s ease;
+      min-height: 44px;
+      padding: 10px 16px;
+    }
+    button:active { transform: scale(0.98); }
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+    .btn-ghost:hover { background: rgba(255, 255, 255, 0.3); }
+    main {
+      max-width: 960px;
+      margin: 20px auto;
+      padding: 0 16px 40px;
+      display: grid;
+      gap: 16px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: 0 4px 14px rgba(16, 36, 32, 0.04);
+    }
+    .quick-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .chip {
+      min-height: 38px;
+      padding: 6px 12px;
+      font-size: 0.84rem;
+      background: #eaf4f2;
+      color: var(--primary);
+      border: 1px solid #c6e0db;
+      border-radius: 999px;
+    }
+    .chip:hover { background: #d6ece7; }
+    .voice-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+    .btn-mic {
+      background: var(--primary);
+      color: #fff;
+      font-size: 1rem;
+      padding: 12px 22px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-mic:hover { background: var(--primary-hover); }
+    .btn-mic.listening {
+      background: #c62828;
+      animation: pulse 1.3s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(198, 40, 40, 0.45); }
+      70% { box-shadow: 0 0 0 12px rgba(198, 40, 40, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(198, 40, 40, 0); }
+    }
+    .status-text {
+      font-size: 0.9rem;
+      color: var(--muted);
+      flex: 1 1 220px;
+    }
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    input[type="text"] {
+      flex: 1;
+      min-height: 46px;
+      padding: 10px 14px;
+      font-size: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+    }
+    .btn-send {
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 20px;
+    }
+    .btn-send:hover { background: var(--primary); }
+    .btn-secondary {
+      background: #eef4f3;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .chat-log {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 220px;
+    }
+    .msg {
+      padding: 14px 16px;
+      border-radius: 14px;
+      max-width: 100%;
+    }
+    .msg-user {
+      background: #e3f2ef;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+      max-width: 85%;
+    }
+    .msg-bot {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+    .msg-bot.blocked {
+      border-color: #f4b4ae;
+      background: var(--danger-bg);
+    }
+    .route-badge {
+      display: inline-block;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: #e0f2ef;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+    .msg-bot.blocked .route-badge {
+      background: #fadbd8;
+      color: var(--danger);
+    }
+    .spoken-box {
+      font-size: 1.05rem;
+      font-weight: 500;
+      margin: 4px 0 10px;
+    }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border);
+      font-size: 0.88rem;
+    }
+    .detail-grid h4 {
+      margin: 0 0 6px;
+      font-size: 0.84rem;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .detail-grid ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+    .meta-footer {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .disclaimer {
+      font-size: 0.82rem;
+      color: var(--warn);
+      background: var(--warn-bg);
+      border: 1px solid #f7d996;
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>SUS Cidadão (NavegaSUS) — Assistente de Voz</h1>
+      <p>Navegação administrativa, receitas, SISREG e preparo pré-exame com memória por sessão e guardrails clínicos.</p>
+    </div>
+    <div class="session-bar">
+      <span class="pill" id="sessionLabel">Sessão: nova</span>
+      <span class="pill" id="turnLabel">Turno: 0</span>
+      <button type="button" class="btn-ghost" id="resetBtn">Nova Conversa</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="disclaimer">
+      <strong>Aviso de Segurança (Ato Médico & LGPD):</strong> Este assistente fornece orientação logística e documental baseada em normas do SUS-DF. Nunca substitui avaliação médica e não orienta suspensão ou ajuste de doses de medicamentos.
+    </div>
+
+    <section class="card" aria-label="Controles de Voz e Texto">
+      <div class="voice-controls">
+        <button type="button" class="btn-mic" id="micBtn">🎙️ Falar no Microfone</button>
+        <button type="button" class="btn-secondary" id="stopAudioBtn">🔇 Parar Áudio</button>
+        <span class="status-text" id="statusText" aria-live="polite">
+          Pronto para conversar. Clique em "Falar no Microfone" ou digite sua dúvida abaixo.
+        </span>
+      </div>
+
+      <form class="input-row" id="chatForm">
+        <input type="text" id="textInput" placeholder="Ex.: Preciso fazer um exame da barriga amanhã, posso tomar água ou vou sem comer?" autocomplete="off" />
+        <button type="submit" class="btn-send" id="sendBtn">Enviar</button>
+      </form>
+
+      <div class="quick-chips" aria-label="Exemplos rápidos para testar">
+        <button type="button" class="chip" data-query="Preciso fazer um exame da barriga no SUS, posso tomar água ou tenho que ir sem comer?">Exame da barriga (Voz)</button>
+        <button type="button" class="chip" data-query="Qual o preparo antes de fazer endoscopia digestiva alta no SUS e precisa de acompanhante?">Preparo Endoscopia</button>
+        <button type="button" class="chip" data-query="Vou fazer ressonância magnética pelo SUS, preciso tirar objetos de metal?">Ressonância e Metais</button>
+        <button type="button" class="chip" data-query="Moro em Ceilândia e uso losartana 50 mg. Onde retiro?">Losartana Ceilândia</button>
+        <button type="button" class="chip" data-query="Vou fazer exame amanhã, posso suspender a metformina por conta própria?">Teste Guardrail (Parar Remédio)</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="chat-log" id="chatLog" aria-live="polite">
+        <div class="msg msg-bot">
+          <span class="route-badge">ASSISTENTE PRONTO</span>
+          <div class="spoken-box">
+            Olá! Eu sou a voz do SUS Cidadão. Você pode perguntar falando ou digitando sobre como pegar seus medicamentos, agendar pelo SISREG ou como se preparar para exames como ultrassom, endoscopia, ressonância e exame de sangue.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const chatLog = document.getElementById("chatLog");
+    const statusText = document.getElementById("statusText");
+    const micBtn = document.getElementById("micBtn");
+    const stopAudioBtn = document.getElementById("stopAudioBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const chatForm = document.getElementById("chatForm");
+    const textInput = document.getElementById("textInput");
+    const sessionLabel = document.getElementById("sessionLabel");
+    const turnLabel = document.getElementById("turnLabel");
+
+    let sessionId = "voz-" + Math.random().toString(36).slice(2, 10);
+    sessionLabel.textContent = "Sessão: " + sessionId;
+
+    let currentAudio = null;
+    let recognition = null;
+    let mediaRecorder = null;
+    let mediaChunks = [];
+    let isListening = false;
+
+    function stopAllPlayback() {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
+      }
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    stopAudioBtn.addEventListener("click", () => {
+      stopAllPlayback();
+      statusText.textContent = "Áudio interrompido.";
+    });
+
+    function playAssistantSpeech(data) {
+      stopAllPlayback();
+      if (data.tts_audio_base64 && data.tts_mime_type && data.tts_mime_type !== "text/plain") {
+        const audio = new Audio("data:" + data.tts_mime_type + ";base64," + data.tts_audio_base64);
+        currentAudio = audio;
+        audio.play().catch(() => {
+          speakWithWebSpeech(data.spoken_guidance || data.synthesized_guidance);
+        });
+        return;
+      }
+      speakWithWebSpeech(data.spoken_guidance || data.synthesized_guidance);
+    }
+
+    function speakWithWebSpeech(text) {
+      if (!("speechSynthesis" in window) || !text) return;
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "pt-BR";
+      utter.rate = 1.02;
+      window.speechSynthesis.speak(utter);
+    }
+
+    function appendUserBubble(text) {
+      const div = document.createElement("div");
+      div.className = "msg msg-user";
+      div.textContent = text;
+      chatLog.appendChild(div);
+      div.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+
+    function createListSection(title, items) {
+      if (!items || !items.length) return null;
+      const box = document.createElement("div");
+      const h4 = document.createElement("h4");
+      h4.textContent = title;
+      const ul = document.createElement("ul");
+      items.forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        ul.appendChild(li);
+      });
+      box.appendChild(h4);
+      box.appendChild(ul);
+      return box;
+    }
+
+    function appendBotBubble(data) {
+      const div = document.createElement("div");
+      div.className = "msg msg-bot" + (data.is_clinical_block ? " blocked" : "");
+
+      const badge = document.createElement("span");
+      badge.className = "route-badge";
+      badge.textContent = data.primary_route + " • " + data.detected_ra;
+      div.appendChild(badge);
+
+      const spoken = document.createElement("div");
+      spoken.className = "spoken-box";
+      spoken.textContent = data.spoken_guidance || data.synthesized_guidance;
+      div.appendChild(spoken);
+
+      const detail = document.createElement("div");
+      detail.className = "detail-grid";
+      const prepSec = createListSection("Orientações de Preparo", data.preparation_tips);
+      const docSec = createListSection("Checklist de Documentos", data.checklist_documents);
+      const citSec = createListSection("Fontes Auditadas", data.citations);
+      if (prepSec) detail.appendChild(prepSec);
+      if (docSec) detail.appendChild(docSec);
+      if (citSec) detail.appendChild(citSec);
+      if (detail.children.length) div.appendChild(detail);
+
+      if (data.follow_up_suggestions && data.follow_up_suggestions.length) {
+        const followWrap = document.createElement("div");
+        followWrap.className = "quick-chips";
+        data.follow_up_suggestions.forEach((sug) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "chip";
+          btn.textContent = "💬 " + sug;
+          btn.addEventListener("click", () => sendTextTurn(sug));
+          followWrap.appendChild(btn);
+        });
+        div.appendChild(followWrap);
+      }
+
+      const footer = document.createElement("div");
+      footer.className = "meta-footer";
+      const replay = document.createElement("button");
+      replay.type = "button";
+      replay.className = "chip";
+      replay.textContent = "🔊 Ouvir novamente";
+      replay.addEventListener("click", () => playAssistantSpeech(data));
+      footer.appendChild(replay);
+
+      const prov = document.createElement("span");
+      const maskedNote = data.sanitized_query !== data.transcript ? "dados mascarados (LGPD)" : "ativo";
+      prov.textContent = "Voz: " + (data.tts_provider || "navegador") + " | LGPD: " + maskedNote;
+      footer.appendChild(prov);
+
+      div.appendChild(footer);
+      chatLog.appendChild(div);
+      div.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+
+    async function sendFormDataTurn(formData, displayUserText) {
+      statusText.textContent = "Consultando bases do SUS e gerando áudio...";
+      try {
+        const res = await fetch("/v1/voice-turn", { method: "POST", body: formData });
+        const data = await res.json();
+        if (!res.ok) {
+          statusText.textContent = data.detail || "Erro ao processar turno.";
+          return;
+        }
+        if (displayUserText) {
+          appendUserBubble(displayUserText);
+        } else if (data.transcript) {
+          appendUserBubble("🎙️ " + data.transcript);
+        }
+        sessionId = data.session_id || sessionId;
+        sessionLabel.textContent = "Sessão: " + sessionId;
+        turnLabel.textContent = "Turno: " + (data.turn_count || 1);
+        appendBotBubble(data);
+        playAssistantSpeech(data);
+        statusText.textContent = "Resposta pronta. Você pode continuar falando na mesma sessão.";
+      } catch (err) {
+        statusText.textContent = "Falha de comunicação com o servidor: " + err.message;
+      }
+    }
+
+    async function sendTextTurn(text) {
+      const clean = (text || "").trim();
+      if (!clean) return;
+      textInput.value = "";
+      const fd = new FormData();
+      fd.append("text", clean);
+      fd.append("session_id", sessionId);
+      fd.append("synthesize_audio", "true");
+      await sendFormDataTurn(fd, clean);
+    }
+
+    chatForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      sendTextTurn(textInput.value);
+    });
+
+    document.querySelectorAll(".chip[data-query]").forEach((btn) => {
+      btn.addEventListener("click", () => sendTextTurn(btn.getAttribute("data-query")));
+    });
+
+    resetBtn.addEventListener("click", async () => {
+      stopAllPlayback();
+      await fetch("/v1/sessions/" + encodeURIComponent(sessionId), { method: "DELETE" });
+      sessionId = "voz-" + Math.random().toString(36).slice(2, 10);
+      sessionLabel.textContent = "Sessão: " + sessionId;
+      turnLabel.textContent = "Turno: 0";
+      statusText.textContent = "Nova sessão iniciada.";
+      chatLog.innerHTML = "";
+    });
+
+    async function startAudioRecordingFallback() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        mediaChunks = [];
+        mediaRecorder.ondataavailable = (ev) => {
+          if (ev.data.size > 0) mediaChunks.push(ev.data);
+        };
+        mediaRecorder.onstop = async () => {
+          stream.getTracks().forEach((t) => t.stop());
+          const blob = new Blob(mediaChunks, { type: "audio/webm" });
+          const fd = new FormData();
+          fd.append("audio", blob, "fala.webm");
+          fd.append("session_id", sessionId);
+          fd.append("synthesize_audio", "true");
+          await sendFormDataTurn(fd, null);
+        };
+        mediaRecorder.start();
+        isListening = true;
+        micBtn.classList.add("listening");
+        micBtn.textContent = "⏹️ Parar e Enviar Áudio";
+        statusText.textContent = "Gravando áudio... clique novamente para enviar.";
+      } catch (err) {
+        statusText.textContent = "Microfone bloqueado ou indisponível: " + err.message;
+      }
+    }
+
+    micBtn.addEventListener("click", () => {
+      stopAllPlayback();
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (mediaRecorder && isListening) {
+        isListening = false;
+        micBtn.classList.remove("listening");
+        micBtn.textContent = "🎙️ Falar no Microfone";
+        mediaRecorder.stop();
+        return;
+      }
+
+      if (SpeechRec) {
+        if (isListening && recognition) {
+          recognition.stop();
+          return;
+        }
+        recognition = new SpeechRec();
+        recognition.lang = "pt-BR";
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
+
+        let finalTranscript = "";
+        recognition.onstart = () => {
+          isListening = true;
+          micBtn.classList.add("listening");
+          micBtn.textContent = "⏹️ Ouvindo (clique para parar)";
+          statusText.textContent = "Ouvindo em português... pode falar sua dúvida!";
+        };
+        recognition.onresult = (event) => {
+          let interim = "";
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const res = event.results[i];
+            if (res.isFinal) {
+              finalTranscript += res[0].transcript + " ";
+            } else {
+              interim += res[0].transcript;
+            }
+          }
+          textInput.value = (finalTranscript + interim).trim();
+        };
+        recognition.onerror = (ev) => {
+          statusText.textContent = "Reconhecimento de voz (" + ev.error + "). Você pode digitar abaixo.";
+        };
+        recognition.onend = () => {
+          isListening = false;
+          micBtn.classList.remove("listening");
+          micBtn.textContent = "🎙️ Falar no Microfone";
+          const captured = (finalTranscript || textInput.value).trim();
+          if (captured) {
+            sendTextTurn(captured);
+          }
+        };
+        recognition.start();
+      } else if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        startAudioRecordingFallback();
+      } else {
+        statusText.textContent = "Seu navegador não suporta captura de microfone; digite sua dúvida.";
+      }
+    });
+  </script>
+</body>
+</html>

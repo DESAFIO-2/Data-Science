@@ -1,5 +1,5 @@
 {
-  "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+  "manifest_sha256": "6aad97cb7ce99495baecca22a0218e750fa43d222e106e6b47904095ba44795d",
   "total_medications": 24,
   "unique_dcbs": 23,
   "by_rename_component": {
@@ -15,22 +15,24 @@
   "pfpb_free_rate": 0.5417,
   "requires_lme_count": 6,
   "requires_lme_rate": 0.25,
-  "total_chunks": 9,
+  "total_chunks": 13,
   "chunks_by_source": {
     "PFPB_2024": 2,
     "RENAME_2024": 3,
     "REME_DF_2024": 2,
-    "SISREG_CPPAS_DF": 2
+    "SISREG_CPPAS_DF": 2,
+    "PRE_EXAME_SESDF_HUB": 4
   },
   "chunks_by_route_category": {
     "FARMACIA_POPULAR": 2,
     "UBS_ATENCAO_PRIMARIA": 2,
     "ALTO_CUSTO_CEAF": 2,
     "SISREG_EXAME_CONSULTA": 2,
-    "GERAL": 1
+    "GERAL": 1,
+    "PRE_EXAME_PREPARO": 4
   },
-  "avg_chunk_words": 88.11,
-  "median_chunk_words": 85.0,
+  "avg_chunk_words": 87.92,
+  "median_chunk_words": 86.0,
   "min_chunk_words": 72,
   "max_chunk_words": 109,
   "dcb_chunk_coverage_rate": 1.0

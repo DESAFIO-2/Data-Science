@@ -17,6 +17,7 @@ import chromadb
 from chromadb.config import Settings
 
 from sus_cidadao_ds.core.config import ProjectPaths
+from sus_cidadao_ds.retrieval.embeddings import PortugueseClinicalEmbeddingFunction
 
 
 @dataclass(frozen=True)
@@ -56,7 +57,11 @@ class ChromaVectorStoreManager:
     COLLECTION_PROTOCOLS = "sus_normative_protocols"
     COLLECTION_UNIFIED_PDF_CORPUS = "sus_unified_pdf_corpus"
 
-    def __init__(self, vectorstore_dir: Path | None = None) -> None:
+    def __init__(
+        self,
+        vectorstore_dir: Path | None = None,
+        embedding_provider: str = "auto",
+    ) -> None:
         if vectorstore_dir is None:
             paths = ProjectPaths.from_root()
             self.vectorstore_dir = paths.data_dir / "vectorstore"
@@ -64,15 +69,34 @@ class ChromaVectorStoreManager:
             self.vectorstore_dir = vectorstore_dir
 
         self.vectorstore_dir.mkdir(parents=True, exist_ok=True)
+        self.embedding_provider = embedding_provider
+        self.embedding_function = PortugueseClinicalEmbeddingFunction(
+            provider=embedding_provider
+        )
         self.client = chromadb.PersistentClient(
             path=str(self.vectorstore_dir),
             settings=Settings(anonymized_telemetry=False),
         )
 
     def _get_or_create_col(self, name: str) -> chromadb.Collection:
+        expected_profile = f"{self.embedding_function.name()}:{self.embedding_provider}"
+        try:
+            existing = self.client.get_collection(name=name)
+            existing_profile = (existing.metadata or {}).get("embedding_profile")
+            if existing_profile != expected_profile:
+                self.client.delete_collection(name=name)
+            else:
+                return self.client.get_collection(
+                    name=name,
+                    embedding_function=self.embedding_function,  # type: ignore[arg-type]
+                )
+        except Exception:
+            pass
+
         return self.client.get_or_create_collection(
             name=name,
-            metadata={"hnsw:space": "cosine"},
+            embedding_function=self.embedding_function,  # type: ignore[arg-type]
+            metadata={"hnsw:space": "cosine", "embedding_profile": expected_profile},
         )
 
     def index_ceaf_stock(self, stock_json_path: Path) -> int:
@@ -337,7 +361,13 @@ class ChromaVectorStoreManager:
         top_k: int = 5,
     ) -> list[ChromaSearchResult]:
         """Realiza busca por similaridade semântica (cosseno) com filtro opcional por metadados."""
-        col = self.client.get_collection(name=collection_name)
+        try:
+            col = self.client.get_collection(
+                name=collection_name,
+                embedding_function=self.embedding_function,  # type: ignore[arg-type]
+            )
+        except Exception:
+            col = self.client.get_collection(name=collection_name)
         kwargs: dict[str, Any] = {
             "query_texts": [query],
             "n_results": top_k,

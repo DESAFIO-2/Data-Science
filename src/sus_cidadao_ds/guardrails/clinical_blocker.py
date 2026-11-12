@@ -19,15 +19,67 @@ class ClinicalCheckResult:
 
 
 class ClinicalBlocker:
-    """Detecta e bloqueia pedidos de diagnóstico, ajuste de dose ou troca de medicamentos."""
+    """Detecta e bloqueia pedidos de diagnóstico, ajuste de dose, troca ou suspensão de medicamentos."""
 
     _DOSE_CHANGE_PATTERNS: tuple[re.Pattern[str], ...] = (
-        re.compile(r"\b(posso|devo)\s+(dobrar|aumentar|diminuir|parar|suspender|cortar)\b"),
+        re.compile(r"\b(posso|devo|preciso)\s+(dobrar|aumentar|diminuir|parar|suspender|interromper|cortar)\b"),
         re.compile(r"\b(dobrar|aumentar|reduzir)\s+a?\s*dose\b"),
         re.compile(r"\btrocar\s+(por|pelo|pela)\b"),
         re.compile(r"\bqual\s+(outro|remedio|medicamento|antidepressivo)\s+.*\b(receita|substituir|tomar)\b"),
         re.compile(r"\b(substituir|tomar)\s+sem\s+receita\b"),
         re.compile(r"\bme\s+(receita|indica|prescreve)\s+um\b"),
+    )
+
+    _PRE_EXAM_MED_DECISION_PATTERNS: tuple[re.Pattern[str], ...] = (
+        re.compile(
+            r"\b(parar|suspender|interromper|manter|continuar|tomo|tomar)\b.*\b"
+            r"(remedio|medicamento|insulina|anticoagulante|aas|metformina|losartana|pressao)\b.*"
+            r"\b(exame|jejum|endoscopia|ressonancia|cirurgia|coleta)\b"
+        ),
+        re.compile(
+            r"\b(remedio|medicamento|insulina|anticoagulante|aas|metformina|losartana|pressao)\b.*"
+            r"\b(antes do exame|no dia do exame|em jejum|paro ou tomo|tomo ou paro)\b"
+        ),
+    )
+
+    _PRE_EXAM_ACTION_WORDS: tuple[str, ...] = (
+        "parar",
+        "paro",
+        "suspender",
+        "suspendo",
+        "interromper",
+        "manter",
+        "continuar",
+        "tomo",
+        "tomar",
+    )
+    _PRE_EXAM_DRUG_WORDS: tuple[str, ...] = (
+        "remedio",
+        "remedios",
+        "medicamento",
+        "medicamentos",
+        "medicacao",
+        "insulina",
+        "anticoagulante",
+        "marevan",
+        "varfarina",
+        "aas",
+        "metformina",
+        "losartana",
+        "pressao",
+        "comprimido",
+    )
+    _PRE_EXAM_CONTEXT_WORDS: tuple[str, ...] = (
+        "exame",
+        "exames",
+        "jejum",
+        "endoscopia",
+        "ressonancia",
+        "tomografia",
+        "ultrassom",
+        "ecocardiograma",
+        "coleta",
+        "cirurgia",
     )
 
     _EMERGENCY_RED_FLAGS: tuple[str, ...] = (
@@ -44,7 +96,30 @@ class ClinicalBlocker:
     def inspect(self, query: str) -> ClinicalCheckResult:
         """Verifica se a consulta viola o limite de navegação administrativa."""
         norm = normalize_pt_text(query)
+        tokens = set(re.findall(r"[a-z0-9]+", norm))
         has_emergency = any(flag in norm for flag in self._EMERGENCY_RED_FLAGS)
+
+        has_pre_exam_decision = any(p.search(norm) for p in self._PRE_EXAM_MED_DECISION_PATTERNS) or (
+            any(w in tokens for w in self._PRE_EXAM_ACTION_WORDS)
+            and any(w in tokens for w in self._PRE_EXAM_DRUG_WORDS)
+            and any(w in tokens for w in self._PRE_EXAM_CONTEXT_WORDS)
+        )
+
+        if has_pre_exam_decision:
+            msg = (
+                "BLOQUEIO ÉTICO E CLÍNICO (Preservação do Ato Médico — Lei nº 12.842/2013): "
+                "O SUS Cidadão orienta apenas o preparo logístico e administrativo de exames e não pode "
+                "decidir se você deve suspender, interromper ou tomar medicamentos contínuos (como insulina, "
+                "anti-hipertensivos, metformina ou anticoagulantes) antes do exame. "
+                "Confirme essa conduta diretamente com o médico solicitante ou com a unidade de saúde "
+                "onde o exame foi agendado antes da data do procedimento."
+            )
+            return ClinicalCheckResult(
+                is_blocked=True,
+                reason="SOLICITACAO_SUSPENSAO_MEDICAMENTO_PRE_EXAME",
+                has_red_flag_emergency=has_emergency,
+                safe_response=msg,
+            )
 
         for pattern in self._DOSE_CHANGE_PATTERNS:
             if pattern.search(norm):

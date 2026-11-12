@@ -172,9 +172,53 @@ def main(argv: list[str] | None = None) -> int:
         help="Executa o pipeline unificado: coleta PDFs, converte JSON->PDF, extrai chunks e indexa no ChromaDB",
     )
 
+    # 12. serve (SPEC-10)
+    p_serve = subparsers.add_parser(
+        "serve",
+        help="Inicia o servidor FastAPI com API /v1/chat, /v1/voice-turn e UI Web de voz (/voice-demo)",
+    )
+    p_serve.add_argument("--host", type=str, default="127.0.0.1", help="Host de escuta HTTP")
+    p_serve.add_argument("--port", type=int, default=8000, help="Porta HTTP")
+    p_serve.add_argument(
+        "--reload", action="store_true", help="Ativa auto-reload para desenvolvimento"
+    )
+
+    # 13. voice-chat (SPEC-10)
+    p_vchat = subparsers.add_parser(
+        "voice-chat",
+        help="Protótipo interativo no terminal com Modo Voz (`spoken_guidance`) e síntese de áudio opcional",
+    )
+    p_vchat.add_argument(
+        "--session-id", type=str, default="cli-voz", help="ID persistente da sessão"
+    )
+    p_vchat.add_argument(
+        "--query",
+        type=str,
+        default=None,
+        help="Consulta única opcional (omite modo interativo em loop)",
+    )
+    p_vchat.add_argument(
+        "--speak",
+        action="store_true",
+        help="Sintetiza e reproduz o áudio PT-BR (afplay no macOS quando disponível)",
+    )
+
     args = parser.parse_args(argv)
     paths = ProjectPaths.from_root()
     paths.ensure_dirs()
+
+    if args.command == "serve":
+        import uvicorn
+
+        print(f"Iniciando SUS Cidadão API em http://{args.host}:{args.port}/voice-demo")
+        uvicorn.run(
+            "sus_cidadao_ds.api.app:app",
+            host=args.host,
+            port=args.port,
+            reload=bool(args.reload),
+        )
+        return 0
+
     syncer = DataSynchronizer(paths)
     tracker = ExperimentTracker(
         registry_path=paths.reports_dir / "experiment_runs_registry.json",
@@ -412,6 +456,63 @@ def main(argv: list[str] | None = None) -> int:
         res = pdf_summary.to_dict()
         res["chroma_indexed_chunks"] = n_indexed
         print(json.dumps(res, ensure_ascii=False, indent=2))
+        return 0
+
+    if args.command == "voice-chat":
+        import base64
+        import shutil
+        import subprocess
+        import tempfile
+
+        from sus_cidadao_ds.voice.audio_engine import VoiceEngine
+
+        chroma_mgr_v: ChromaVectorStoreManager | None
+        try:
+            chroma_mgr_v = ChromaVectorStoreManager(vectorstore_dir=paths.data_dir / "vectorstore")
+        except Exception:
+            chroma_mgr_v = None
+
+        v_orch = LangGraphMultiAgentOrchestrator(
+            medications=meds,
+            chunks=chunks,
+            vectorstore_manager=chroma_mgr_v,
+        )
+        engine = VoiceEngine()
+
+        def _handle_voice_turn(user_q: str) -> None:
+            resp = v_orch.run(user_q, session_id=args.session_id)
+            spoken = resp.spoken_guidance or resp.synthesized_guidance
+            print(f"\n[Rota: {resp.primary_route} | Turno {resp.turn_count}]")
+            print(f"Assistente (Voz): {spoken}")
+            if resp.follow_up_suggestions:
+                print(f"Sugestões: {' | '.join(resp.follow_up_suggestions)}")
+            if args.speak:
+                tts = engine.synthesize_speech(spoken)
+                print(f"[TTS={tts.provider}, bytes={tts.bytes_count}]")
+                afplay_bin = shutil.which("afplay")
+                if tts.audio_base64 and afplay_bin:
+                    ext = ".mp3" if tts.mime_type == "audio/mpeg" else ".m4a"
+                    with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
+                        tmp_path = Path(tmp.name)
+                        tmp_path.write_bytes(base64.b64decode(tts.audio_base64))
+                    try:
+                        subprocess.run([afplay_bin, str(tmp_path)], check=False)
+                    finally:
+                        tmp_path.unlink(missing_ok=True)
+
+        if args.query:
+            _handle_voice_turn(args.query)
+            return 0
+
+        print(f"Sessão de Voz SUS Cidadão (`{args.session_id}`). Digite sua dúvida ou 'sair':")
+        while True:
+            try:
+                line = input("\nVocê > ").strip()
+            except EOFError:
+                break
+            if not line or line.lower() in {"sair", "exit", "quit"}:
+                break
+            _handle_voice_turn(line)
         return 0
 
     return 1

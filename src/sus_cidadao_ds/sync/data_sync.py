@@ -678,6 +678,74 @@ def _build_normative_chunks() -> list[NormativeChunk]:
             dcb_mentions=[],
             route_category="GERAL",
         ),
+        NormativeChunk.create(
+            chunk_id="CHK-PREEXAM-001",
+            source_id="PRE_EXAME_SESDF_HUB",
+            document_title="Guia Operacional de Preparo para Exames SUS-DF / Regulação Ambulatorial",
+            section="Protocolo Logístico — Endoscopia Digestiva Alta (EDA)",
+            page_number=1,
+            text=(
+                "Preparo administrativo padrão para Endoscopia Digestiva Alta (EDA): requer jejum alimentar de referência "
+                "(geralmente cerca de 8 horas sem alimentos sólidos, conforme horário marcado pela unidade), comparecimento "
+                "obrigatório com acompanhante maior de 18 anos devido à sedação (não dirigir após o procedimento), documento "
+                "oficial com foto, CPF, Cartão SUS (CNS), pedido médico e comprovante do agendamento. "
+                "Aviso de escopo institucional: o tempo exato de restrição de líquidos claros e eventuais particularidades "
+                "variam conforme a unidade executante (ex.: HUB-UnB, hospitais regionais ou clínicas credenciadas SES-DF); "
+                "confirme no papel do agendamento e nunca suspenda medicamentos contínuos por conta própria sem aval médico."
+            ),
+            dcb_mentions=[],
+            route_category="PRE_EXAME_PREPARO",
+        ),
+        NormativeChunk.create(
+            chunk_id="CHK-PREEXAM-002",
+            source_id="PRE_EXAME_SESDF_HUB",
+            document_title="Guia Operacional de Preparo para Exames SUS-DF / Regulação Ambulatorial",
+            section="Protocolo Logístico — Ultrassonografia de Abdome Total e Pélvica / Vias Urinárias",
+            page_number=2,
+            text=(
+                "Preparo administrativo padrão para Ultrassonografia: na Ultrassonografia de Abdome Total (exame da barriga), "
+                "o protocolo padrão orienta jejum alimentar (sem comer) de referência entre 6 e 8 horas antes do horário marcado "
+                "para reduzir gases abdominais. Já na Ultrassonografia Pélvica, de Próstata via abdominal ou de Vias Urinárias, "
+                "orienta-se bexiga cheia (ingerir água cerca de 1 hora antes e não urinar até a realização do exame). "
+                "Levar pedido médico, CNS, CPF, exames de imagem prévios e confirmar as instruções específicas da unidade executante "
+                "impressas no comprovante de agendamento."
+            ),
+            dcb_mentions=[],
+            route_category="PRE_EXAME_PREPARO",
+        ),
+        NormativeChunk.create(
+            chunk_id="CHK-PREEXAM-003",
+            source_id="PRE_EXAME_SESDF_HUB",
+            document_title="Guia Operacional de Preparo para Exames SUS-DF / Regulação Ambulatorial",
+            section="Protocolo Logístico — Ressonância Magnética e Tomografia Computadorizada",
+            page_number=3,
+            text=(
+                "Preparo logístico e de segurança para Ressonância Magnética e Tomografia: antes de entrar na sala da Ressonância, "
+                "retire todos os objetos metálicos (brincos, alianças, piercings, relógio, celular, fivelas e cartões magnéticos). "
+                "Informe obrigatoriamente à equipe no agendamento e na recepção se possui marcapasso, implantes metálicos, clipes "
+                "ou claustrofobia. Quando houver indicação de contraste, a unidade costuma exigir exame recente de creatinina e "
+                "jejum específico informado no agendamento. Leve pedido médico, exames anteriores, CNS e CPF."
+            ),
+            dcb_mentions=[],
+            route_category="PRE_EXAME_PREPARO",
+        ),
+        NormativeChunk.create(
+            chunk_id="CHK-PREEXAM-004",
+            source_id="PRE_EXAME_SESDF_HUB",
+            document_title="Guia Operacional de Preparo para Exames SUS-DF / Regulação Ambulatorial",
+            section="Protocolo Logístico — Coleta Laboratorial (Sangue) e Ecocardiograma Transtorácico",
+            page_number=4,
+            text=(
+                "Orientações operacionais para Coleta de Sangue e Ecocardiograma Transtorácico: para Ecocardiograma Transtorácico "
+                "(exame do coração), não há necessidade de jejum; recomenda-se vestir roupa confortável de duas peças e levar ECG "
+                "prévio junto ao pedido médico. Para exames laboratoriais de sangue (glicemia, perfil lipídico/colesterol), evite "
+                "álcool nas 72 horas anteriores e exercícios físicos intensos na véspera, confirmando com o laboratório/UBS "
+                "se há necessidade de jejum (ex.: 8 a 12 horas em exames específicos ou jejum dispensado conforme pedido médico). "
+                "Não suspenda remédios contínuos sem consultar o médico solicitante."
+            ),
+            dcb_mentions=[],
+            route_category="PRE_EXAME_PREPARO",
+        ),
     ]
 
 
@@ -692,6 +760,7 @@ class DataSynchronizer:
         """Sincroniza artefatos de `engineering_dir` (se disponível) ou materializa a base canônica."""
         engineering_source = "canonical_materialization_v2024.2"
 
+        imported = False
         if engineering_dir is not None and engineering_dir.exists():
             eng_gold = engineering_dir / "data" / "gold" / "medicamentos_sus_canonical.json"
             eng_silver = engineering_dir / "data" / "silver" / "normative_chunks.json"
@@ -699,11 +768,12 @@ class DataSynchronizer:
                 shutil.copy2(eng_gold, self.paths.gold_dir / "medicamentos_sus_canonical.json")
                 shutil.copy2(eng_silver, self.paths.silver_dir / "normative_chunks.json")
                 engineering_source = f"imported_from:{engineering_dir.resolve()}"
+                imported = True
 
         gold_path = self.paths.gold_dir / "medicamentos_sus_canonical.json"
         silver_path = self.paths.silver_dir / "normative_chunks.json"
 
-        if not gold_path.exists() or not silver_path.exists():
+        if not imported:
             meds = _build_canonical_medications()
             chunks = _build_normative_chunks()
             gold_payload = [m.to_dict() for m in meds]

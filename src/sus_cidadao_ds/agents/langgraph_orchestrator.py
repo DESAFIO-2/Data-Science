@@ -78,6 +78,20 @@ class LangGraphMultiAgentOrchestrator:
         "levar",
         "agendar",
         "marcar",
+        "preparo",
+        "preparar",
+        "jejum",
+        "sem comer",
+        "beber agua",
+        "tomar agua",
+        "bexiga",
+        "metal",
+        "joia",
+        "acompanhante",
+        "dirigir",
+        "contraste",
+        "creatinina",
+        "exame",
     )
 
     def __init__(
@@ -187,13 +201,19 @@ class LangGraphMultiAgentOrchestrator:
         """Nó do Agente 2: Auditor Farmacêutico com RAG Híbrido + Memória de Medicamentos da Sessão."""
         sanitized_query = state["sanitized_input"]
         prior_meds = list(state.get("known_medications", []))
+        prior_exams = list(state.get("known_exams", []))
+        current_exams = list(state.get("detected_exams", []))
         direct_matches = self._core.tabular_matcher.match_medications(sanitized_query)
 
         effective_query = sanitized_query
-        inherited_meds = False
-        if not direct_matches and prior_meds and self._is_followup_query(sanitized_query):
-            effective_query = f"{sanitized_query} {' '.join(prior_meds)}"
-            inherited_meds = True
+        inherited_context = False
+        if not direct_matches and self._is_followup_query(sanitized_query):
+            if prior_meds and not current_exams:
+                effective_query = f"{sanitized_query} {' '.join(prior_meds)}"
+                inherited_context = True
+            elif prior_exams and not current_exams:
+                effective_query = f"{sanitized_query} {' '.join(prior_exams)}"
+                inherited_context = True
 
         orch_state = OrchestratorState(
             raw_input=state["raw_input"],
@@ -209,7 +229,7 @@ class LangGraphMultiAgentOrchestrator:
                 merged_meds.append(med.dcb_name)
 
         trace = list(state.get("agent_trace", []))
-        mem_note = " | contexto de medicamentos herdado da sessão" if inherited_meds else ""
+        mem_note = " | contexto herdado da sessão" if inherited_context else ""
         trace.append(
             f"[LangGraph: Node 2] Auditoria Farmacêutica (Meds={len(orch_state.audited_medications)}, "
             f"Hits={len(orch_state.retrieved_hits)}{mem_note})"
@@ -285,6 +305,7 @@ class LangGraphMultiAgentOrchestrator:
                     "required_documents": it.required_documents,
                     "priority_rule": it.priority_rule,
                     "source_citation": it.source_citation,
+                    "preparation_tips": it.preparation_tips,
                 }
                 for it in orch_state.sisreg_items
             ],
@@ -314,6 +335,7 @@ class LangGraphMultiAgentOrchestrator:
                 required_documents=it["required_documents"],
                 priority_rule=it["priority_rule"],
                 source_citation=it["source_citation"],
+                preparation_tips=list(it.get("preparation_tips", [])),
             )
             for it in state.get("sisreg_items", [])
         ]
@@ -432,6 +454,7 @@ class LangGraphMultiAgentOrchestrator:
                 required_documents=it["required_documents"],
                 priority_rule=it["priority_rule"],
                 source_citation=it["source_citation"],
+                preparation_tips=list(it.get("preparation_tips", [])),
             )
             for it in final_dict["sisreg_guidance"]
         ]
@@ -467,4 +490,6 @@ class LangGraphMultiAgentOrchestrator:
             session_id=final_dict.get("session_id"),
             turn_count=int(final_dict.get("turn_count", 1)),
             remembered_history=list(final_dict.get("remembered_history", [])),
+            spoken_guidance=str(final_dict.get("spoken_guidance", "")),
+            follow_up_suggestions=list(final_dict.get("follow_up_suggestions", [])),
         )

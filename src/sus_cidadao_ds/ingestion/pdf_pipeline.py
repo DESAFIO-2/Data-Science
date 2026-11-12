@@ -331,6 +331,12 @@ class JSONToPDFConverter:
             self.convert_canonical_meds(canonical_json, pdf_path)
             generated.append(pdf_path)
 
+        silver_chunks_json = gold_dir.parent / "silver" / "normative_chunks.json"
+        if silver_chunks_json.exists():
+            pre_exam_pdf = self.pdf_dir / "GUIA_PRE_EXAMES_SUS_DF.pdf"
+            self.convert_pre_exam_protocols(silver_chunks_json, pre_exam_pdf)
+            generated.append(pre_exam_pdf)
+
         return generated
 
     def convert_ceaf_stock(self, json_path: Path, output_pdf: Path) -> Path:
@@ -645,6 +651,76 @@ class JSONToPDFConverter:
         logger.info("PDF do Catálogo Canônico gerado com sucesso: %s", output_pdf.name)
         return output_pdf
 
+    def convert_pre_exam_protocols(self, silver_chunks_path: Path, output_pdf: Path) -> Path:
+        """Converte protocolos validados de pré-exames (Silver) em Guia PDF auditável (SPEC-09)."""
+        chunks = json.loads(silver_chunks_path.read_text(encoding="utf-8"))
+        pre_exam_chunks = [
+            c for c in chunks if c.get("route_category") == "PRE_EXAME_PREPARO"
+        ]
+
+        doc = SimpleDocTemplate(
+            str(output_pdf),
+            pagesize=A4,
+            leftMargin=36,
+            rightMargin=36,
+            topMargin=36,
+            bottomMargin=36,
+        )
+        title_style = ParagraphStyle(
+            "PreExamTitle",
+            parent=self.styles["Heading1"],
+            fontSize=14,
+            leading=17,
+            textColor=colors.HexColor("#1B5E20"),
+            spaceAfter=4,
+        )
+        meta_style = ParagraphStyle(
+            "PreExamMeta",
+            parent=self.styles["Normal"],
+            fontSize=9,
+            leading=12,
+            textColor=colors.HexColor("#37474F"),
+            spaceAfter=10,
+        )
+        section_style = ParagraphStyle(
+            "PreExamSection",
+            parent=self.styles["Heading2"],
+            fontSize=11,
+            leading=14,
+            textColor=colors.HexColor("#2E7D32"),
+            spaceBefore=8,
+            spaceAfter=4,
+        )
+        body_style = ParagraphStyle(
+            "PreExamBody",
+            parent=self.styles["Normal"],
+            fontSize=9.5,
+            leading=13,
+            textColor=colors.HexColor("#212121"),
+            spaceAfter=8,
+        )
+
+        story: list[Any] = []
+        story.append(Paragraph("SUS-DF — NAVEGAÇÃO ADMINISTRATIVA E REGULAÇÃO AMBULATORIAL", meta_style))
+        story.append(Paragraph("GUIA OFICIAL DE PREPARO E ORIENTAÇÕES DE PRÉ-EXAMES", title_style))
+        story.append(
+            Paragraph(
+                "<b>Importante:</b> As instruções específicas de jejum e horários podem variar conforme a "
+                "unidade executante (HUB-UnB, Policlínicas ou Clínicas Credenciadas SES-DF). Confirme sempre "
+                "o comprovante de agendamento e nunca suspenda medicamentos contínuos sem orientação médica.",
+                meta_style,
+            )
+        )
+        story.append(HRFlowable(width="100%", thickness=1.2, color=colors.HexColor("#1B5E20"), spaceAfter=10))
+
+        for ch in pre_exam_chunks:
+            story.append(Paragraph(f"{ch['section']} ({ch['chunk_id']})", section_style))
+            story.append(Paragraph(ch["text"], body_style))
+
+        doc.build(story)
+        logger.info("PDF de Pré-Exames gerado com sucesso: %s", output_pdf.name)
+        return output_pdf
+
 
 class PDFChunkExtractor:
     """Extrai texto e gera chunks semânticos com metadados estruturados de todos os PDFs."""
@@ -728,6 +804,8 @@ class PDFChunkExtractor:
             return "geolocalizacao_farmacias_ubs"
         if "CANONICO" in s:
             return "catalogo_canonico_sus"
+        if "PRE_EXAME" in s:
+            return "preparo_pre_exames"
         return "documento_geral_sus"
 
     def _clean_text(self, text: str) -> str:
@@ -759,7 +837,12 @@ class PDFChunkExtractor:
             chunk_text = text[start:boundary].strip()
             if chunk_text:
                 chunks.append(chunk_text)
-            start = max(start + 1, boundary - self.overlap_chars)
+            next_start = max(start + 1, boundary - self.overlap_chars)
+            if next_start < len(text) and text[next_start - 1] != " ":
+                space_after = text.find(" ", next_start)
+                if space_after != -1 and space_after < boundary:
+                    next_start = space_after + 1
+            start = next_start
         return chunks
 
 

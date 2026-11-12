@@ -1,4 +1,9 @@
-"""Implementação determinística de TF-IDF (ADR-003), BM25, Tabular DCB e Hybrid Retriever (RRF)."""
+"""Motores de Recuperação (SPEC-03 / SPEC-09).
+
+- `TFIDFRetriever`: Linha de base histórica (`ADR-003`), isolada exclusivamente para avaliação e calibração.
+- `BM25Retriever` + `TabularDCBMatcher` + `HybridRetriever`: Motor de produção lexical/estruturado
+  (sem TF-IDF) combinado via RRF com o `ChromaVectorStoreManager` (embeddings PT-BR).
+"""
 
 from __future__ import annotations
 
@@ -322,7 +327,7 @@ class TabularDCBMatcher:
 
 
 class HybridRetriever:
-    """Recuperador Híbrido (Busca Tabular DCB Gold + TF-IDF + BM25 com Reciprocal Rank Fusion)."""
+    """Recuperador Híbrido de Produção (Tabular DCB Gold + Okapi BM25 com RRF — sem TF-IDF)."""
 
     _SISREG_DOMAIN_TOKENS: frozenset[str] = frozenset(
         {
@@ -333,10 +338,19 @@ class HybridRetriever:
             "cardiologia",
             "endoscopia",
             "ressonancia",
+            "tomografia",
             "reumatologia",
             "endocrinologia",
+            "ultrassom",
+            "ultrassonografia",
+            "sangue",
             "exame",
             "consulta",
+            "preparo",
+            "jejum",
+            "bexiga",
+            "barriga",
+            "abdome",
         }
     )
 
@@ -349,7 +363,6 @@ class HybridRetriever:
         self.medications = medications
         self.chunks = {c.chunk_id: c for c in chunks}
         self.tabular = TabularDCBMatcher(medications)
-        self.tfidf = TFIDFRetriever(chunks)
         self.bm25 = BM25Retriever(chunks)
         self.rrf_k = rrf_k
 
@@ -359,41 +372,27 @@ class HybridRetriever:
         top_k: int = 5,
         min_score: float = 0.18,
     ) -> list[RetrievalHit]:
-        """Combina correspondência tabular DCB e recuperação normativa via RRF calibrado."""
+        """Combina correspondência tabular DCB e BM25 via RRF calibrado (motor oficial sem TF-IDF)."""
         med_matches = self.tabular.match_medications(query)
         matched_dcbs = {med.dcb_name: score for score, med in med_matches}
 
         norm_query_tokens = set(normalize_pt_text(query).split())
-        is_sisreg_intent = bool(
+        is_sisreg_or_preexam_intent = bool(
             norm_query_tokens.intersection(self._SISREG_DOMAIN_TOKENS)
         )
 
-        tfidf_hits = self.tfidf.search(query, top_k=len(self.chunks), min_score=0.01)
         bm25_hits = self.bm25.search(query, top_k=len(self.chunks), min_score=0.01)
-
-        tfidf_ranks = {hit.chunk_id: rank + 1 for rank, hit in enumerate(tfidf_hits)}
-        tfidf_scores = {hit.chunk_id: hit.score for hit in tfidf_hits}
-
         bm25_ranks = {hit.chunk_id: rank + 1 for rank, hit in enumerate(bm25_hits)}
         bm25_scores = {hit.chunk_id: hit.score for hit in bm25_hits}
 
         combined_results: list[RetrievalHit] = []
         for chunk_id, chunk in self.chunks.items():
-            t_score = tfidf_scores.get(chunk_id, 0.0)
             b_score = bm25_scores.get(chunk_id, 0.0)
-
-            rrf_component = 0.0
-            if chunk_id in tfidf_ranks:
-                rrf_component += (self.rrf_k + 1.0) / (
-                    self.rrf_k + tfidf_ranks[chunk_id]
-                )
-            if chunk_id in bm25_ranks:
-                rrf_component += (self.rrf_k + 1.0) / (
-                    self.rrf_k + bm25_ranks[chunk_id]
-                )
-            rrf_norm = rrf_component / 2.0
-
-            lexical_score = 0.55 * t_score + 0.45 * b_score
+            rrf_norm = (
+                (self.rrf_k + 1.0) / (self.rrf_k + bm25_ranks[chunk_id])
+                if chunk_id in bm25_ranks
+                else 0.0
+            )
 
             # Verifica se algum DCB casado na tabela Gold aparece no chunk normativo
             chunk_dcb_boost = 0.0
@@ -405,17 +404,19 @@ class HybridRetriever:
                         best_dcb = dcb_name
 
             if chunk_dcb_boost > 0.0:
-                final_score = (
-                    0.50 * lexical_score + 0.35 * chunk_dcb_boost + 0.15 * rrf_norm
-                )
-            elif is_sisreg_intent and chunk.route_category == "SISREG_EXAME_CONSULTA":
-                final_score = 0.80 * lexical_score + 0.20 * rrf_norm
+                final_score = 0.45 * b_score + 0.40 * chunk_dcb_boost + 0.15 * rrf_norm
+            elif (
+                is_sisreg_or_preexam_intent
+                and chunk.route_category in ("SISREG_EXAME_CONSULTA", "PRE_EXAME_PREPARO")
+                and b_score >= 0.18
+            ):
+                final_score = 0.80 * b_score + 0.20 * rrf_norm
             elif matched_dcbs:
                 # A consulta possui DCB válido, mas este chunk não menciona o DCB
-                final_score = 0.35 * lexical_score
+                final_score = 0.30 * b_score
             else:
-                # Sem DCB no catálogo Gold e sem intenção SISREG -> penaliza ruído de palavras genéricas
-                final_score = 0.30 * lexical_score
+                # Sem DCB no catálogo Gold e sem evidência forte de exame/regulação -> favorece abstenção segura
+                final_score = 0.25 * b_score
 
             if final_score >= min_score:
                 combined_results.append(
@@ -429,7 +430,7 @@ class HybridRetriever:
                         route_category=chunk.route_category,
                         text=chunk.text,
                         matched_dcb=best_dcb,
-                        retriever_name="hybrid_dcb_rrf",
+                        retriever_name="hybrid_dcb_bm25_rrf",
                     )
                 )
 
