@@ -196,19 +196,65 @@ class MultiAgentOrchestrator:
                 return ceaf_unit
         return "Farmácia de Alto Custo (CEAF-DF: unidades Estação 102 Sul, Ceilândia ou Gama)"
 
+    _GENERIC_QUERY_TOKENS: frozenset[str] = frozenset(
+        {
+            "comprimido",
+            "capsula",
+            "solucao",
+            "injetavel",
+            "spray",
+            "gotas",
+            "tratamento",
+            "medicamento",
+            "remedio",
+            "preciso",
+            "quero",
+            "posso",
+            "tomar",
+            "quais",
+            "sobre",
+            "funciona",
+            "levar",
+            "retirar",
+            "pegar",
+            "buscar",
+        }
+    )
+
     def _agent_2_pharmaceutical_auditor(self, state: OrchestratorState) -> None:
+        med_matches = self.tabular_matcher.match_medications(state.sanitized_input)
         hits = self.hybrid_retriever.search(
             state.sanitized_input, top_k=3, min_score=self.min_score
         )
 
-        # Se houver gerenciador vetorial ChromaDB, enriquece com busca semântica sobre o corpus de PDFs
+        # Se houver gerenciador vetorial ChromaDB, enriquece com busca semântica fundamentada
         if self.vectorstore_manager is not None:
             try:
                 chroma_hits = self.vectorstore_manager.search_unified_corpus(
                     state.sanitized_input, top_k=3
                 )
+                norm_q = normalize_pt_text(state.sanitized_input)
+                sig_tokens = [
+                    tok
+                    for tok in norm_q.split()
+                    if len(tok) >= 5
+                    and not tok.isdigit()
+                    and tok not in self._GENERIC_QUERY_TOKENS
+                ]
+                has_prior_grounding = bool(med_matches or hits)
+
                 for ch in chroma_hits:
-                    if ch.relevance_score >= 0.22:
+                    norm_doc = normalize_pt_text(ch.document)
+                    if has_prior_grounding:
+                        is_grounded = ch.relevance_score >= 0.25
+                    elif sig_tokens:
+                        matched = sum(1 for tok in sig_tokens if tok in norm_doc)
+                        needed = max(1, (len(sig_tokens) + 1) // 2)
+                        is_grounded = ch.relevance_score >= 0.35 and matched >= needed
+                    else:
+                        is_grounded = False
+
+                    if is_grounded:
                         hits.append(
                             RetrievalHit(
                                 chunk_id=ch.id,
@@ -227,7 +273,6 @@ class MultiAgentOrchestrator:
 
         state.retrieved_hits = hits
 
-        med_matches = self.tabular_matcher.match_medications(state.sanitized_input)
         ceaf_unit = self._resolve_ceaf_unit(state.detected_ra)
 
         for _, med in med_matches:

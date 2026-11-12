@@ -341,10 +341,14 @@ class TestSDDSpecifications(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             session_db = Path(tmpdir) / "sessions.db"
             sid = "sessao-dona-helena-001"
+            chroma_mgr = ChromaVectorStoreManager(
+                vectorstore_dir=self.paths.data_dir / "vectorstore"
+            )
 
             orch1 = LangGraphMultiAgentOrchestrator(
                 medications=self.medications,
                 chunks=self.chunks,
+                vectorstore_manager=chroma_mgr,
                 session_db_path=session_db,
             )
             r1 = orch1.run(
@@ -360,6 +364,7 @@ class TestSDDSpecifications(unittest.TestCase):
             orch2 = LangGraphMultiAgentOrchestrator(
                 medications=self.medications,
                 chunks=self.chunks,
+                vectorstore_manager=chroma_mgr,
                 session_db_path=session_db,
             )
             r2 = orch2.run("E onde retiro adalimumabe 40 mg?", session_id=sid)
