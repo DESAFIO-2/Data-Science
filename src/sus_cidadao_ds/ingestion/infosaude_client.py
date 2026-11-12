@@ -542,8 +542,16 @@ class InfoSaudeLiveClient:
         stock_json_str = json.dumps(stock_payload_out, ensure_ascii=False, indent=2)
         maps_json_str = json.dumps(maps_payload_out, ensure_ascii=False, indent=2)
 
-        self.stock_path.write_text(stock_json_str, encoding="utf-8")
-        self.maps_path.write_text(maps_json_str, encoding="utf-8")
+        # Proteção contra sobrescrita por resposta vazia/instabilidade do Power BI
+        if stock_items or not self.stock_path.exists():
+            self.stock_path.write_text(stock_json_str, encoding="utf-8")
+        else:
+            stock_json_str = self.stock_path.read_text(encoding="utf-8")
+
+        if pharmacies or not self.maps_path.exists():
+            self.maps_path.write_text(maps_json_str, encoding="utf-8")
+        else:
+            maps_json_str = self.maps_path.read_text(encoding="utf-8")
 
         return InfoSaudeSyncSummary(
             synced_at_utc=datetime.now(UTC).isoformat(),
