@@ -9,6 +9,10 @@ from sus_cidadao_ds.agents.orchestrator import (
     MultiAgentOrchestrator,
     OrchestratorState,
 )
+from sus_cidadao_ds.agents.session_memory import (
+    SessionContext,
+    SQLiteSessionStore,
+)
 
 __all__ = [
     "CitizenGuidanceResponse",
@@ -16,5 +20,7 @@ __all__ = [
     "MedicationAuditItem",
     "MultiAgentOrchestrator",
     "OrchestratorState",
+    "SQLiteSessionStore",
+    "SessionContext",
 ]
 

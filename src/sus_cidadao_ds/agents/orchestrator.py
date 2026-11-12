@@ -89,6 +89,9 @@ class CitizenGuidanceResponse:
     retrieved_chunks: list[RetrievalHit]
     synthesized_guidance: str
     agent_trace: list[str]
+    session_id: str | None = None
+    turn_count: int = 1
+    remembered_history: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

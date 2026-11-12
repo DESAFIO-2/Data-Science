@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from sus_cidadao_ds.agents.orchestrator import MultiAgentOrchestrator
+from sus_cidadao_ds.agents.langgraph_orchestrator import LangGraphMultiAgentOrchestrator
 from sus_cidadao_ds.calibration.threshold_optimizer import ThresholdCalibrator
 from sus_cidadao_ds.contracts.schemas import GoldenCase
 from sus_cidadao_ds.core.config import ProjectPaths
@@ -98,6 +98,17 @@ def main(argv: list[str] | None = None) -> int:
         type=int,
         default=166,
         help="Dias decorridos desde a emissão da receita para alerta RF08 (15d/7d)",
+    )
+    p_audit.add_argument(
+        "--session-id",
+        type=str,
+        default=None,
+        help="ID persistente de sessão (thread_id) para manter memória multi-turno sem repetir dados",
+    )
+    p_audit.add_argument(
+        "--reset-session",
+        action="store_true",
+        help="Limpa o histórico persistido do --session-id antes da execução",
     )
 
     # 7. sync-infosaude (SPEC-06)
@@ -262,9 +273,24 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "audit":
-        orchestrator = MultiAgentOrchestrator(medications=meds, chunks=chunks)
+        chroma_mgr: ChromaVectorStoreManager | None
+        try:
+            chroma_mgr = ChromaVectorStoreManager(vectorstore_dir=paths.data_dir / "vectorstore")
+        except Exception:
+            chroma_mgr = None
+
+        orchestrator = LangGraphMultiAgentOrchestrator(
+            medications=meds,
+            chunks=chunks,
+            vectorstore_manager=chroma_mgr,
+        )
+        if args.reset_session and args.session_id:
+            orchestrator.clear_session(args.session_id)
+
         guidance = orchestrator.run(
-            args.input_text, days_since_emission=args.days_emitted
+            args.input_text,
+            days_since_emission=args.days_emitted,
+            session_id=args.session_id,
         )
         print(json.dumps(guidance.to_dict(), ensure_ascii=False, indent=2))
         return 0

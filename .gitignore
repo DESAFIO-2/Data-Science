@@ -17,6 +17,7 @@ build/
 data/raw/*
 !data/raw/.gitkeep
 data/vectorstore/
+data/sessions/
 
 # Apache Airflow Local Runtime (DAGs em dags/ são versionadas)
 airflow.db

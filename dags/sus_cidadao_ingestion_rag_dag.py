@@ -74,3 +74,4 @@ with DAG(
         >> run_unified_pdf_pipeline
         >> index_chroma_collections
     )
+

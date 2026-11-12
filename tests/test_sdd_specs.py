@@ -336,6 +336,54 @@ class TestSDDSpecifications(unittest.TestCase):
             for cmd in required_cmds:
                 self.assertIn(cmd, source, f"Comando '{cmd}' esperado na DAG {filename}")
 
+    def test_spec10_langgraph_persistent_session_memory(self) -> None:
+        """LangGraph + SQLite: Memória persistente por sessão deve manter RA e contexto sem salvar PII."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            session_db = Path(tmpdir) / "sessions.db"
+            sid = "sessao-dona-helena-001"
+
+            orch1 = LangGraphMultiAgentOrchestrator(
+                medications=self.medications,
+                chunks=self.chunks,
+                session_db_path=session_db,
+            )
+            r1 = orch1.run(
+                "Paciente: Maria Silva, CPF 111.222.333-44. Moro em Ceilândia - DF e preciso de losartana potássica 50 mg.",
+                session_id=sid,
+            )
+            self.assertEqual(r1.session_id, sid)
+            self.assertEqual(r1.turn_count, 1)
+            self.assertEqual(r1.detected_ra, "Ceilândia - DF")
+            self.assertEqual(r1.primary_route, "FARMACIA_POPULAR")
+
+            # Simula nova instância / reinício de processo usando o mesmo banco SQLite
+            orch2 = LangGraphMultiAgentOrchestrator(
+                medications=self.medications,
+                chunks=self.chunks,
+                session_db_path=session_db,
+            )
+            r2 = orch2.run("E onde retiro adalimumabe 40 mg?", session_id=sid)
+            self.assertEqual(r2.turn_count, 2)
+            self.assertEqual(r2.detected_ra, "Ceilândia - DF")
+            self.assertEqual(r2.primary_route, "ALTO_CUSTO_CEAF")
+            self.assertIn("Ceilândia", r2.audited_medications[0].where_to_collect)
+
+            # Turno 3: pergunta de acompanhamento sem repetir remédio nem RA
+            r3 = orch2.run("Quais documentos preciso levar?", session_id=sid)
+            self.assertEqual(r3.turn_count, 3)
+            self.assertEqual(r3.detected_ra, "Ceilândia - DF")
+            self.assertGreaterEqual(len(r3.audited_medications), 2)
+            self.assertTrue(len(r3.checklist_documents) >= 3)
+            self.assertEqual(len(r3.remembered_history), 3)
+            for item in r3.remembered_history:
+                self.assertNotIn("111.222.333-44", item)
+                self.assertNotIn("Maria Silva", item)
+
+            # Turno 4: medicamento fora do elenco não deve sequestrar o contexto anterior
+            r4 = orch2.run("E tirzepatida 5 mg?", session_id=sid)
+            self.assertTrue(r4.abstained)
+            self.assertEqual(r4.primary_route, "ABSTENCAO_FORA_ELENCO")
+
 
 if __name__ == "__main__":
     unittest.main()
