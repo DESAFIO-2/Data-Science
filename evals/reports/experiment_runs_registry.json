@@ -228,5 +228,515 @@
       "git_stage": "semana3_ragas_benchmark"
     },
     "artifacts": []
+  },
+  {
+    "run_id": "25862bf77d604fd8a7bd6b6569c4633a",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC01_EDA_Silver_Gold_Profile",
+    "timestamp_utc": "2026-11-12T13:23:04.646934+00:00",
+    "params": {
+      "manifest_version": "2024.2.0",
+      "engineering_source": "canonical_materialization_v2024.2"
+    },
+    "metrics": {
+      "total_medications": 24.0,
+      "unique_dcbs": 23.0,
+      "pfpb_free_rate": 0.5417,
+      "requires_lme_rate": 0.25,
+      "total_chunks": 9.0,
+      "avg_chunk_words": 88.11,
+      "dcb_chunk_coverage_rate": 1.0
+    },
+    "tags": {
+      "run_name": "SPEC01_EDA_Silver_Gold_Profile",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-01",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana2_eda"
+    },
+    "artifacts": [
+      "eda_summary.json"
+    ]
+  },
+  {
+    "run_id": "673ff363a3d547588e51a9586c8fb122",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC03_TFIDF_Baseline_012",
+    "timestamp_utc": "2026-11-12T13:23:05.266112+00:00",
+    "params": {
+      "retriever_type": "tfidf_baseline",
+      "min_score": 0.12,
+      "top_k": 3
+    },
+    "metrics": {
+      "hit_rate_at_3": 1.0,
+      "recall_at_3": 1.0,
+      "mrr": 1.0,
+      "abstention_accuracy": 0.0,
+      "combined_f1": 0.0
+    },
+    "tags": {
+      "run_name": "SPEC03_TFIDF_Baseline_012",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-03",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana2_baseline"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "73f06b1b24ab4721886361cce9111bef",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC03_Hybrid_Calibrated_Best",
+    "timestamp_utc": "2026-11-12T13:23:05.266518+00:00",
+    "params": {
+      "retriever_type": "hybrid_dcb_rrf",
+      "min_score": 0.12,
+      "top_k": 3,
+      "rrf_k": 60
+    },
+    "metrics": {
+      "hit_rate_at_3": 1.0,
+      "recall_at_3": 1.0,
+      "mrr": 1.0,
+      "abstention_accuracy": 1.0,
+      "combined_f1": 1.0
+    },
+    "tags": {
+      "run_name": "SPEC03_Hybrid_Calibrated_Best",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-03",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana2_hybrid_calibrated"
+    },
+    "artifacts": [
+      "calibration_curve.json"
+    ]
+  },
+  {
+    "run_id": "7b94aa438034458ca08f68458a8dd9ce",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC04_RAGAS_01_LLM_Pura_Sem_RAG",
+    "timestamp_utc": "2026-11-12T13:23:06.840285+00:00",
+    "params": {
+      "system_name": "01_LLM_Pura_Sem_RAG",
+      "golden_cases": 16
+    },
+    "metrics": {
+      "faithfulness": 0.3837,
+      "answer_relevancy": 0.5413,
+      "context_recall": 0.0,
+      "ragas_harmonic_score": 0.1227,
+      "hit_rate_at_3": 0.0,
+      "recall_at_3": 0.0,
+      "mrr": 0.0,
+      "route_accuracy": 0.375,
+      "clinical_guardrail_pass_rate": 0.5
+    },
+    "tags": {
+      "run_name": "SPEC04_RAGAS_01_LLM_Pura_Sem_RAG",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-04",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana3_ragas_benchmark"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "ad1e8abb702644ee9564ee2e2b0d4a87",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC04_RAGAS_02_RAG_TFIDF_Baseline_012",
+    "timestamp_utc": "2026-11-12T13:23:06.840696+00:00",
+    "params": {
+      "system_name": "02_RAG_TFIDF_Baseline_012",
+      "golden_cases": 16
+    },
+    "metrics": {
+      "faithfulness": 0.8037,
+      "answer_relevancy": 0.7848,
+      "context_recall": 0.7288,
+      "ragas_harmonic_score": 0.7711,
+      "hit_rate_at_3": 1.0,
+      "recall_at_3": 1.0,
+      "mrr": 1.0,
+      "route_accuracy": 0.75,
+      "clinical_guardrail_pass_rate": 0.0
+    },
+    "tags": {
+      "run_name": "SPEC04_RAGAS_02_RAG_TFIDF_Baseline_012",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-04",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana3_ragas_benchmark"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "1072ee3e1ddf4f1380f7050a1a92a7b3",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC04_RAGAS_03_RAG_Hibrido_Multiagentes",
+    "timestamp_utc": "2026-11-12T13:23:06.840888+00:00",
+    "params": {
+      "system_name": "03_RAG_Hibrido_Multiagentes",
+      "golden_cases": 16
+    },
+    "metrics": {
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.9751,
+      "context_recall": 0.9651,
+      "ragas_harmonic_score": 0.9798,
+      "hit_rate_at_3": 1.0,
+      "recall_at_3": 1.0,
+      "mrr": 1.0,
+      "route_accuracy": 1.0,
+      "clinical_guardrail_pass_rate": 1.0
+    },
+    "tags": {
+      "run_name": "SPEC04_RAGAS_03_RAG_Hibrido_Multiagentes",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-04",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana3_ragas_benchmark"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "88cdd3f3be474b1b982b1a783e8cba23",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC04_RAGAS_04_RAG_ChromaDB_Corpus_PDFs",
+    "timestamp_utc": "2026-11-12T13:23:06.841064+00:00",
+    "params": {
+      "system_name": "04_RAG_ChromaDB_Corpus_PDFs",
+      "golden_cases": 16
+    },
+    "metrics": {
+      "faithfulness": 0.9769,
+      "answer_relevancy": 0.9488,
+      "context_recall": 0.9446,
+      "ragas_harmonic_score": 0.9566,
+      "hit_rate_at_3": 1.0,
+      "recall_at_3": 1.0,
+      "mrr": 1.0,
+      "route_accuracy": 1.0,
+      "clinical_guardrail_pass_rate": 1.0
+    },
+    "tags": {
+      "run_name": "SPEC04_RAGAS_04_RAG_ChromaDB_Corpus_PDFs",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-08",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana3_ragas_benchmark"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "db7e01b85e5545219e3eecd645213d0c",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC08_Unified_PDF_Pipeline_Ingestion",
+    "timestamp_utc": "2026-11-12T17:25:03.368642+00:00",
+    "params": {
+      "official_pdfs": 4,
+      "converted_pdfs": 3,
+      "total_pdfs": 7
+    },
+    "metrics": {
+      "chunks_extracted": 69.0,
+      "chunks_indexed_chroma": 69.0
+    },
+    "tags": {
+      "run_name": "SPEC08_Unified_PDF_Pipeline_Ingestion",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-08",
+      "backend": "pypdf_reportlab_chromadb"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "95ff4d5a7e364e3288802b2e4c7cb064",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC01_EDA_Silver_Gold_Profile",
+    "timestamp_utc": "2026-11-12T17:44:28.088834+00:00",
+    "params": {
+      "manifest_version": "2024.2.0",
+      "engineering_source": "canonical_materialization_v2024.2"
+    },
+    "metrics": {
+      "total_medications": 24.0,
+      "unique_dcbs": 23.0,
+      "pfpb_free_rate": 0.5417,
+      "requires_lme_rate": 0.25,
+      "total_chunks": 9.0,
+      "avg_chunk_words": 88.11,
+      "dcb_chunk_coverage_rate": 1.0
+    },
+    "tags": {
+      "run_name": "SPEC01_EDA_Silver_Gold_Profile",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-01",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana2_eda"
+    },
+    "artifacts": [
+      "eda_summary.json"
+    ]
+  },
+  {
+    "run_id": "d63184fd19b34113ba45c5d2dfa380f5",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC03_TFIDF_Baseline_012",
+    "timestamp_utc": "2026-11-12T17:44:28.771716+00:00",
+    "params": {
+      "retriever_type": "tfidf_baseline",
+      "min_score": 0.12,
+      "top_k": 3
+    },
+    "metrics": {
+      "hit_rate_at_3": 1.0,
+      "recall_at_3": 1.0,
+      "mrr": 1.0,
+      "abstention_accuracy": 0.0,
+      "combined_f1": 0.0
+    },
+    "tags": {
+      "run_name": "SPEC03_TFIDF_Baseline_012",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-03",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana2_baseline"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "92020b185e9f4b678fccc9e5718c77c6",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC03_Hybrid_Calibrated_Best",
+    "timestamp_utc": "2026-11-12T17:44:28.772181+00:00",
+    "params": {
+      "retriever_type": "hybrid_dcb_rrf",
+      "min_score": 0.12,
+      "top_k": 3,
+      "rrf_k": 60
+    },
+    "metrics": {
+      "hit_rate_at_3": 1.0,
+      "recall_at_3": 1.0,
+      "mrr": 1.0,
+      "abstention_accuracy": 1.0,
+      "combined_f1": 1.0
+    },
+    "tags": {
+      "run_name": "SPEC03_Hybrid_Calibrated_Best",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-03",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana2_hybrid_calibrated"
+    },
+    "artifacts": [
+      "calibration_curve.json"
+    ]
+  },
+  {
+    "run_id": "a77098c450f14bcdbcfd01209787eac1",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC04_RAGAS_01_LLM_Pura_Sem_RAG",
+    "timestamp_utc": "2026-11-12T17:44:30.169343+00:00",
+    "params": {
+      "system_name": "01_LLM_Pura_Sem_RAG",
+      "golden_cases": 16
+    },
+    "metrics": {
+      "faithfulness": 0.3837,
+      "answer_relevancy": 0.5413,
+      "context_recall": 0.0,
+      "ragas_harmonic_score": 0.1227,
+      "hit_rate_at_3": 0.0,
+      "recall_at_3": 0.0,
+      "mrr": 0.0,
+      "route_accuracy": 0.375,
+      "clinical_guardrail_pass_rate": 0.5
+    },
+    "tags": {
+      "run_name": "SPEC04_RAGAS_01_LLM_Pura_Sem_RAG",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-04",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana3_ragas_benchmark"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "c5575074f964420a8f2ea1b7af175d8f",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC04_RAGAS_02_RAG_TFIDF_Baseline_012",
+    "timestamp_utc": "2026-11-12T17:44:30.169616+00:00",
+    "params": {
+      "system_name": "02_RAG_TFIDF_Baseline_012",
+      "golden_cases": 16
+    },
+    "metrics": {
+      "faithfulness": 0.8037,
+      "answer_relevancy": 0.7848,
+      "context_recall": 0.7288,
+      "ragas_harmonic_score": 0.7711,
+      "hit_rate_at_3": 1.0,
+      "recall_at_3": 1.0,
+      "mrr": 1.0,
+      "route_accuracy": 0.75,
+      "clinical_guardrail_pass_rate": 0.0
+    },
+    "tags": {
+      "run_name": "SPEC04_RAGAS_02_RAG_TFIDF_Baseline_012",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-04",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana3_ragas_benchmark"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "c3fce1faa6894d1ca81455f583349103",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC04_RAGAS_03_RAG_Hibrido_Multiagentes",
+    "timestamp_utc": "2026-11-12T17:44:30.169844+00:00",
+    "params": {
+      "system_name": "03_RAG_Hibrido_Multiagentes",
+      "golden_cases": 16
+    },
+    "metrics": {
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.9751,
+      "context_recall": 0.9651,
+      "ragas_harmonic_score": 0.9798,
+      "hit_rate_at_3": 1.0,
+      "recall_at_3": 1.0,
+      "mrr": 1.0,
+      "route_accuracy": 1.0,
+      "clinical_guardrail_pass_rate": 1.0
+    },
+    "tags": {
+      "run_name": "SPEC04_RAGAS_03_RAG_Hibrido_Multiagentes",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-04",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana3_ragas_benchmark"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "4e43bb6e5177416f9ab4e7c341094090",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC04_RAGAS_04_RAG_ChromaDB_Corpus_PDFs",
+    "timestamp_utc": "2026-11-12T17:44:30.170076+00:00",
+    "params": {
+      "system_name": "04_RAG_ChromaDB_Corpus_PDFs",
+      "golden_cases": 16
+    },
+    "metrics": {
+      "faithfulness": 0.9769,
+      "answer_relevancy": 0.9488,
+      "context_recall": 0.9446,
+      "ragas_harmonic_score": 0.9566,
+      "hit_rate_at_3": 1.0,
+      "recall_at_3": 1.0,
+      "mrr": 1.0,
+      "route_accuracy": 1.0,
+      "clinical_guardrail_pass_rate": 1.0
+    },
+    "tags": {
+      "run_name": "SPEC04_RAGAS_04_RAG_ChromaDB_Corpus_PDFs",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-08",
+      "manifest_sha256": "283d1d35ca6ecebb39d82d3b73403409dd3a240dfcca83d3fde511b0338ed8cf",
+      "git_stage": "semana3_ragas_benchmark"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "e094faa88e654528a72fddc43e97185d",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC06_InfoSaude_Live_Stock_And_Maps_Sync",
+    "timestamp_utc": "2026-11-12T17:46:05.224783+00:00",
+    "params": {
+      "ceaf_resource_key": "a665320c-1f2b-43cd-8380-6d39f535daf9",
+      "doc_maps_resource_key": "d77b9ba0-317a-4041-88a0-3241c35384ac",
+      "stock_schedule": "Diária (2x ao dia: 00:00 BRT e ~13:45–14:37 BRT)"
+    },
+    "metrics": {
+      "total_ceaf_stock_rows": 857.0,
+      "distinct_ceaf_medications": 294.0,
+      "total_establishments": 231.0,
+      "geolocated_establishments": 174.0
+    },
+    "tags": {
+      "run_name": "SPEC06_InfoSaude_Live_Stock_And_Maps_Sync",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-06",
+      "stock_sha256": "a4031d786c633e613a9c49f80d47aeef7bac7d07a8183ac2fb7fc8946fe1c32b",
+      "maps_sha256": "5915b9faf08bb3a4ef199c71a904891f33862309696f5c8ed9a93c128b6b416f"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "8a3e1f82bf6c4107a2026ea942e3f22b",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC08_Unified_PDF_Pipeline_Ingestion",
+    "timestamp_utc": "2026-11-12T17:46:07.692362+00:00",
+    "params": {
+      "official_pdfs": 4,
+      "converted_pdfs": 3,
+      "total_pdfs": 7
+    },
+    "metrics": {
+      "chunks_extracted": 69.0,
+      "chunks_indexed_chroma": 69.0
+    },
+    "tags": {
+      "run_name": "SPEC08_Unified_PDF_Pipeline_Ingestion",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-08",
+      "backend": "pypdf_reportlab_chromadb"
+    },
+    "artifacts": []
+  },
+  {
+    "run_id": "710545874864484d9d7f1e3e1c69e567",
+    "experiment_name": "sus_cidadao_rag_benchmarks",
+    "run_name": "SPEC07_ChromaDB_MultiCollection_Indexing",
+    "timestamp_utc": "2026-11-12T17:46:22.361011+00:00",
+    "params": {
+      "vectorstore_path": "/Users/aluno2/Data-Science/data/vectorstore",
+      "collections_count": 3
+    },
+    "metrics": {
+      "ceaf_stock_indexed": 857.0,
+      "df_pharmacies_indexed": 231.0,
+      "protocols_indexed": 33.0,
+      "total_indexed": 1190.0
+    },
+    "tags": {
+      "run_name": "SPEC07_ChromaDB_MultiCollection_Indexing",
+      "project": "SUS_Cidadao_NavegaSUS",
+      "methodology": "SDD",
+      "spec_id": "SPEC-07",
+      "backend": "chromadb_persistent"
+    },
+    "artifacts": []
   }
 ]

@@ -137,3 +137,4 @@ class SQLiteSessionStore:
                 "SELECT session_id FROM citizen_sessions ORDER BY updated_at_utc DESC"
             ).fetchall()
         return [str(r[0]) for r in rows]
+

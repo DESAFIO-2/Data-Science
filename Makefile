@@ -1,4 +1,4 @@
-.PHONY: dev-install sync-data eda calibrate benchmark run-agents index-chroma pipeline-pdf test lint clean
+.PHONY: dev-install sync-data eda calibrate benchmark run-agents index-chroma pipeline-pdf test lint clean dag-ingestion dag-eval
 
 PYTHON ?= $(shell if [ -x .venv/bin/python ]; then echo .venv/bin/python; else echo python3; fi)
 PYTHONPATH := src
@@ -27,6 +27,22 @@ index-chroma:
 pipeline-pdf:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m sus_cidadao_ds.cli pipeline-pdf
 
+dag-ingestion:
+	@echo "==> Executando DAG [sus_cidadao_ingestion_rag_pipeline]..."
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m sus_cidadao_ds.cli sync-infosaude
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m sus_cidadao_ds.cli sync
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m sus_cidadao_ds.cli pipeline-pdf
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m sus_cidadao_ds.cli index-chroma
+	@echo "==> DAG [sus_cidadao_ingestion_rag_pipeline] concluida com sucesso!"
+
+dag-eval:
+	@echo "==> Executando DAG [sus_cidadao_agents_eval_pipeline]..."
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m sus_cidadao_ds.cli eda
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m sus_cidadao_ds.cli calibrate
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m sus_cidadao_ds.cli eval
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m sus_cidadao_ds.cli audit "Receita: Losartana potássica 50 mg 1 cp 12/12h, Metformina 500 mg e Adalimumabe 40 mg. Solicito Ecocardiograma Transtorácico. Moro em Ceilândia - DF."
+	@echo "==> DAG [sus_cidadao_agents_eval_pipeline] concluida com sucesso!"
+
 test:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m unittest discover -s tests -p "test_*.py" -v
 
@@ -35,4 +51,5 @@ lint:
 
 clean:
 	rm -rf .artifacts .pytest_cache .mypy_cache .ruff_cache
+
 
