@@ -1,4 +1,4 @@
-# SPEC-04: Avaliação Experimental Científica (Métricas IR + Framework RAGAS + MLflow)
+# SPEC-04: Avaliação Experimental Científica (Métricas IR + Framework RAGAS)
 
 - **Status:** Implementado
 - **Fase:** Semana 3 — Avaliação Experimental Científica (LLM Pura vs. RAG)
@@ -34,6 +34,6 @@ Conduzir o experimento controlado da Semana 3 comparando três arquiteturas sobr
 ---
 
 ## 3. Critérios de Aceite da SPEC-04
-- [x] Execução comparativa das 3 arquiteturas registrada no **MLflow** (`mlruns/` e `evals/reports/mlflow_runs_registry.json`).
+- [x] Execução comparativa das arquiteturas registrada em JSON (`evals/reports/experiment_runs_registry.json`) via `ExperimentTracker`.
 - [x] Geração automática de `evals/reports/ragas_benchmark_report.md` e `evals/baselines/llm_vs_rag_comparison.json`.
 

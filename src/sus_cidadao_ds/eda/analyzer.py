@@ -10,7 +10,7 @@ from statistics import median
 from typing import Any
 
 from sus_cidadao_ds.contracts.schemas import CanonicalMedication, DataManifest, NormativeChunk
-from sus_cidadao_ds.core.mlflow_tracker import MLflowTracker
+from sus_cidadao_ds.core.experiment_tracker import ExperimentTracker
 
 
 @dataclass(frozen=True)
@@ -48,7 +48,7 @@ class EDAAnalyzer:
         chunks: list[NormativeChunk],
         manifest: DataManifest,
         reports_dir: Path | None = None,
-        tracker: MLflowTracker | None = None,
+        tracker: ExperimentTracker | None = None,
     ) -> EDASummary:
         """Calcula estatísticas descritivas das bases Silver/Gold e salva relatórios."""
         total_meds = len(medications)

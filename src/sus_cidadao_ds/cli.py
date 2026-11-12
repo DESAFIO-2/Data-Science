@@ -12,7 +12,7 @@ from sus_cidadao_ds.agents.orchestrator import MultiAgentOrchestrator
 from sus_cidadao_ds.calibration.threshold_optimizer import ThresholdCalibrator
 from sus_cidadao_ds.contracts.schemas import GoldenCase
 from sus_cidadao_ds.core.config import ProjectPaths
-from sus_cidadao_ds.core.mlflow_tracker import MLflowTracker
+from sus_cidadao_ds.core.experiment_tracker import ExperimentTracker
 from sus_cidadao_ds.eda.analyzer import EDAAnalyzer
 from sus_cidadao_ds.evaluation.ragas_benchmark import RAGASBenchmarkRunner
 from sus_cidadao_ds.ingestion.infosaude_client import InfoSaudeLiveClient
@@ -53,7 +53,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # 2. eda
     subparsers.add_parser(
-        "eda", help="Executa Análise Exploratória de Dados (EDA) e loga no MLflow"
+        "eda", help="Executa Análise Exploratória de Dados (EDA) e registra métricas em JSON"
     )
 
     # 3. search
@@ -76,13 +76,13 @@ def main(argv: list[str] | None = None) -> int:
     # 4. calibrate
     subparsers.add_parser(
         "calibrate",
-        help="Calibra cientificamente o limiar min_score no Golden Dataset + MLflow",
+        help="Calibra cientificamente o limiar min_score no Golden Dataset",
     )
 
     # 5. eval
     subparsers.add_parser(
         "eval",
-        help="Executa benchmark científico RAGAS (LLM Pura vs RAG TF-IDF vs RAG Híbrido) + MLflow",
+        help="Executa benchmark científico RAGAS (LLM Pura vs RAG TF-IDF vs RAG Híbrido vs ChromaDB)",
     )
 
     # 6. audit
@@ -165,9 +165,9 @@ def main(argv: list[str] | None = None) -> int:
     paths = ProjectPaths.from_root()
     paths.ensure_dirs()
     syncer = DataSynchronizer(paths)
-    tracker = MLflowTracker(
-        mlruns_dir=paths.mlruns_dir,
-        registry_path=paths.reports_dir / "mlflow_runs_registry.json",
+    tracker = ExperimentTracker(
+        registry_path=paths.reports_dir / "experiment_runs_registry.json",
+        artifacts_dir=paths.artifacts_dir,
     )
 
     if args.command == "sync":

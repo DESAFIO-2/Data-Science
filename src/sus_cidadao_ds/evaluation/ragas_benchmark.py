@@ -20,7 +20,7 @@ from sus_cidadao_ds.contracts.schemas import (
     GoldenCase,
     NormativeChunk,
 )
-from sus_cidadao_ds.core.mlflow_tracker import MLflowTracker
+from sus_cidadao_ds.core.experiment_tracker import ExperimentTracker
 from sus_cidadao_ds.guardrails.clinical_blocker import ClinicalBlocker
 from sus_cidadao_ds.retrieval.chroma_indexer import ChromaVectorStoreManager
 from sus_cidadao_ds.retrieval.retrievers import (
@@ -86,9 +86,9 @@ class RAGASBenchmarkRunner:
         manifest: DataManifest,
         reports_dir: Path | None = None,
         baselines_dir: Path | None = None,
-        tracker: MLflowTracker | None = None,
+        tracker: ExperimentTracker | None = None,
     ) -> list[SystemEvaluationMetrics]:
-        """Avalia as arquiteturas sobre o Golden Dataset e registra no MLflow."""
+        """Avalia as arquiteturas sobre o Golden Dataset e registra métricas em JSON."""
         if self.vectorstore_manager is None:
             try:
                 self.vectorstore_manager = ChromaVectorStoreManager()

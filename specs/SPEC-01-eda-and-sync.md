@@ -11,7 +11,7 @@
 Garantir que o repositório `Data-Science`:
 1. Consuma diretamente os artefatos produzidos por `DESAFIO-2/engenharia-dados` (`data/silver/` e `data/gold/`) quando o diretório local é fornecido (`--engineering-dir`), validando os hashes SHA-256 do manifesto.
 2. Materialize determinísticamente o catálogo canônico (`medicamentos_sus_canonical.json`), os chunks normativos (`normative_chunks.json`) e o manifesto criptográfico (`data/manifests/manifest.json`) a partir das regras oficiais do Ministério da Saúde e SES-DF (RENAME 2024 2ª ed., Farmácia Popular, REME-DF e SISREG III/CPPAS).
-3. Produza um relatório estatístico automatizado de Análise Exploratória de Dados (EDA) em `evals/reports/eda_report.md` e JSON estruturado para rastreamento no **MLflow**.
+3. Produza um relatório estatístico automatizado de Análise Exploratória de Dados (EDA) em `evals/reports/eda_report.md` e JSON estruturado via `ExperimentTracker`.
 
 ---
 
@@ -42,6 +42,6 @@ O módulo `sus_cidadao_ds.eda.analyzer` deve calcular e validar:
 
 ## 4. Critérios de Aceite da SPEC-01
 - [x] `sus_cidadao_ds.sync` gera/sincroniza `data/gold/medicamentos_sus_canonical.json`, `data/silver/normative_chunks.json` e `data/manifests/manifest.json` com hashes SHA-256 verificáveis.
-- [x] `sus_cidadao_ds.eda` gera `evals/reports/eda_report.md` e registra as métricas de perfilamento no MLflow.
+- [x] `sus_cidadao_ds.eda` gera `evals/reports/eda_report.md` e registra as métricas de perfilamento em JSON (`ExperimentTracker`).
 - [x] Testes unitários verificam a integridade de todos os schemas e hashes SHA-256.
 

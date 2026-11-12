@@ -18,10 +18,10 @@ data/raw/*
 !data/raw/.gitkeep
 data/vectorstore/
 
-# MLflow Tracking Local (runs voláteis; relatórios consolidados ficam em evals/reports/)
-mlruns/
-mlartifacts/
-mlflow.db
+# Apache Airflow Local Runtime (DAGs em dags/ são versionadas)
+airflow.db
+airflow.cfg
+logs/
 
 # Sistema Operacional & IDEs
 .DS_Store

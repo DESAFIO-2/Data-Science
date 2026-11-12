@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from sus_cidadao_ds.contracts.schemas import DataManifest, GoldenCase, RetrievalHit
-from sus_cidadao_ds.core.mlflow_tracker import MLflowTracker
+from sus_cidadao_ds.core.experiment_tracker import ExperimentTracker
 
 
 class SearchableRetriever(Protocol):
@@ -52,7 +52,7 @@ class CalibrationSummary:
 
 
 class ThresholdCalibrator:
-    """Executa varredura de limiares `min_score` sobre o Golden Dataset e registra no MLflow."""
+    """Executa varredura de limiares `min_score` sobre o Golden Dataset e registra métricas em JSON."""
 
     DEFAULT_GRID: tuple[float, ...] = (
         0.05,
@@ -146,7 +146,7 @@ class ThresholdCalibrator:
         golden_cases: list[GoldenCase],
         manifest: DataManifest,
         reports_dir: Path | None = None,
-        tracker: MLflowTracker | None = None,
+        tracker: ExperimentTracker | None = None,
     ) -> CalibrationSummary:
         """Executa a varredura de limiares para TF-IDF e Hybrid Retriever."""
         tfidf_curve = [

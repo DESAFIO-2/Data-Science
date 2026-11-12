@@ -21,5 +21,5 @@
 ## 2. Critérios de Aceite da SPEC-03
 - [x] `TFIDFRetriever` executa consultas como `"losartana potássica 50 mg"` com `--top-k 3 --min-score 0.12` retornando `CHK-PFPB-001` no topo.
 - [x] `HybridRetriever` supera o `TFIDFRetriever` em `MRR` e `Recall@3` no Golden Dataset.
-- [x] `ThresholdCalibrator` avalia a grade de limiares (`0.02` a `0.35`), seleciona o limiar ótimo e registra os resultados no **MLflow** e em `evals/reports/calibration_report.md`.
+- [x] `ThresholdCalibrator` avalia a grade de limiares (`0.02` a `0.35`), seleciona o limiar ótimo e registra os resultados em JSON (`ExperimentTracker`) e em `evals/reports/calibration_report.md`.
 

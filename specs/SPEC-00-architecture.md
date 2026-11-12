@@ -1,11 +1,11 @@
-# SPEC-00: Arquitetura de Ciência de Dados, Contratos com Engenharia e Governança MLflow
+# SPEC-00: Arquitetura de Ciência de Dados, Contratos com Engenharia e Rastreamento Experimental
 
 - **Status:** Aprovado
-- **Fase:** Semanas 2–4 (Base de Conhecimento, Avaliação Científica RAGAS e Sistema Multiagentes)
+- **Fase:** Semanas 2–4 (Base de Conhecimento, Avaliação Científica RAGAS, ChromaDB, Airflow DAGs e Sistema Multiagentes)
 - **Responsável:** Marlon Dias Marques (Cientista de Dados)
 - **Alinhamento Arquitetural:**
   - `ADR-001` (Engenharia de Dados): Arquitetura Medallion Lite (`bronze` -> `silver` -> `gold`)
-  - `ADR-002` (Engenharia de Dados): Catálogo relacional + vetorial (`PostgreSQL` + `pgvector` / índices locais)
+  - `ADR-002` (Engenharia de Dados): Catálogo relacional + vetorial (`PostgreSQL` + `pgvector` / ChromaDB local)
   - `ADR-003` (Engenharia de Dados): `TF-IDF` como linha de base determinística (`min_score = 0.12`)
   - `ADR-004` (Engenharia de Dados): Artefatos RAG reconstruíveis fora do Git (`.artifacts/`)
 
@@ -13,7 +13,7 @@
 
 ## 1. Objetivo
 
-Estabelecer os contratos formais de dados entre o repositório `DESAFIO-2/engenharia-dados` e `DESAFIO-2/Data-Science`, garantindo reprodutibilidade determinística, rastreabilidade criptográfica (SHA-256) e governança experimental via **MLflow** sob a metodologia **Spec-Driven Development (SDD)**.
+Estabelecer os contratos formais de dados entre o repositório `DESAFIO-2/engenharia-dados` e `DESAFIO-2/Data-Science`, garantindo reprodutibilidade determinística, rastreabilidade criptográfica (SHA-256), registro leve de métricas em JSON (`ExperimentTracker`) e orquestração via **Apache Airflow** sob a metodologia **Spec-Driven Development (SDD)**.
 
 ---
 
@@ -56,15 +56,15 @@ Cada fragmento extraído das portarias e protocolos (RENAME, PFPB, REME-DF, SISR
 
 ---
 
-## 3. Governança Experimental com MLflow
+## 3. Rastreamento Experimental em JSON e Orquestração Airflow
 
-Todo experimento de recuperação, calibração de limiar ou avaliação RAGAS deve registrar:
+Como a solução utiliza RAG (ChromaDB) e Multiagentes (LangGraph) sem treinamento de modelos tradicionais de ML, substitui-se o servidor MLflow por rastreamento leve em JSON (`ExperimentTracker`) combinado com DAGs do **Apache Airflow** (`dags/`). Toda avaliação deve registrar:
 1. **Tags de Linhagem:**
    - `manifest_sha256`: Hash consolidado do manifesto de dados
-   - `spec_id`: Especificação SDD correspondente (`SPEC-03`, `SPEC-04`, `SPEC-05`)
+   - `spec_id`: Especificação SDD correspondente (`SPEC-03`, `SPEC-04`, `SPEC-05`, `SPEC-08`)
    - `git_stage`: Etapa do projeto (`semana2_baseline`, `semana2_hybrid`, `semana3_ragas`)
 2. **Parâmetros (`params`):**
-   - `retriever_type`: `tfidf_baseline` | `bm25` | `hybrid_dcb_rrf`
+   - `retriever_type`: `tfidf_baseline` | `bm25` | `hybrid_dcb_rrf` | `chroma_dense`
    - `top_k`: Inteiro (`3`, `5`, `10`)
    - `min_score`: Float (ex.: `0.12` baseline vs. limiar calibrado)
    - `rrf_k`: Constante de suavização do Reciprocal Rank Fusion (padrão `60`)
@@ -72,12 +72,12 @@ Todo experimento de recuperação, calibração de limiar ou avaliação RAGAS d
    - Recuperação: `hit_rate_at_k`, `recall_at_k`, `mrr`, `abstention_f1`, `false_positive_rate`
    - Geração / RAGAS: `faithfulness`, `answer_relevancy`, `context_recall`, `clinical_guardrail_pass_rate`
 4. **Artefatos (`artifacts`):**
-   - Curva de calibração JSON/CSV e relatório Markdown auditável.
+   - Registro consolidado em `evals/reports/experiment_runs_registry.json`, curva de calibração JSON e relatório Markdown auditável.
 
 ---
 
 ## 4. Critérios de Aceite da SPEC-00
 - [x] Estrutura de pacotes em `src/sus_cidadao_ds/` com tipagem estrita.
-- [x] Rastreador MLflow (`MLflowTracker`) funcional com suporte nativo ao pacote `mlflow` e fallback determinístico em arquivo compatível com a estrutura `mlruns/` para execução offline/CI em qualquer ambiente.
+- [x] Rastreador experimental leve em JSON (`ExperimentTracker`) sem dependência de MLflow, compatível com execuções locais, CI e Airflow.
 - [x] Arquivo de configuração `config/sources.yaml` e `config/experiments.yaml` versionados.
 

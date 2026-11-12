@@ -1,7 +1,8 @@
-"""Testes unitários e de integração validando SPEC-00 a SPEC-05 (SDD)."""
+"""Testes unitários e de integração validando SPEC-00 a SPEC-08 e DAGs do Airflow (SDD)."""
 
 from __future__ import annotations
 
+import ast
 import json
 import tempfile
 import unittest
@@ -12,7 +13,7 @@ from sus_cidadao_ds.agents.orchestrator import MultiAgentOrchestrator
 from sus_cidadao_ds.calibration.threshold_optimizer import ThresholdCalibrator
 from sus_cidadao_ds.contracts.schemas import GoldenCase, compute_sha256
 from sus_cidadao_ds.core.config import ProjectPaths
-from sus_cidadao_ds.core.mlflow_tracker import MLflowTracker
+from sus_cidadao_ds.core.experiment_tracker import ExperimentTracker
 from sus_cidadao_ds.eda.analyzer import EDAAnalyzer
 from sus_cidadao_ds.evaluation.ragas_benchmark import RAGASBenchmarkRunner
 from sus_cidadao_ds.guardrails.clinical_blocker import ClinicalBlocker
@@ -43,13 +44,13 @@ class TestSDDSpecifications(unittest.TestCase):
         )
         self.golden_cases = [GoldenCase.from_dict(item) for item in golden_raw]
 
-    def test_spec00_mlflow_tracker_and_lineage(self) -> None:
-        """SPEC-00: MLflowTracker deve registrar parâmetros, métricas, tags e artefatos."""
+    def test_spec00_experiment_tracker_and_lineage(self) -> None:
+        """SPEC-00: ExperimentTracker deve registrar parâmetros, métricas, tags e artefatos em JSON."""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp_path = Path(tmpdir)
-            tracker = MLflowTracker(
-                mlruns_dir=tmp_path / "mlruns",
+            tracker = ExperimentTracker(
                 registry_path=tmp_path / "registry.json",
+                artifacts_dir=tmp_path / "artifacts",
             )
             record = tracker.log_experiment_run(
                 run_name="test_run_sdd",
@@ -311,6 +312,29 @@ class TestSDDSpecifications(unittest.TestCase):
         self.assertGreaterEqual(chroma_eval.route_accuracy, 0.95)
         self.assertGreaterEqual(chroma_eval.faithfulness, 0.95)
         self.assertEqual(chroma_eval.clinical_guardrail_pass_rate, 1.0)
+
+    def test_spec09_airflow_dags_syntax_and_contracts(self) -> None:
+        """Airflow: DAGs de ingestão RAG e avaliação multiagentes devem compilar e mapear CLIs válidas."""
+        expected_dags = {
+            "sus_cidadao_ingestion_rag_dag.py": [
+                "sync-infosaude --live",
+                "pipeline-pdf",
+                "index-chroma",
+            ],
+            "sus_cidadao_agents_eval_dag.py": [
+                "sus_cidadao_ds.cli eda",
+                "sus_cidadao_ds.cli calibrate",
+                "sus_cidadao_ds.cli eval",
+                "sus_cidadao_ds.cli audit",
+            ],
+        }
+        for filename, required_cmds in expected_dags.items():
+            dag_path = self.paths.dags_dir / filename
+            self.assertTrue(dag_path.exists(), f"DAG ausente: {dag_path}")
+            source = dag_path.read_text(encoding="utf-8")
+            ast.parse(source, filename=str(dag_path))
+            for cmd in required_cmds:
+                self.assertIn(cmd, source, f"Comando '{cmd}' esperado na DAG {filename}")
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sus-cidadao-ds"
 version = "0.2.0"
-description = "Frente de Ciência de Dados do SUS Cidadão (NavegaSUS) — EDA, Golden Dataset, RAG Híbrido, Calibração, RAGAS, MLflow e Orquestrador Multiagentes"
+description = "Frente de Ciência de Dados do SUS Cidadão (NavegaSUS) — EDA, Golden Dataset, RAG Híbrido, Calibração, RAGAS, ChromaDB, Airflow DAGs e Orquestrador Multiagentes LangGraph"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
@@ -17,7 +17,6 @@ dependencies = [
     "pydantic>=2.7.0",
     "polars>=1.0.0",
     "scikit-learn>=1.5.0",
-    "mlflow>=2.14.0",
     "pyyaml>=6.0.1",
     "chromadb>=0.5.0",
     "pypdf>=5.0.0",
@@ -34,6 +33,9 @@ dev = [
 ragas = [
     "ragas>=0.1.10",
     "datasets>=2.20.0",
+]
+airflow = [
+    "apache-airflow>=2.9.0",
 ]
 agents = [
     "langgraph>=0.2.0",

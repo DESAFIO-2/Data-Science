@@ -23,7 +23,7 @@ class ProjectPaths:
     datasets_dir: Path
     baselines_dir: Path
     reports_dir: Path
-    mlruns_dir: Path
+    dags_dir: Path
 
     @classmethod
     def from_root(cls, root: Path | None = None) -> ProjectPaths:
@@ -49,7 +49,7 @@ class ProjectPaths:
             datasets_dir=evals_dir / "datasets",
             baselines_dir=evals_dir / "baselines",
             reports_dir=evals_dir / "reports",
-            mlruns_dir=resolved_root / "mlruns",
+            dags_dir=resolved_root / "dags",
         )
 
     def ensure_dirs(self) -> None:
@@ -65,7 +65,7 @@ class ProjectPaths:
             self.datasets_dir,
             self.baselines_dir,
             self.reports_dir,
-            self.mlruns_dir,
+            self.dags_dir,
         ):
             directory.mkdir(parents=True, exist_ok=True)
 

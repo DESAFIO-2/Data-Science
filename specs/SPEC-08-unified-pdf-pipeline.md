@@ -69,7 +69,7 @@ Para garantir homogeneidade documental na arquitetura RAG e permitir auditoria t
                            │     - Recuperação semântica ChromaDB           │
                            │     - Métricas IR (Hit@K, Recall@K, MRR)       │
                            │     - RAGAS (Faithfulness, Relevancy, Context) │
-                           │     - Registro de Runs no MLflow               │
+                           │     - Registro em JSON (ExperimentTracker)   │
                            └────────────────────────────────────────────────┘
 ```
 
@@ -146,8 +146,8 @@ Para comprovar experimentalmente o impacto da base vetorial unificada, reexecuta
      - `Answer Relevancy`: Pertinência da resposta à dúvida do cidadão.
      - `Context Recall`: Proporção de evidências do gabarito factual recuperadas.
 
-3. **Rastreabilidade e MLflow**:
-   - Cada execução registra run no MLflow com tags: `run_type="chroma_rag_benchmark"`, `corpus="unified_pdf_corpus"`, `chunk_count=N`.
+3. **Rastreabilidade e Orquestração (ExperimentTracker + Apache Airflow)**:
+   - Cada execução registra run em `evals/reports/experiment_runs_registry.json` com tags (`spec_id="SPEC-08"`, `manifest_sha256`, `corpus="unified_pdf_corpus"`), agendável via DAGs do Apache Airflow em `dags/`.
    - Relatório consolidado gerado em `evals/reports/ragas_benchmark_chroma_report.md`.
 
 ---
@@ -157,7 +157,7 @@ Para comprovar experimentalmente o impacto da base vetorial unificada, reexecuta
 2. Os JSONs da API Power BI devem ser convertidos em PDFs válidos (`RELATORIO_ESTOQUE_CEAF_INFOSAUDE.pdf` e `GUIA_FARMACIAS_UBS_GEO_DF.pdf`).
 3. `pypdf` deve extrair 100% dos textos dos PDFs sem erros de decodificação.
 4. `ChromaDB` deve indexar todos os chunks gerados na coleção `sus_unified_pdf_corpus`.
-5. O runner de benchmark deve executar contra a base ChromaDB e registrar métricas no MLflow e relatório markdown.
+5. O runner de benchmark deve executar contra a base ChromaDB e registrar métricas em `evals/reports/experiment_runs_registry.json` e relatório markdown.
 6. Todos os testes automatizados em `tests/test_sdd_specs.py` devem passar.
 7. Código e documentação devem ser comitados e enviados para `origin/main` no repositório `DESAFIO-2/Data-Science`.
 
