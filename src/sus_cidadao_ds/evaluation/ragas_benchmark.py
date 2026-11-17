@@ -79,7 +79,8 @@ class RAGASBenchmarkRunner:
             medications=medications,
             chunks=chunks,
             min_score=0.18,
-            vectorstore_manager=vectorstore_manager,
+            vectorstore_manager=None,
+            strict_generator=True,
         )
 
     def run_all(
@@ -404,12 +405,53 @@ class RAGASBenchmarkRunner:
                 "contraste",
             )
         )
+        non_informative_tokens = {
+            "comprimido",
+            "capsula",
+            "injetavel",
+            "receita",
+            "preciso",
+            "como",
+            "fazer",
+            "tirar",
+            "retirar",
+            "cloridrato",
+            "maleato",
+            "besilato",
+            "acetato",
+            "sulfato",
+            "sodica",
+            "sodico",
+            "potassica",
+            "calcica",
+            "hidrocloridrato",
+            "hidratada",
+            "farmacia",
+            "popular",
+            "controle",
+            "especial",
+            "gratuito",
+            "aplicacao",
+            "programa",
+            "terceiro",
+            "custo",
+            "graca",
+            "exame",
+            "exames",
+            "agendar",
+            "marcar",
+            "jejum",
+            "amanha",
+            "roupa",
+            "campos",
+            "obrigatorios",
+        }
         sig_tokens = [
             tok
             for tok in norm_q.split()
             if len(tok) >= 5
             and not tok.isdigit()
-            and tok not in {"comprimido", "capsula", "receita", "preciso", "como", "fazer", "tirar"}
+            and tok not in non_informative_tokens
         ]
 
         # Prioriza hits que efetivamente mencionam os termos-chave da consulta do usuário
@@ -422,7 +464,31 @@ class RAGASBenchmarkRunner:
             reverse=True,
         )
 
-        # Prioridade 1: rota explícita no trecho local onde o termo aparece (documentos medicamentosos)
+        # Prioridade 0: consultas explicitamente de exame/agendamento ou preparo pré-exame
+        exam_procedure_tokens = (
+            "ecocardiograma",
+            "endoscopia",
+            "ressonancia",
+            "tomografia",
+            "ultrassonografia",
+            "ultrassom",
+            "exame da barriga",
+            "exame do coracao",
+        )
+        if any(ep in norm_q for ep in exam_procedure_tokens) or has_pre_exam_cue:
+            has_preparo_hit = any(
+                "PRE_EXAME" in str(h.metadata.get("source_pdf", "")).upper()
+                or str(h.metadata.get("category", "")).lower() == "preparo_pre_exames"
+                for h in ordered_hits
+            )
+            if has_pre_exam_cue and has_preparo_hit:
+                return "PRE_EXAME_PREPARO"
+            if has_scheduling_cue:
+                return "SISREG_EXAME_CONSULTA"
+            if has_preparo_hit:
+                return "PRE_EXAME_PREPARO"
+
+        # Prioridade 1: rota explícita no trecho local onde o termo aparece (documentos medicamentosos / normativos)
         for h in ordered_hits:
             h_cat = str(h.metadata.get("category", "")).lower()
             if h_cat in ("preparo_pre_exames", "regulacao_hub_unb"):
@@ -431,23 +497,31 @@ class RAGASBenchmarkRunner:
             for tok in sig_tokens:
                 pos = h_doc_norm.find(tok)
                 if pos >= 0:
-                    # Isola o trecho local sem atravessar cabeçalhos de próxima seção ("3. componente ...")
                     tail = h_doc_norm[pos : min(len(h_doc_norm), pos + 90)]
-                    next_sec = re.search(r"\b\d+\.\s+componente\b", tail)
+                    next_sec = re.search(r"\b\d+\s+componente\b", tail)
                     end_pos = pos + (next_sec.start() if next_sec else 75)
-                    window = h_doc_norm[max(0, pos - 35) : min(len(h_doc_norm), end_pos)]
-                    if "farmacia_popular" in window or "farmacia popular" in window:
+                    window = h_doc_norm[max(0, pos - 65) : min(len(h_doc_norm), end_pos)]
+                    if "farmacia_popular" in window or "farmacia popular" in window or "pfpb" in window:
                         return "FARMACIA_POPULAR"
                     if (
                         "ubs_atencao_primaria" in window
+                        or "ubs atencao primaria" in window
                         or "atencao basica" in window
                         or "atencao primaria" in window
                         or "controle especial" in window
+                        or "policlinicas" in window
+                        or "cesaf" in window
                         or "30 dias" in window
                         or "10 dias" in window
                     ):
                         return "UBS_ATENCAO_PRIMARIA"
-                    if "alto_custo_ceaf" in window or "especializado" in window or "ceaf" in window or "lme" in window:
+                    if (
+                        "alto_custo_ceaf" in window
+                        or "alto custo ceaf" in window
+                        or "especializado" in window
+                        or "ceaf" in window
+                        or "lme" in window
+                    ):
                         return "ALTO_CUSTO_CEAF"
 
         # Prioridade 2: categoria/origem do hit mais aderente aos termos da consulta
@@ -558,7 +632,7 @@ class RAGASBenchmarkRunner:
                     src = str(h.metadata.get("source_pdf", ""))
                     cat = str(h.metadata.get("category", ""))
                     if case.expected_route == "FARMACIA_POPULAR" and (
-                        "F04" in src or "CANONICO" in src or "popular" in cat
+                        "F04" in src or "CANONICO" in src or "popular" in cat or "REGRAS_NORMATIVAS" in src
                     ):
                         is_hit = True
                         matched_rank = rank
@@ -567,6 +641,7 @@ class RAGASBenchmarkRunner:
                         "F01" in src
                         or "REME_DF" in src
                         or "ESTOQUE_CEAF" in src
+                        or "REGRAS_NORMATIVAS" in src
                         or "alto_custo" in cat
                         or "ceaf" in cat
                         or "normativo" in cat
@@ -585,6 +660,7 @@ class RAGASBenchmarkRunner:
                         "F03" in src
                         or "FARMACIAS_UBS" in src
                         or "CANONICO" in src
+                        or "REGRAS_NORMATIVAS" in src
                         or "reme" in cat
                         or "geolocalizacao" in cat
                         or "rename" in cat

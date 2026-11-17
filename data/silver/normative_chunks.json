@@ -132,6 +132,159 @@
     "sha256": "e12fc5e00640d2b96aa4c6dc7414d8ebebc87e61b3ebbf2fa9b5028f4a717d0d"
   },
   {
+    "chunk_id": "CHK-REGRA-UBS-001",
+    "source_id": "PNAB_SES_DF",
+    "document_title": "Portaria de Consolidação MS nº 2/2017 e Diretrizes da Atenção Primária SES-DF",
+    "section": "Regra de Adscrição Territorial e Dispensação na Unidade Básica de Saúde (UBS)",
+    "page_number": 14,
+    "text": "Na Atenção Primária à Saúde do SUS-DF, os medicamentos do Componente Básico (RENAME/REME-DF) devem ser retirados prioritariamente na farmácia da Unidade Básica de Saúde (UBS) de referência do território onde o cidadão reside e está cadastrado na sua Equipe de Saúde da Família (eSF). Para retirar, é obrigatório apresentar o Cartão Nacional de Saúde (CNS - Cartão SUS), documento oficial de identificação com foto e CPF, comprovante de residência no DF e receita médica original válida emitida pelo SUS. Em caso de indisponibilidade pontual de estoque no lote da UBS, o farmacêutico emite declaração de encaminhamento para a UBS polo de retaguarda da mesma Região de Saúde.",
+    "dcb_mentions": [
+      "omeprazol",
+      "amoxicilina",
+      "levotiroxina sódica"
+    ],
+    "route_category": "UBS_ATENCAO_PRIMARIA",
+    "sha256": "c18259b132558ca748d43a6af9b87801a80bc77190a8629c597524ecd487d8d7"
+  },
+  {
+    "chunk_id": "CHK-REGRA-PFPB-001",
+    "source_id": "PFPB_2024",
+    "document_title": "Portaria GM/MS nº 3.677/2024 — Manual de Operações do Programa Farmácia Popular",
+    "section": "Regras de Acesso Nacional, Receitas Particulares e Retirada por Terceiros",
+    "page_number": 8,
+    "text": "No Programa Farmácia Popular do Brasil, não há exigência de vinculação territorial: o cidadão pode retirar medicamentos gratuitos (hipertensão, diabetes, asma, osteoporose, dislipidemia) em qualquer drogaria privada credenciada ('Aqui Tem Farmácia Popular') em qualquer Região Administrativa do DF ou município brasileiro. São aceitas receitas emitidas tanto pelo SUS quanto por clínicas privadas e convênios, com validade de até 180 dias. A retirada exige a presença do titular com CPF, RG e receita. Caso o paciente seja idoso, enfermo ou esteja impossibilitado de locomoção, a retirada por terceiros exige procuração pública ou procuração particular com firma reconhecida em cartório, laudo médico atestando a impossibilidade e documentos de identificação com foto do paciente e do procurador.",
+    "dcb_mentions": [
+      "losartana potássica",
+      "cloridrato de metformina",
+      "sinvastatina",
+      "alendronato de sódio"
+    ],
+    "route_category": "FARMACIA_POPULAR",
+    "sha256": "efacbbb0a69374ac9b98a0f2d7f6e514a1fed55f486cfa3ab11034b412099c2b"
+  },
+  {
+    "chunk_id": "CHK-REGRA-CEAF-001",
+    "source_id": "REME_DF_2024",
+    "document_title": "Manual do Componente Especializado da Assistência Farmacêutica (CEAF) — SES-DF",
+    "section": "Polos Regionais de Alto Custo no DF e Abertura de Processo LME",
+    "page_number": 19,
+    "text": "No Distrito Federal, os medicamentos do Componente Especializado (Alto Custo / CEAF) são dispensados exclusivamente em três polos centrais da Diretoria de Assistência Farmacêutica (DIASF): (1) Polo Asa Sul, localizado no subsolo da Estação 102 Sul do Metrô; (2) Polo Ceilândia, na Praça do Cidadão ao lado do Hospital Regional de Ceilândia (HRC); e (3) Polo Gama, na Praça 1, Entrequadra 1/2, Setor Sul. A obtenção exige abertura de processo administrativo com Laudo de Solicitação, Avaliação e Autorização de Medicamento(s) (LME) assinado pelo médico especialista (validade de 90 dias a contar da emissão), receita médica em 2 vias com a Denominação Comum Brasileira (DCB), Termo de Esclarecimento e Responsabilidade (TER), exames exigidos pelo PCDT do Ministério da Saúde para o CID-10, Cartão SUS, CPF, RG e comprovante de residência no DF. Recomenda-se conferência prévia da disponibilidade no painel InfoSaúde antes do deslocamento.",
+    "dcb_mentions": [
+      "adalimumabe",
+      "sacubitril valsartana sódica hidratada",
+      "insulina glargina"
+    ],
+    "route_category": "ALTO_CUSTO_CEAF",
+    "sha256": "2e2b0bc8429b4b9e4b4dc832683a6b0029bb6fa57d01350dd668d0dd74dd80cf"
+  },
+  {
+    "chunk_id": "CHK-REGRA-CONTROLE-001",
+    "source_id": "ANVISA_PORTARIA_344",
+    "document_title": "Portaria SVS/MS nº 344/1998 e RDC ANVISA nº 20/2011 — Controle Especial e Antimicrobianos",
+    "section": "Prazos de Validade Estrita de Receituários de Controle Especial e Antibióticos",
+    "page_number": 5,
+    "text": "Para medicamentos sujeitos a controle especial (psicotrópicos, antidepressivos, ansiolíticos e anticonvulsivantes como fluoxetina e carbamazepina), a dispensação gratuita nas farmácias do SUS exige Receita de Controle Especial em duas vias (ou Notificação de Receita), com retenção obrigatória da 1ª via pelo farmacêutico e validade estrita de 30 dias contados da data de emissão médica. Para medicamentos antimicrobianos (antibióticos como amoxicilina, azitromicina e cefalexina), a receita médica em duas vias possui validade máxima improrrogável de 10 dias corridos em todo o território nacional.",
+    "dcb_mentions": [
+      "cloridrato de fluoxetina",
+      "carbamazepina",
+      "amoxicilina"
+    ],
+    "route_category": "UBS_ATENCAO_PRIMARIA",
+    "sha256": "6b6afcab416169ca890532b1aafa0fd6ba5af8ec8c174f10fb7b20191b1873f0"
+  },
+  {
+    "chunk_id": "CHK-COMP-PFPB-003",
+    "source_id": "PFPB_C01_2026",
+    "document_title": "Diretrizes Operacionais do Programa Farmácia Popular e Dignidade Menstrual (Fonte C01)",
+    "section": "Seção 2 — Fraldas Geriátricas, Dignidade Menstrual e Procuração com Assinatura Eletrônica",
+    "page_number": 2,
+    "text": "Pelo Programa Farmácia Popular do Brasil (Aqui Tem Farmácia Popular), além do elenco de medicamentos gratuitos para hipertensão, diabetes, asma, osteoporose, dislipidemia, rinite, doença de Parkinson, glaucoma e anticoncepção, são disponibilizadas fraldas geriátricas (para pessoas com idade igual ou superior a 60 anos ou pessoas com deficiência, mediante prescrição ou laudo médico indicando incontinência) e absorventes higiênicos gratuitos pelo Programa Dignidade Menstrual. Para pacientes acamados ou impossibilitados de comparecer, é aceita procuração particular com firma reconhecida ou assinatura eletrônica qualificada (Gov.br), acompanhada dos documentos oficiais com CPF do titular e do representante legal.",
+    "dcb_mentions": [
+      "fralda geriátrica",
+      "absorvente higiênico"
+    ],
+    "route_category": "FARMACIA_POPULAR",
+    "sha256": "15bc0c916adfbe67069300adad73afe7093b2fbbf1c09b43a87998f7d575b6a1"
+  },
+  {
+    "chunk_id": "CHK-COMP-UBS-002",
+    "source_id": "SES_DF_C02_2026",
+    "document_title": "Normas das Farmácias das Unidades Básicas de Saúde (UBS) — SES-DF (Fonte C02)",
+    "section": "Seção 3 — Entrega de Controlados para Maiores de 18 Anos e Aplicações Injetáveis na APS",
+    "page_number": 2,
+    "text": "Nas Farmácias das Unidades Básicas de Saúde (UBS) da Secretaria de Saúde do Distrito Federal (SES-DF), medicamentos sujeitos a controle especial (Portaria SVS/MS nº 344/1998) somente podem ser dispensados e entregues a cidadãos maiores de 18 anos, mediante apresentação de documento oficial de identificação com foto, Cartão SUS (CNS) e Receita de Controle Especial em duas vias válida por 30 dias. Medicamentos injetáveis padronizados na Atenção Primária à Saúde (como benzilpenicilina benzatina e acetato de medroxiprogesterona) são dispensados e aplicados na sala de procedimentos da própria UBS pela equipe de enfermagem.",
+    "dcb_mentions": [
+      "benzilpenicilina benzatina",
+      "acetato de medroxiprogesterona"
+    ],
+    "route_category": "UBS_ATENCAO_PRIMARIA",
+    "sha256": "a9bb41aee743620082b91a13d481d5ce5b21a780c56c27f55224628073435611"
+  },
+  {
+    "chunk_id": "CHK-COMP-SEC-001",
+    "source_id": "SES_DF_C03_2026",
+    "document_title": "Guia das Farmácias da Atenção Secundária SES-DF: Policlínicas, CAPS, HUB e CEDIN (Fonte C03)",
+    "section": "Seção 1 — Documentação e Polos de Dispensação Especializada Ambulatorial no DF",
+    "page_number": 1,
+    "text": "No Distrito Federal, medicamentos de acompanhamento ambulatorial específico da Atenção Secundária e Estratégica (incluindo antirretrovirais para HIV/AIDS como abacavir, dolutegravir e lamivudina, medicamentos de saúde mental em acompanhamento intensivo e esquemas especiais de infectologia) são dispensados nas Farmácias das Policlínicas (Ceilândia, Gama, Planaltina e Taguatinga), nos Centros de Atenção Psicossocial (CAPS), na Farmácia Escola do Hospital Universitário de Brasília (HUB-UnB) e no Centro Especializado em Doenças Infecciosas (CEDIN, antigo Hospital Dia na Asa Sul). O acesso exige receita médica válida e legível em 2 vias, documento oficial com foto, CPF, Cartão SUS (CNS) e formulário específico do programa quando exigido em protocolo.",
+    "dcb_mentions": [
+      "abacavir",
+      "dolutegravir sódico",
+      "lamivudina"
+    ],
+    "route_category": "UBS_ATENCAO_PRIMARIA",
+    "sha256": "c0ef0512988dc62f7fc9b04f3b098c6f08ba9f934251872c6de7ac9e329e4db8"
+  },
+  {
+    "chunk_id": "CHK-COMP-CEAF-002",
+    "source_id": "SES_DF_C04_2026",
+    "document_title": "Regionalização do Componente Especializado (Farmácia de Alto Custo) — SES-DF (Fonte C04)",
+    "section": "Seção 2 — Regiões Administrativas Vinculadas às Unidades Asa Sul, Ceilândia e Gama",
+    "page_number": 3,
+    "text": "O atendimento das três unidades da Farmácia do Componente Especializado (Alto Custo / CEAF-DF) é regionalizado conforme a Região Administrativa de residência do paciente: 1) Unidade Asa Sul (Estação 102 Sul do Metrô): atende moradores de Asa Sul, Asa Norte, Cruzeiro, Sudoeste, Lago Sul, Lago Norte, Varjão, Guará, Estrutural (SCIA), Núcleo Bandeirante, Candangolândia, Riacho Fundo I e II, Park Way, Paranoá, Itapoã, São Sebastião, Jardim Botânico, Jardins Mangueiral, Sobradinho I e II, Planaltina e Fercal; 2) Unidade Ceilândia (Praça do Cidadão, EQNN 18/20): atende moradores de Ceilândia, Sol Nascente/Pôr do Sol, Taguatinga, Samambaia, Águas Claras, Vicente Pires, Arniqueira e Brazlândia; 3) Unidade Gama (Praça 1, Setor Leste): atende moradores do Gama, Santa Maria e Recanto das Emas.",
+    "dcb_mentions": [],
+    "route_category": "ALTO_CUSTO_CEAF",
+    "sha256": "8178d6236cc0e7455f584d6c2246c1e0b9ea4432a4444603c29fb162d9eda689"
+  },
+  {
+    "chunk_id": "CHK-COMP-INFOSAUDE-001",
+    "source_id": "INFOSAUDE_DF_C06_C07",
+    "document_title": "Painel InfoSaúde DF — Transparência de Estoque de Medicamentos SES-DF (Fontes C06 e C07)",
+    "section": "Consulta Pública de Estoque nas Farmácias de UBS e Farmácias de Alto Custo",
+    "page_number": 1,
+    "text": "Antes de se deslocar à farmácia pública, o cidadão do Distrito Federal pode consultar gratuitamente a disponibilidade em tempo real dos medicamentos padronizados por meio do portal InfoSaúde DF (info.saude.df.gov.br), nos painéis 'Farmácias Ambulatoriais' (estoque das UBS e Policlínicas) e 'Farmácias de Alto Custo' (estoque das unidades Asa Sul, Ceilândia e Gama do Componente Especializado - CEAF). O painel informa se o item encontra-se 'COM ESTOQUE', 'SEM ESTOQUE' ou em fase de 'AQUISIÇÃO / PROGRAMADO' na respectiva unidade.",
+    "dcb_mentions": [],
+    "route_category": "GERAL",
+    "sha256": "9261c1e8bdc92d40c0cb99a9fd1b1902fdb8dd29a382263967b82c9a9754e1c3"
+  },
+  {
+    "chunk_id": "CHK-COMP-LME-001",
+    "source_id": "MS_CEAF_C09_C10",
+    "document_title": "Perguntas Frequentes e Manual do LME no Componente Especializado — MS (Fontes C09 e C10)",
+    "section": "Regras de Preenchimento do LME, Declaração Autorizadora e Renovação da Continuidade",
+    "page_number": 4,
+    "text": "No Componente Especializado da Assistência Farmacêutica (CEAF), o Laudo para Solicitação, Avaliação e Autorização de Medicamentos (LME) possui campos de preenchimento exclusivo e obrigatório do médico assistente: identificação e CNS do médico, CID-10, anamnese clínica, indicação de tratamento prévio, atestado de incapacidade (quando aplicável), assinatura e carimbo. O LME tem validade de 90 dias para solicitação. Caso o paciente deseje designar um terceiro para retirar o medicamento de Alto Custo, deve apresentar a Declaração Autorizadora assinada, acompanhada de cópia do documento de identidade, endereço e telefone do representante.",
+    "dcb_mentions": [],
+    "route_category": "ALTO_CUSTO_CEAF",
+    "sha256": "a6821f414aa59cfae9dc25d74eebca30da02d94b67ee7713a47e127d56b41ae4"
+  },
+  {
+    "chunk_id": "CHK-COMP-CESAF-001",
+    "source_id": "MS_CESAF_C14",
+    "document_title": "Diretrizes do Componente Estratégico da Assistência Farmacêutica — CESAF (Fonte C14)",
+    "section": "Acesso Equitativo a Medicamentos para Endemias, Tuberculose, Hanseníase e Tabagismo",
+    "page_number": 1,
+    "text": "O Componente Estratégico da Assistência Farmacêutica (CESAF) garante o acesso gratuito no SUS a medicamentos e insumos destinados à prevenção, diagnóstico e tratamento de doenças de perfil endêmico e importância epidemiológica, incluindo tuberculose (rifampicina, isoniazida, pirazinamida, etambutol), hanseníase (dapsona, clofazimina), malária, leishmaniose, doença de Chagas, infecções sexualmente transmissíveis (HIV/AIDS e hepatites virais) e controle do tabagismo (adesivo e goma de nicotina, cloridrato de bupropiona). No DF, a dispensação ocorre nas UBS de referência, Policlínicas e no CEDIN.",
+    "dcb_mentions": [
+      "rifampicina",
+      "isoniazida",
+      "dapsona",
+      "nicotina"
+    ],
+    "route_category": "UBS_ATENCAO_PRIMARIA",
+    "sha256": "3b5cd69fc7df37bab304d196a828e9c7bcb59c731ee4d4ef57a7bbbe0c292c33"
+  },
+  {
     "chunk_id": "CHK-PREEXAM-001",
     "source_id": "PRE_EXAME_SESDF_HUB",
     "document_title": "Guia Operacional de Preparo para Exames SUS-DF / Regulação Ambulatorial",

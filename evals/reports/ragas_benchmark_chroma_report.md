@@ -1,16 +1,16 @@
 # Avaliação Experimental Científica (Semana 3 / SPEC-08 — Framework RAGAS & IR)
 
-- **Hash Consolidado do Manifesto (SHA-256):** `6aad97cb7ce99495baecca22a0218e750fa43d222e106e6b47904095ba44795d`
-- **Total de Casos no Golden Dataset (`golden_set_v1.json`):** `22`
+- **Hash Consolidado do Manifesto (SHA-256):** `6cdf0a15b12bd78da37c7d38d2975c677d6fdc5dea77a521762c86b9f90bd511`
+- **Total de Casos no Golden Dataset (`golden_set_v1.json`):** `28`
 
 ## 1. Comparativo Experimental: LLM Pura vs. RAG TF-IDF vs. RAG Híbrido vs. RAG ChromaDB (Corpus PDFs)
 
 | Arquitetura Avaliada | Faithfulness | Answer Relevancy | Context Recall | Score RAGAS (H-Mean) | Hit Rate@3 | Recall@3 | MRR | Route Acc | Guardrail Clínico |
 |---|---|---|---|---|---|---|---|---|---|
-| **01_LLM_Pura_Sem_RAG** | 0.3805 | 0.5377 | 0.0000 | **0.1225** | 0.0000 | 0.0000 | 0.0000 | 0.2727 | 0.3333 |
-| **02_RAG_TFIDF_Baseline_012** | 0.8241 | 0.7961 | 0.7602 | **0.7926** | 1.0000 | 0.9688 | 1.0000 | 0.7727 | 0.0000 |
-| **03_RAG_Hibrido_Multiagentes** | 1.0000 | 0.9760 | 0.9683 | **0.9812** | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
-| **04_RAG_ChromaDB_Corpus_PDFs** | 0.9832 | 0.9609 | 0.9596 | **0.9678** | 1.0000 | 1.0000 | 0.8542 | 0.9545 | 1.0000 |
+| **01_LLM_Pura_Sem_RAG** | 0.3889 | 0.5468 | 0.0000 | **0.1230** | 0.0000 | 0.0000 | 0.0000 | 0.3214 | 0.3333 |
+| **02_RAG_TFIDF_Baseline_012** | 0.8361 | 0.8117 | 0.7803 | **0.8087** | 1.0000 | 0.9545 | 1.0000 | 0.8214 | 0.0000 |
+| **03_RAG_Hibrido_Multiagentes** | 1.0000 | 0.9789 | 0.9706 | **0.9830** | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
+| **04_RAG_ChromaDB_Corpus_PDFs** | 0.9882 | 0.9721 | 0.9717 | **0.9773** | 0.9545 | 0.9545 | 0.9242 | 0.9286 | 1.0000 |
 
 ## 2. Principais Conclusões Científicas
 

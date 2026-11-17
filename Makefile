@@ -1,4 +1,4 @@
-.PHONY: dev-install sync-data eda calibrate benchmark run-agents index-chroma pipeline-pdf serve test lint clean dag-ingestion dag-eval
+.PHONY: dev-install sync-data eda calibrate benchmark run-agents index-chroma pipeline-pdf serve prototype-web prototype-check test lint clean dag-ingestion dag-eval
 
 PYTHON ?= $(shell if [ -x .venv/bin/python ]; then echo .venv/bin/python; else echo python3; fi)
 PYTHONPATH := src
@@ -29,6 +29,12 @@ pipeline-pdf:
 
 serve:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m sus_cidadao_ds.cli serve --host 127.0.0.1 --port 8000
+
+prototype-web:
+	cd prototype && npx expo start --web --clear
+
+prototype-check:
+	cd prototype && npx tsc --noEmit && npm run lint
 
 dag-ingestion:
 	@echo "==> Executando DAG [sus_cidadao_ingestion_rag_pipeline]..."

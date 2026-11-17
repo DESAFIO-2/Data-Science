@@ -1,12 +1,13 @@
 {
-  "manifest_version": "2024.2.0",
-  "generated_at_utc": "2026-11-12T18:38:01.780619+00:00",
-  "engineering_source": "canonical_materialization_v2024.2",
-  "canonical_medications_sha256": "0a531bd8b691adb999c4262d93e2e81a6663529d9c566ed7496b166ee31c9105",
-  "normative_chunks_sha256": "a18df760702d97163f1e40926a35bb492ee2e0144c5fcb27e45fc92654a9b18d",
-  "combined_sha256": "6aad97cb7ce99495baecca22a0218e750fa43d222e106e6b47904095ba44795d",
+  "manifest_version": "2026.4.0",
+  "generated_at_utc": "2026-11-17T13:01:28.158279+00:00",
+  "engineering_source": "corpus-consolidado-v9-aprovado-2026-11-12",
+  "canonical_medications_sha256": "47099cfcdf9b890ecee27ae9912efbe196b4ebc5196d64b7e5ace68f0457429a",
+  "normative_chunks_sha256": "8b5236a1cb8439c82c4f83f6a2c93da957b088dce0d2445b1a951cc99a4eaeb7",
+  "combined_sha256": "6cdf0a15b12bd78da37c7d38d2975c677d6fdc5dea77a521762c86b9f90bd511",
   "record_counts": {
-    "canonical_medications": 24,
-    "normative_chunks": 13
+    "canonical_medications": 1775,
+    "normative_chunks": 24,
+    "evidence_chunks_v2": 2114
   }
 }

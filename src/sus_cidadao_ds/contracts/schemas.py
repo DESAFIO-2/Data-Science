@@ -24,7 +24,7 @@ class CanonicalMedication:
     available_pfpb: bool
     pfpb_free: bool
     available_reme_df: bool
-    dispensation_route: str  # "FARMACIA_POPULAR", "UBS_ATENCAO_PRIMARIA", "ALTO_CUSTO_CEAF"
+    dispensation_route: str  # "FARMACIA_POPULAR", "UBS_ATENCAO_PRIMARIA", "ALTO_CUSTO_CEAF", "HOSPITALAR"
     requires_lme: bool
     icd10_codes: list[str] = field(default_factory=list)
     required_documents: list[str] = field(default_factory=list)
@@ -32,6 +32,9 @@ class CanonicalMedication:
     source_id: str = "RENAME_2024"
     source_page: int = 1
     notes: str = ""
+    df_channels: list[str] = field(default_factory=list)
+    item_type: str = "medicine"
+    occurrence_ids: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -55,6 +58,43 @@ class CanonicalMedication:
             source_id=str(data.get("source_id", "RENAME_2024")),
             source_page=int(data.get("source_page", 1)),
             notes=str(data.get("notes", "")),
+            df_channels=[str(x) for x in data.get("df_channels", [])],
+            item_type=str(data.get("item_type", "medicine")),
+            occurrence_ids=[str(x) for x in data.get("occurrence_ids", [])],
+        )
+
+
+@dataclass(frozen=True)
+class EvidenceChunkV2:
+    """Chunk literal 1:1 com proveniência F01/F03/F04 do corpus consolidado v9."""
+
+    chunk_id: str
+    evidence_id: str
+    occurrence_id: str
+    medicine_id: str | None
+    supply_id: str | None
+    item_type: str
+    source: dict[str, Any]
+    release_version: str
+    text: str
+    literal_text: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> EvidenceChunkV2:
+        return cls(
+            chunk_id=str(data["chunk_id"]),
+            evidence_id=str(data["evidence_id"]),
+            occurrence_id=str(data["occurrence_id"]),
+            medicine_id=str(data["medicine_id"]) if data.get("medicine_id") else None,
+            supply_id=str(data["supply_id"]) if data.get("supply_id") else None,
+            item_type=str(data.get("item_type", "medicine")),
+            source=dict(data.get("source", {})),
+            release_version=str(data.get("release_version", "corpus-consolidado-v9")),
+            text=str(data["text"]),
+            literal_text=str(data.get("literal_text", "")),
         )
 
 

@@ -31,3 +31,11 @@ logs/
 *.swp
 .env
 
+# Protótipo Mobile Expo / React Native (prototype/)
+prototype/node_modules/
+prototype/.expo/
+prototype/dist/
+prototype/web-build/
+prototype/.eslintcache
+
+

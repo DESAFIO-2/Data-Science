@@ -10,6 +10,7 @@ Este módulo executa o ciclo completo de ingestão documental uniforme:
 
 from __future__ import annotations
 
+import html
 import json
 import logging
 import re
@@ -337,6 +338,10 @@ class JSONToPDFConverter:
             self.convert_pre_exam_protocols(silver_chunks_json, pre_exam_pdf)
             generated.append(pre_exam_pdf)
 
+            rules_pdf = self.pdf_dir / "GUIA_REGRAS_NORMATIVAS_CONSOLIDADAS_SUS_DF.pdf"
+            self.convert_consolidated_rules(silver_chunks_json, rules_pdf)
+            generated.append(rules_pdf)
+
         return generated
 
     def convert_ceaf_stock(self, json_path: Path, output_pdf: Path) -> Path:
@@ -617,12 +622,14 @@ class JSONToPDFConverter:
         ]
 
         for m in meds:
-            dcb = f"{m.get('dcb_name', '')} {m.get('concentration', '')} ({m.get('pharmaceutical_form', '')})"
-            comp = str(m.get("rename_component", ""))
-            route = str(m.get("dispensation_route", ""))
+            dcb = html.escape(
+                f"{m.get('dcb_name', '')} {m.get('concentration', '')} ({m.get('pharmaceutical_form', '')})"
+            )
+            comp = html.escape(str(m.get("rename_component", "")))
+            route = html.escape(str(m.get("dispensation_route", "")))
             pfpb = "SIM (100%)" if m.get("pfpb_free") else ("SIM" if m.get("available_pfpb") else "NÃO")
             lme = "SIM" if m.get("requires_lme") else "NÃO"
-            val = f"{m.get('prescription_validity_days', 180)} dias"
+            val = html.escape(f"{m.get('prescription_validity_days', 180)} dias")
 
             table_data.append([
                 Paragraph(f"<b>{dcb}</b>", cell_style),
@@ -633,7 +640,7 @@ class JSONToPDFConverter:
                 Paragraph(val, cell_style),
             ])
 
-        t = Table(table_data, colWidths=[175, 75, 105, 60, 50, 70], repeatRows=1)
+        t = Table(table_data, colWidths=[165, 65, 130, 55, 45, 75], repeatRows=0)
         t.setStyle(
             TableStyle([
                 ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#4A148C")),
@@ -721,6 +728,63 @@ class JSONToPDFConverter:
         logger.info("PDF de Pré-Exames gerado com sucesso: %s", output_pdf.name)
         return output_pdf
 
+    def convert_consolidated_rules(self, silver_chunks_path: Path, output_pdf: Path) -> Path:
+        """Converte regras normativas consolidadas v9 (procuração, CEAF/LME, Policlínicas, CESAF) em PDF."""
+        chunks = json.loads(silver_chunks_path.read_text(encoding="utf-8"))
+        rule_chunks = [
+            c for c in chunks if c.get("route_category") != "PRE_EXAME_PREPARO"
+        ]
+
+        doc = SimpleDocTemplate(
+            str(output_pdf),
+            pagesize=A4,
+            leftMargin=36,
+            rightMargin=36,
+            topMargin=36,
+            bottomMargin=36,
+        )
+        title_style = ParagraphStyle(
+            "RulesTitle",
+            parent=self.styles["Heading1"],
+            fontSize=13,
+            leading=16,
+            textColor=colors.HexColor("#0D47A1"),
+            spaceAfter=6,
+        )
+        section_style = ParagraphStyle(
+            "RulesSection",
+            parent=self.styles["Heading2"],
+            fontSize=10.5,
+            leading=13,
+            textColor=colors.HexColor("#1565C0"),
+            spaceBefore=7,
+            spaceAfter=3,
+        )
+        body_style = ParagraphStyle(
+            "RulesBody",
+            parent=self.styles["Normal"],
+            fontSize=9,
+            leading=12.5,
+            textColor=colors.HexColor("#212121"),
+            spaceAfter=7,
+        )
+
+        story: list[Any] = [
+            Paragraph("SUS-DF — CONSOLIDAÇÃO NORMATIVA OFICIAL (CORPUS v9 AUDITADO)", title_style),
+            HRFlowable(width="100%", thickness=1.2, color=colors.HexColor("#0D47A1"), spaceAfter=8),
+        ]
+        for ch in rule_chunks:
+            title_txt = html.escape(
+                f"{ch['chunk_id']} [{ch['route_category']}] — {ch['section']}"
+            )
+            body_txt = html.escape(str(ch["text"]))
+            story.append(Paragraph(title_txt, section_style))
+            story.append(Paragraph(body_txt, body_style))
+
+        doc.build(story)
+        logger.info("PDF de Regras Consolidadas v9 gerado: %s", output_pdf.name)
+        return output_pdf
+
 
 class PDFChunkExtractor:
     """Extrai texto e gera chunks semânticos com metadados estruturados de todos os PDFs."""
@@ -806,6 +870,8 @@ class PDFChunkExtractor:
             return "catalogo_canonico_sus"
         if "PRE_EXAME" in s:
             return "preparo_pre_exames"
+        if "REGRAS_NORMATIVAS" in s:
+            return "regras_normativas_v9"
         return "documento_geral_sus"
 
     def _clean_text(self, text: str) -> str:
