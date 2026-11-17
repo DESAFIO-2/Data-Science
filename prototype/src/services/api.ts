@@ -5,8 +5,18 @@ export interface HealthResponse {
   service: string;
   embedding_profile?: Record<string, unknown>;
   chroma_collections?: Record<string, number | string>;
-  stt_provider_configured?: boolean;
+  stt_provider_configured?: string | null;
+  gemini_configured?: boolean;
   tts_voice?: string;
+  tts_voices_available?: string[];
+}
+
+export interface TTSResponse {
+  tts_audio_base64: string | null;
+  tts_mime_type: string;
+  tts_provider: string;
+  tts_voice: string;
+  tts_fallback_reason?: string | null;
 }
 
 export interface AuditedMedicationDTO {
@@ -231,6 +241,25 @@ export async function checkHealth(baseUrl?: string): Promise<HealthResponse> {
   return requestJson<HealthResponse>('/health', { method: 'GET' }, baseUrl, 5000);
 }
 
+export async function synthesizeSpeech(
+  payload: { text: string; voice?: string },
+  baseUrl?: string,
+): Promise<TTSResponse> {
+  return requestJson<TTSResponse>(
+    '/v1/tts',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: payload.text,
+        voice: payload.voice ?? null,
+      }),
+    },
+    baseUrl,
+    8000,
+  );
+}
+
 export async function sendChatTurn(
   payload: {
     text: string;
@@ -266,6 +295,7 @@ export async function sendVoiceTurn(
     session_id?: string | null;
     days_since_emission?: number;
     synthesize_audio?: boolean;
+    tts_voice?: string;
   },
   baseUrl?: string,
 ): Promise<ConversationTurnResponse> {
@@ -287,6 +317,9 @@ export async function sendVoiceTurn(
   }
   form.append('days_since_emission', String(params.days_since_emission ?? 166));
   form.append('synthesize_audio', String(params.synthesize_audio ?? true));
+  if (params.tts_voice) {
+    form.append('tts_voice', params.tts_voice);
+  }
 
   return requestJson<ConversationTurnResponse>(
     '/v1/voice-turn',

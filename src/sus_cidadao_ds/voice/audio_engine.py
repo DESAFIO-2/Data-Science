@@ -58,17 +58,29 @@ class VoiceEngine:
     """Abstração de STT (áudio -> texto) e TTS (texto -> áudio PT-BR)."""
 
     DEFAULT_TTS_VOICE = "pt-BR-FranciscaNeural"
+    DEFAULT_TTS_RATE = "+5%"
     DEFAULT_MACOS_VOICE = "Luciana"
+    AVAILABLE_PT_BR_VOICES: tuple[str, ...] = (
+        "pt-BR-FranciscaNeural",
+        "pt-BR-ThalitaMultilingualNeural",
+        "pt-BR-AntonioNeural",
+    )
 
     def __init__(
         self,
         tts_voice: str | None = None,
         allow_network_tts: bool | None = None,
+        tts_rate: str | None = None,
     ) -> None:
         self.tts_voice = (
             tts_voice
             or os.environ.get("SUS_CIDADAO_TTS_VOICE", "").strip()
             or self.DEFAULT_TTS_VOICE
+        )
+        self.tts_rate = (
+            tts_rate
+            or os.environ.get("SUS_CIDADAO_TTS_RATE", "").strip()
+            or self.DEFAULT_TTS_RATE
         )
         if allow_network_tts is None:
             env_flag = os.environ.get("SUS_CIDADAO_ENABLE_EDGE_TTS", "1").strip()
@@ -230,7 +242,12 @@ class VoiceEngine:
     ) -> TTSResult:
         """Sintetiza áudio PT-BR de forma assíncrona (ideal para FastAPI)."""
         clean_text = text.strip()
-        selected_voice = voice or self.tts_voice
+        raw_voice = (voice or self.tts_voice).strip()
+        selected_voice = (
+            raw_voice
+            if raw_voice in self.AVAILABLE_PT_BR_VOICES
+            else self.tts_voice
+        )
         if not clean_text:
             return TTSResult(
                 audio_base64=None,
@@ -247,6 +264,7 @@ class VoiceEngine:
                 communicate = edge_tts.Communicate(
                     text=clean_text,
                     voice=selected_voice,
+                    rate=self.tts_rate,
                     connect_timeout=6,
                     receive_timeout=15,
                 )

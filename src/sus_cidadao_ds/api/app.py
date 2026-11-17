@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import uuid
 from dataclasses import asdict
 from datetime import date, timedelta
@@ -15,6 +16,11 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 from sus_cidadao_ds.agents.langgraph_orchestrator import LangGraphMultiAgentOrchestrator
+from sus_cidadao_ds.agents.ports import (
+    DeterministicCitizenGenerator,
+    GeminiGeneratorAdapter,
+    GeneratorPort,
+)
 from sus_cidadao_ds.core.config import ProjectPaths
 from sus_cidadao_ds.ingestion.infosaude_client import haversine_km
 from sus_cidadao_ds.retrieval.embeddings import PortugueseClinicalEmbeddingFunction
@@ -41,6 +47,30 @@ class ChatRequest(BaseModel):
         default=False,
         description="Quando True, sintetiza também o áudio PT-BR de `spoken_guidance`.",
     )
+    tts_voice: str | None = Field(
+        default=None,
+        description="Voz neural PT-BR desejada (ex.: pt-BR-FranciscaNeural, pt-BR-ThalitaMultilingualNeural).",
+    )
+
+
+class TTSRequest(BaseModel):
+    """Payload JSON para síntese isolada de fala PT-BR (ex.: saudação inicial do Modo Ao Vivo)."""
+
+    text: str = Field(..., min_length=1, max_length=1200)
+    voice: str | None = Field(
+        default=None,
+        description="Identificador da voz neural PT-BR (padrão: pt-BR-FranciscaNeural).",
+    )
+
+
+class TTSResponse(BaseModel):
+    """Resposta com áudio neural PT-BR em Base64 ou fallback transparente."""
+
+    tts_audio_base64: str | None = None
+    tts_mime_type: str = "text/plain"
+    tts_provider: str = "none"
+    tts_voice: str = VoiceEngine.DEFAULT_TTS_VOICE
+    tts_fallback_reason: str | None = None
 
 
 class ConversationTurnResponse(BaseModel):
@@ -132,9 +162,35 @@ class PrescriptionAuditResponseDTO(BaseModel):
     solicitou_automedicacao: bool = False
 
 
+def _load_env_file_if_present(env_path: Path) -> None:
+    """Carrega variáveis de ambiente locais do `.env` sem sobrescrever as já exportadas."""
+    if not env_path.is_file():
+        return
+    for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        clean_key = key.strip()
+        clean_value = value.strip().strip('"').strip("'")
+        if clean_key:
+            os.environ.setdefault(clean_key, clean_value)
+
+
+def _build_default_generator() -> GeneratorPort:
+    """Ativa humanização auditada via Gemini se GEMINI_API_KEY estiver configurada."""
+    gemini_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if not gemini_key:
+        return DeterministicCitizenGenerator()
+    os.environ.setdefault("SUS_CIDADAO_VOICE_LLM", "1")
+    model = os.environ.get("SUS_CIDADAO_GEMINI_MODEL", "gemini-2.5-flash").strip()
+    return GeminiGeneratorAdapter(api_key=gemini_key, model=model or "gemini-2.5-flash")
+
+
 def _load_default_orchestrator(paths: ProjectPaths) -> LangGraphMultiAgentOrchestrator:
     """Inicializa sincronizador Gold v9 + RAG Híbrido Puro Python + Orquestrador LangGraph paralelo."""
     paths.ensure_dirs()
+    _load_env_file_if_present(paths.root / ".env")
     sync = DataSynchronizer(paths)
     try:
         medications = sync.load_medications()
@@ -151,6 +207,8 @@ def _load_default_orchestrator(paths: ProjectPaths) -> LangGraphMultiAgentOrches
         min_score=0.18,
         vectorstore_manager=None,
         evidences_v2=evidences_v2,
+        generator_port=_build_default_generator(),
+        strict_generator=False,
         gold_dir=paths.gold_dir,
     )
 
@@ -188,6 +246,7 @@ def create_app(
         days_since_emission: int,
         stt_provider: str,
         synthesize_audio: bool,
+        requested_voice: str | None = None,
     ) -> ConversationTurnResponse:
         effective_session = (session_id or "").strip() or f"sess-{uuid.uuid4().hex[:10]}"
         result = orch.run(
@@ -205,11 +264,11 @@ def create_app(
         tts_audio_b64: str | None = None
         tts_mime = "text/plain"
         tts_provider = "disabled"
-        tts_voice = voice.tts_voice
+        tts_voice = requested_voice or voice.tts_voice
         tts_reason: str | None = None
         if synthesize_audio:
             spoken_text = result.spoken_guidance or result.synthesized_guidance
-            tts_res = await voice.async_synthesize_speech(spoken_text)
+            tts_res = await voice.async_synthesize_speech(spoken_text, voice=requested_voice)
             tts_audio_b64 = tts_res.audio_base64
             tts_mime = tts_res.mime_type
             tts_provider = tts_res.provider
@@ -265,8 +324,25 @@ def create_app(
             "embedding_profile": PortugueseClinicalEmbeddingFunction().get_config(),
             "chroma_collections": chroma_stats,
             "stt_provider_configured": voice.stt_provider_configured(),
+            "gemini_configured": bool(os.environ.get("GEMINI_API_KEY", "").strip()),
             "tts_voice": voice.tts_voice,
+            "tts_voices_available": list(VoiceEngine.AVAILABLE_PT_BR_VOICES),
         }
+
+    @application.post("/v1/tts", response_model=TTSResponse)
+    async def synthesize_tts(payload: TTSRequest) -> TTSResponse:
+        """Sintetiza áudio neural em PT-BR para falas de acolhimento e respostas da Zelo."""
+        clean_text = payload.text.strip()
+        if not clean_text:
+            raise HTTPException(status_code=422, detail="O campo `text` não pode estar vazio.")
+        tts_res = await voice.async_synthesize_speech(clean_text, voice=payload.voice)
+        return TTSResponse(
+            tts_audio_base64=tts_res.audio_base64,
+            tts_mime_type=tts_res.mime_type,
+            tts_provider=tts_res.provider,
+            tts_voice=tts_res.voice,
+            tts_fallback_reason=tts_res.fallback_reason,
+        )
 
     @application.get("/", response_class=HTMLResponse)
     @application.get("/voice-demo", response_class=HTMLResponse)
@@ -288,6 +364,7 @@ def create_app(
             days_since_emission=payload.days_since_emission,
             stt_provider="text_input",
             synthesize_audio=payload.include_audio,
+            requested_voice=payload.tts_voice,
         )
 
     @application.post("/v1/voice-turn", response_model=ConversationTurnResponse)
@@ -297,6 +374,7 @@ def create_app(
         session_id: Annotated[str | None, Form()] = None,
         days_since_emission: Annotated[int, Form()] = 166,
         synthesize_audio: Annotated[bool, Form()] = True,
+        tts_voice: Annotated[str | None, Form()] = None,
     ) -> ConversationTurnResponse:
         """Executa um turno de voz completo (áudio/texto -> LangGraph -> TTS PT-BR)."""
         clean_text = (text or "").strip()
@@ -328,6 +406,7 @@ def create_app(
             days_since_emission=days_since_emission,
             stt_provider=stt_provider,
             synthesize_audio=synthesize_audio,
+            requested_voice=tts_voice,
         )
 
     @application.get("/v1/sessions/{session_id}", response_model=SessionStateResponse)

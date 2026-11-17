@@ -501,7 +501,21 @@ class TestSDDSpecifications(unittest.TestCase):
 
             health_res = client.get("/health")
             self.assertEqual(health_res.status_code, 200)
-            self.assertEqual(health_res.json()["status"], "ok")
+            health_json = health_res.json()
+            self.assertEqual(health_json["status"], "ok")
+            self.assertIn("pt-BR-FranciscaNeural", health_json["tts_voices_available"])
+            self.assertIn("gemini_configured", health_json)
+
+            tts_res = client.post(
+                "/v1/tts",
+                json={"text": "Oi! Aqui é a Zelo.", "voice": "pt-BR-ThalitaMultilingualNeural"},
+            )
+            self.assertEqual(tts_res.status_code, 200)
+            tts_data = tts_res.json()
+            self.assertIn(
+                tts_data["tts_provider"],
+                {"browser_speech_synthesis", "macos_say", "edge_tts"},
+            )
 
             ui_res = client.get("/voice-demo")
             self.assertEqual(ui_res.status_code, 200)

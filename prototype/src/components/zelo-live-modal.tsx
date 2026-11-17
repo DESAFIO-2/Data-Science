@@ -13,10 +13,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '@/components/ui/icon';
 import { Button, Pill } from '@/components/ui/primitives';
 import { Txt } from '@/components/ui/txt';
-import { sendVoiceTurn, type ConversationTurnResponse } from '@/services/api';
+import { sendVoiceTurn, synthesizeSpeech, type ConversationTurnResponse } from '@/services/api';
 import { shadow } from '@/theme/shadows';
 import { colors } from '@/theme/tokens';
 import { abrirRota } from '@/utils/maps';
+import { playNeuralAudioOrFallback, stopBrowserSpeech, warmUpPtBrVoices } from '@/utils/speech';
+
+const NEURAL_VOICES = [
+  { id: 'pt-BR-FranciscaNeural', label: 'Francisca' },
+  { id: 'pt-BR-ThalitaMultilingualNeural', label: 'Thalita' },
+  { id: 'pt-BR-AntonioNeural', label: 'Antonio' },
+] as const;
 
 export type LivePhase = 'listening' | 'thinking' | 'speaking' | 'paused';
 
@@ -67,12 +74,15 @@ export function ZeloLiveModal({
   const [lastUserText, setLastUserText] = useState('');
   const [lastResponse, setLastResponse] = useState<ConversationTurnResponse | null>(null);
   const [liveError, setLiveError] = useState<string | null>(null);
+  const [selectedVoice, setSelectedVoice] = useState<string>(NEURAL_VOICES[0].id);
+  const [voiceEngineLabel, setVoiceEngineLabel] = useState<string>('Voz Neural • Francisca PT-BR');
 
   const visibleRef = useRef(visible);
   const phaseRef = useRef<LivePhase>('listening');
   const handsFreeRef = useRef(handsFree);
+  const selectedVoiceRef = useRef(selectedVoice);
   const speechRecRef = useRef<SpeechRecInstance | null>(null);
-  const audioRef = useRef<{ pause: () => void } | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const streamRef = useRef<{ getTracks: () => { stop: () => void }[] } | null>(null);
   const mediaRecRef = useRef<{ stop: () => void; state?: string } | null>(null);
   const audioCtxRef = useRef<{ close: () => Promise<void> } | null>(null);
@@ -82,7 +92,8 @@ export function ZeloLiveModal({
   useEffect(() => {
     visibleRef.current = visible;
     handsFreeRef.current = handsFree;
-  }, [handsFree, visible]);
+    selectedVoiceRef.current = selectedVoice;
+  }, [handsFree, selectedVoice, visible]);
 
   const setPhaseSync = useCallback((next: LivePhase) => {
     phaseRef.current = next;
@@ -143,15 +154,14 @@ export function ZeloLiveModal({
   const stopAudioOutput = useCallback(() => {
     if (audioRef.current) {
       try {
+        audioRef.current.onended = null;
+        audioRef.current.onerror = null;
         audioRef.current.pause();
       } catch {
         // Ignora erro ao interromper reprodução.
       }
-      audioRef.current = null;
     }
-    if (Platform.OS === 'web' && typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
+    stopBrowserSpeech();
   }, []);
 
   const stopAudioInput = useCallback(() => {
@@ -205,6 +215,7 @@ export function ZeloLiveModal({
       stopAudioOutput();
       setPhaseSync('speaking');
       const speechText = resp.spoken_guidance || resp.synthesized_guidance;
+      const voiceMeta = NEURAL_VOICES.find((v) => v.id === (resp.tts_voice || selectedVoiceRef.current));
 
       const finishTurn = () => {
         if (!visibleRef.current || phaseRef.current !== 'speaking') return;
@@ -214,53 +225,24 @@ export function ZeloLiveModal({
             if (visibleRef.current && phaseRef.current === 'listening') {
               startListeningRef.current();
             }
-          }, 320);
+          }, 260);
         } else {
           setPhaseSync('paused');
         }
       };
 
-      if (Platform.OS !== 'web') {
-        finishTurn();
-        return;
-      }
-
-      if (resp.tts_audio_base64 && typeof Audio !== 'undefined') {
-        try {
-          const audio = new Audio(`data:${resp.tts_mime_type};base64,${resp.tts_audio_base64}`);
-          audioRef.current = audio;
-          audio.onended = finishTurn;
-          audio.onerror = finishTurn;
-          void audio.play().catch(() => {
-            // Fallback para speechSynthesis se navegador bloquear autoplay
-            if (typeof window !== 'undefined' && 'speechSynthesis' in window && speechText) {
-              const utter = new SpeechSynthesisUtterance(speechText);
-              utter.lang = 'pt-BR';
-              utter.rate = 0.98;
-              utter.onend = finishTurn;
-              utter.onerror = finishTurn;
-              window.speechSynthesis.speak(utter);
-            } else {
-              finishTurn();
-            }
-          });
-          return;
-        } catch {
-          // Segue para speechSynthesis
-        }
-      }
-
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window && speechText) {
-        const utter = new SpeechSynthesisUtterance(speechText);
-        utter.lang = 'pt-BR';
-        utter.rate = 0.98;
-        utter.onend = finishTurn;
-        utter.onerror = finishTurn;
-        window.speechSynthesis.speak(utter);
-        return;
-      }
-
-      finishTurn();
+      playNeuralAudioOrFallback({
+        text: speechText,
+        audioBase64: resp.tts_audio_base64,
+        mimeType: resp.tts_mime_type,
+        audioElRef: audioRef,
+        rate: 1.02,
+        onStartNeural: () =>
+          setVoiceEngineLabel(`Voz Neural • ${voiceMeta?.label ?? 'Francisca'} PT-BR`),
+        onFallbackBrowser: (voiceName) =>
+          setVoiceEngineLabel(voiceName ? `Voz Navegador • ${voiceName}` : 'Voz Navegador PT-BR'),
+        onEnd: finishTurn,
+      });
     },
     [setPhaseSync, stopAudioOutput],
   );
@@ -288,6 +270,7 @@ export function ZeloLiveModal({
             session_id: sessionId,
             days_since_emission: 166,
             synthesize_audio: true,
+            tts_voice: selectedVoiceRef.current,
           },
           apiBaseUrl,
         );
@@ -484,39 +467,58 @@ export function ZeloLiveModal({
       stopAll();
       return;
     }
+    warmUpPtBrVoices();
+    let cancelled = false;
     const timer = setTimeout(() => {
-      if (Platform.OS === 'web' && typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        stopAudioOutput();
-        setPhaseSync('speaking');
-        const greet = new SpeechSynthesisUtterance(
-          'Oi! Pode falar comigo, estou te ouvindo. Como posso te ajudar no SUS hoje?',
-        );
-        greet.lang = 'pt-BR';
-        greet.rate = 1.02;
-        const goListen = () => {
-          if (visibleRef.current && phaseRef.current === 'speaking') {
-            startListeningRef.current();
-          }
-        };
-        greet.onend = goListen;
-        greet.onerror = goListen;
-        window.speechSynthesis.speak(greet);
-        // Fallback se speechSynthesis não disparar onend em alguns navegadores
-        restartTimerRef.current = setTimeout(() => {
-          if (visibleRef.current && phaseRef.current === 'speaking') {
-            window.speechSynthesis.cancel();
-            startListeningRef.current();
-          }
-        }, 4800);
-      } else {
-        startListeningRef.current();
-      }
-    }, 120);
+      if (cancelled || !visibleRef.current) return;
+      const welcomeText = 'Oi! Aqui é a Zelo. Pode falar comigo que estou te ouvindo.';
+      const voiceId = selectedVoiceRef.current;
+      const voiceMeta = NEURAL_VOICES.find((v) => v.id === voiceId);
+
+      const finishWelcome = () => {
+        if (!cancelled && visibleRef.current && phaseRef.current === 'speaking') {
+          startListeningRef.current();
+        }
+      };
+
+      stopAudioOutput();
+      setPhaseSync('speaking');
+      restartTimerRef.current = setTimeout(finishWelcome, 5500);
+
+      void synthesizeSpeech({ text: welcomeText, voice: voiceId }, apiBaseUrl)
+        .then((tts) => {
+          if (cancelled || !visibleRef.current || phaseRef.current !== 'speaking') return;
+          playNeuralAudioOrFallback({
+            text: welcomeText,
+            audioBase64: tts.tts_audio_base64,
+            mimeType: tts.tts_mime_type,
+            audioElRef: audioRef,
+            rate: 1.02,
+            onStartNeural: () =>
+              setVoiceEngineLabel(`Voz Neural • ${voiceMeta?.label ?? 'Francisca'} PT-BR`),
+            onFallbackBrowser: (voiceName) =>
+              setVoiceEngineLabel(voiceName ? `Voz Navegador • ${voiceName}` : 'Voz Navegador PT-BR'),
+            onEnd: finishWelcome,
+          });
+        })
+        .catch(() => {
+          if (cancelled || !visibleRef.current || phaseRef.current !== 'speaking') return;
+          playNeuralAudioOrFallback({
+            text: welcomeText,
+            audioElRef: audioRef,
+            rate: 1.02,
+            onFallbackBrowser: (voiceName) =>
+              setVoiceEngineLabel(voiceName ? `Voz Navegador • ${voiceName}` : 'Voz Navegador PT-BR'),
+            onEnd: finishWelcome,
+          });
+        });
+    }, 80);
     return () => {
+      cancelled = true;
       clearTimeout(timer);
       stopAll();
     };
-  }, [setPhaseSync, stopAll, stopAudioOutput, visible]);
+  }, [apiBaseUrl, setPhaseSync, stopAll, stopAudioOutput, visible]);
 
   function handleOrbPress() {
     if (phase === 'speaking') {
@@ -587,6 +589,31 @@ export function ZeloLiveModal({
               {handsFree ? 'Contínuo ON' : 'Contínuo OFF'}
             </Txt>
           </Pressable>
+        </View>
+
+        {/* Seletor de voz neural PT-BR natural */}
+        <View className="flex-row flex-wrap items-center justify-between gap-2 px-5 pb-1">
+          <Txt v="label-sm" className="text-primary-fixed/85">
+            {voiceEngineLabel}
+          </Txt>
+          <View className="flex-row items-center gap-1.5">
+            {NEURAL_VOICES.map((voiceOpt) => {
+              const active = selectedVoice === voiceOpt.id;
+              return (
+                <Pressable
+                  key={voiceOpt.id}
+                  accessibilityRole="button"
+                  onPress={() => setSelectedVoice(voiceOpt.id)}
+                  className={`rounded-full border px-2.5 py-1 ${
+                    active ? 'border-secondary-fixed bg-secondary/40' : 'border-white/20 bg-white/10'
+                  }`}>
+                  <Txt v="label-sm" className="text-on-primary">
+                    {voiceOpt.label}
+                  </Txt>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
 
         {/* Área Central com Orbe Pulsante & Cartão Vivo */}

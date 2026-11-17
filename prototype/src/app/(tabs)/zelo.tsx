@@ -26,6 +26,7 @@ import { useApp } from '@/state/app-state';
 import { shadow } from '@/theme/shadows';
 import { colors } from '@/theme/tokens';
 import { abrirRota } from '@/utils/maps';
+import { playNeuralAudioOrFallback, stopBrowserSpeech, warmUpPtBrVoices } from '@/utils/speech';
 
 type QuickSuggestion = { icon: string; texto: string };
 
@@ -168,7 +169,7 @@ export default function Zelo() {
   const [scanTexto, setScanTexto] = useState('');
 
   const scroll = useRef<React.ComponentRef<typeof ScrollView>>(null);
-  const audioRef = useRef<{ pause: () => void } | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const speechRecRef = useRef<SpeechRecInstance | null>(null);
   const mediaRecRef = useRef<{ stop: () => void } | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -179,18 +180,21 @@ export default function Zelo() {
   const tomada = doses.metformina === 'tomada';
   const adiada = doses.metformina === 'adiada';
 
+  useEffect(() => {
+    warmUpPtBrVoices();
+  }, []);
+
   const pararFala = useCallback(() => {
     if (audioRef.current) {
       try {
+        audioRef.current.onended = null;
+        audioRef.current.onerror = null;
         audioRef.current.pause();
       } catch {
         // Ignora erro ao pausar áudio encerrado.
       }
-      audioRef.current = null;
     }
-    if (Platform.OS === 'web' && typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
+    stopBrowserSpeech();
     setFalandoId(null);
   }, []);
 
@@ -201,32 +205,16 @@ export default function Zelo() {
         toast('Reprodução automática em áudio disponível na versão Web ou com expo-av nativo.', 'volume_up');
         return;
       }
-      const b64 = payload.tts_audio_base64;
       const speechText = payload.spoken_guidance || payload.synthesized_guidance;
-      if (b64 && typeof Audio !== 'undefined') {
-        try {
-          const audio = new Audio(`data:${payload.tts_mime_type};base64,${b64}`);
-          audioRef.current = audio;
-          setFalandoId(msgId);
-          audio.onended = () => setFalandoId(null);
-          audio.onerror = () => setFalandoId(null);
-          void audio.play().catch(() => {
-            setFalandoId(null);
-          });
-          return;
-        } catch {
-          // Segue para Web Speech Synthesis se Audio falhar.
-        }
-      }
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window && speechText) {
-        const utter = new SpeechSynthesisUtterance(speechText);
-        utter.lang = 'pt-BR';
-        utter.rate = 0.96;
-        setFalandoId(msgId);
-        utter.onend = () => setFalandoId(null);
-        utter.onerror = () => setFalandoId(null);
-        window.speechSynthesis.speak(utter);
-      }
+      setFalandoId(msgId);
+      playNeuralAudioOrFallback({
+        text: speechText,
+        audioBase64: payload.tts_audio_base64,
+        mimeType: payload.tts_mime_type,
+        audioElRef: audioRef,
+        rate: 1.0,
+        onEnd: () => setFalandoId(null),
+      });
     },
     [pararFala, toast],
   );
