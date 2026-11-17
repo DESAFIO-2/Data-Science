@@ -102,9 +102,9 @@ function AvatarZelo({ icon = 'spa', bg = 'bg-primary' }: { icon?: string; bg?: s
 function BolhaEu({ texto, hora, viaVoz, anexoNome }: { texto: string; hora: string; viaVoz?: boolean; anexoNome?: string }) {
   return (
     <View className="ml-auto max-w-[88%] flex-row items-end gap-2">
-      <View className="shrink rounded-2xl rounded-br-sm bg-primary p-3.5" style={shadow.sm}>
+      <View className="shrink rounded-2xl rounded-br-sm bg-accent p-3.5" style={shadow.sm}>
         {anexoNome && (
-          <View className="mb-1.5 flex-row items-center gap-1.5 rounded-lg bg-primary-container px-2.5 py-1">
+          <View className="mb-1.5 flex-row items-center gap-1.5 rounded-lg bg-primary px-2.5 py-1">
             <Icon name="photo_camera" size={14} color="tertiary-fixed" />
             <Txt v="label-sm" className="text-tertiary-fixed" numberOfLines={1}>
               {anexoNome}
@@ -114,7 +114,7 @@ function BolhaEu({ texto, hora, viaVoz, anexoNome }: { texto: string; hora: stri
         <Txt v="body-md" className="text-on-primary">
           {texto}
         </Txt>
-        <Txt v="label-sm" w="medium" className="mt-1 text-right text-primary-fixed-dim">
+        <Txt v="label-sm" w="medium" className="mt-1 text-right text-primary-fixed">
           {hora} • {viaVoz ? 'Voz PT-BR' : 'Enviado'}
         </Txt>
       </View>
@@ -898,7 +898,7 @@ export default function Zelo() {
         <View className="px-4 pb-2 pt-1" style={{ marginBottom: espacoTabBar }}>
           <View className="gap-2 rounded-2xl bg-surface-container-lowest p-2.5" style={shadow.lg}>
             {(ouvindo || gravandoAudio) && (
-              <View className="flex-row items-center justify-between gap-2 rounded-xl bg-primary-container p-3">
+              <View className="flex-row items-center justify-between gap-2 rounded-xl bg-accent p-3">
                 <View className="flex-1 flex-row items-center gap-2.5">
                   <PulseDot color="bg-error" size={12} />
                   <Txt v="body-sm" className="flex-1 text-on-primary">

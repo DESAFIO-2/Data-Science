@@ -162,7 +162,7 @@ function ReceitaCard({
         )}
         <Button label="Perguntar à Zelo" icon="spa" size="sm" variant="surface" className="flex-1" onPress={onPerguntarZelo} />
         {r.status === 'vencendo' && (
-          <Button label="Renovar" icon="sync_saved_loc" size="sm" variant="container" onPress={onRenovar} />
+          <Button label="Renovar" icon="sync_saved_loc" size="sm" variant="surface" onPress={onRenovar} />
         )}
       </View>
     </View>

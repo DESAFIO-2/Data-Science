@@ -108,7 +108,7 @@ const BTN_FG: Record<ButtonVariant, ColorToken> = {
   success: 'on-secondary',
   surface: 'primary',
   white: 'primary',
-  container: 'primary-fixed',
+  container: 'on-primary',
   danger: 'on-error',
 };
 
@@ -117,7 +117,7 @@ const BTN_TEXT: Record<ButtonVariant, string> = {
   success: 'text-on-secondary',
   surface: 'text-primary',
   white: 'text-primary',
-  container: 'text-primary-fixed',
+  container: 'text-on-primary',
   danger: 'text-on-error',
 };
 

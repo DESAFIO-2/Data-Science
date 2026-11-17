@@ -115,7 +115,8 @@ export default function Login() {
           <Button
             label="Testar protótipo agora (Dona Maria Helena)"
             icon="auto_awesome"
-            variant="container"
+            variant="surface"
+            iconColor="primary"
             onPress={handleDemo}
           />
 

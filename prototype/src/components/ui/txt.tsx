@@ -89,11 +89,15 @@ export type TxtProps = TextProps & {
   className?: string;
 };
 
+const HAS_TEXT_COLOR =
+  /(?:^|\s)text-(?:on-|primary|secondary|tertiary|error|outline|surface|inverse|background|canvas|accent|white\b|black\b|\[)/;
+
 export function Txt({ v = 'body-md', w, serif, upper, className = '', style, children, ...rest }: TxtProps) {
   const fontScale = useContext(FontScaleContext);
   const isSerif = serif ?? (v.startsWith('headline') || v.startsWith('display'));
   const weight = w ?? DEFAULT_WEIGHT[v];
   const family = isSerif ? SERIF[weight] : SANS[weight];
+  const defaultColor = HAS_TEXT_COLOR.test(className) ? '' : 'text-on-surface';
   const scaledStyle =
     fontScale > 1.01
       ? [{ fontSize: Math.round(BASE_PX[v] * fontScale), lineHeight: Math.round(BASE_PX[v] * fontScale * 1.35) }, style]
@@ -103,7 +107,7 @@ export function Txt({ v = 'body-md', w, serif, upper, className = '', style, chi
     <Text
       {...rest}
       style={scaledStyle}
-      className={`${SIZE[v]} ${family} ${upper ? 'uppercase' : ''} text-on-surface ${className}`}>
+      className={`${SIZE[v]} ${family} ${upper ? 'uppercase' : ''} ${defaultColor} ${className}`}>
       {children}
     </Text>
   );
