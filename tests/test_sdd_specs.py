@@ -704,6 +704,27 @@ class TestSDDSpecifications(unittest.TestCase):
         self.assertEqual(len(nph_resp.audited_medications), 1)
         self.assertEqual(nph_resp.audited_medications[0].dcb_name, "insulina humana nph")
 
+        # Turnos conversacionais naturais (Olá / ajuda / sessão) não devem retornar abstenção seca
+        with tempfile.TemporaryDirectory() as conv_dir:
+            lg_conv = LangGraphMultiAgentOrchestrator(
+                medications=self.medications,
+                chunks=self.chunks,
+                vectorstore_manager=None,
+                evidences_v2=self.syncer.load_evidence_chunks_v2(),
+                session_db_path=Path(conv_dir) / "conv.db",
+                gold_dir=self.paths.gold_dir,
+            )
+            greet = lg_conv.run("Olá", session_id="zelo-live-conv")
+            self.assertFalse(greet.abstained)
+            self.assertEqual(greet.primary_route, "CONVERSA_ACOLHIMENTO")
+            self.assertIn("zelo", greet.spoken_guidance.lower())
+
+            lg_conv.run("Quero saber onde pego metformina 850 mg", session_id="zelo-live-conv")
+            recall_greet = lg_conv.run("O que já conversamos?", session_id="zelo-live-conv")
+            self.assertFalse(recall_greet.abstained)
+            self.assertEqual(recall_greet.primary_route, "CONVERSA_ACOLHIMENTO")
+            self.assertIn("metformina", recall_greet.spoken_guidance.lower())
+
 
 if __name__ == "__main__":
     unittest.main()

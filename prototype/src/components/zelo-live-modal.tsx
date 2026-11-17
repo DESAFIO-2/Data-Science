@@ -485,13 +485,38 @@ export function ZeloLiveModal({
       return;
     }
     const timer = setTimeout(() => {
-      startListeningRef.current();
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        stopAudioOutput();
+        setPhaseSync('speaking');
+        const greet = new SpeechSynthesisUtterance(
+          'Oi! Pode falar comigo, estou te ouvindo. Como posso te ajudar no SUS hoje?',
+        );
+        greet.lang = 'pt-BR';
+        greet.rate = 1.02;
+        const goListen = () => {
+          if (visibleRef.current && phaseRef.current === 'speaking') {
+            startListeningRef.current();
+          }
+        };
+        greet.onend = goListen;
+        greet.onerror = goListen;
+        window.speechSynthesis.speak(greet);
+        // Fallback se speechSynthesis não disparar onend em alguns navegadores
+        restartTimerRef.current = setTimeout(() => {
+          if (visibleRef.current && phaseRef.current === 'speaking') {
+            window.speechSynthesis.cancel();
+            startListeningRef.current();
+          }
+        }, 4800);
+      } else {
+        startListeningRef.current();
+      }
     }, 120);
     return () => {
       clearTimeout(timer);
       stopAll();
     };
-  }, [stopAll, visible]);
+  }, [setPhaseSync, stopAll, stopAudioOutput, visible]);
 
   function handleOrbPress() {
     if (phase === 'speaking') {
@@ -531,7 +556,7 @@ export function ZeloLiveModal({
       : phase === 'thinking'
         ? 'Consultando SUS-DF...'
         : phase === 'speaking'
-          ? 'Zelo falando (toque p/ interromper)'
+          ? 'Zelo falando • toque para interromper'
           : 'Microfone em pausa';
 
   const statusTone =
@@ -650,9 +675,17 @@ export function ZeloLiveModal({
                   label={
                     lastResponse.is_clinical_block
                       ? 'Alerta Médico / Urgência'
-                      : lastResponse.primary_route.replace(/_/g, ' ')
+                      : lastResponse.primary_route === 'CONVERSA_ACOLHIMENTO'
+                        ? 'Zelo Voz • Conversa'
+                        : lastResponse.primary_route.replace(/_/g, ' ')
                   }
-                  tone={lastResponse.is_clinical_block ? 'danger' : 'success'}
+                  tone={
+                    lastResponse.is_clinical_block
+                      ? 'danger'
+                      : lastResponse.primary_route === 'CONVERSA_ACOLHIMENTO'
+                        ? 'info'
+                        : 'success'
+                  }
                 />
                 <Txt v="label-sm" w="medium" className="text-on-surface-variant">
                   Turno {lastResponse.turn_count}
@@ -709,6 +742,37 @@ export function ZeloLiveModal({
               )}
             </View>
           )}
+
+          {/* Sugestões interativas tocáveis durante a chamada ao vivo */}
+          <View className="w-full max-w-md gap-2">
+            <Txt v="label-sm" upper className="text-center text-primary-fixed">
+              Ou toque para perguntar agora:
+            </Txt>
+            <View className="flex-row flex-wrap justify-center gap-2">
+              {(lastResponse?.follow_up_suggestions?.length
+                ? lastResponse.follow_up_suggestions
+                : [
+                    'O que você faz?',
+                    'Onde retiro metformina 850 mg?',
+                    'Preciso de jejum para ultrassom?',
+                    'Como conseguir remédio no Alto Custo?',
+                  ]
+              ).map((sug) => (
+                <Pressable
+                  key={sug}
+                  disabled={phase === 'thinking'}
+                  onPress={() => {
+                    stopAudioOutput();
+                    void sendLiveTurn({ text: sug });
+                  }}
+                  className="rounded-full border border-primary-fixed-dim/30 bg-white/10 px-3.5 py-2 active:bg-white/20">
+                  <Txt v="label-md" className="text-on-primary">
+                    {sug}
+                  </Txt>
+                </Pressable>
+              ))}
+            </View>
+          </View>
         </ScrollView>
 
         {/* Controles inferiores acessíveis (estilo Gemini Live) */}

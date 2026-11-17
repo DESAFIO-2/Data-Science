@@ -419,6 +419,8 @@ class LangGraphMultiAgentOrchestrator:
             sisreg_items=sisreg,
             retrieved_hits=hits,
             normative_notes=list(state.get("normative_notes", [])),
+            session_known_medications=list(state.get("known_medications", [])),
+            session_known_exams=list(state.get("known_exams", [])),
             agent_trace=list(state.get("agent_trace", [])),
         )
 

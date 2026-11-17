@@ -87,6 +87,8 @@ function routeLabel(route: string): { label: string; tone: 'success' | 'warning'
       return { label: 'SISREG / Regulação DF', tone: 'info' };
     case 'BLOQUEIO_CLINICO_ATO_MEDICO':
       return { label: 'Segurança • Ato Médico', tone: 'warning' };
+    case 'CONVERSA_ACOLHIMENTO':
+      return { label: 'Zelo Voz • Conversa', tone: 'info' };
     default:
       return { label: 'Protocolo Oficial SUS', tone: 'neutral' };
   }

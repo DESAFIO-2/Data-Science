@@ -95,6 +95,8 @@ class OrchestratorState:
     sisreg_items: list[SISREGGuidanceItem] = field(default_factory=list)
     retrieved_hits: list[RetrievalHit] = field(default_factory=list)
     normative_notes: list[str] = field(default_factory=list)
+    session_known_medications: list[str] = field(default_factory=list)
+    session_known_exams: list[str] = field(default_factory=list)
     agent_trace: list[str] = field(default_factory=list)
 
 
@@ -857,6 +859,153 @@ class MultiAgentOrchestrator:
         unique_followups = list(dict.fromkeys(follow_ups))[:3]
         return final_speech, unique_followups
 
+    @staticmethod
+    def _build_conversational_reply(
+        state: OrchestratorState,
+    ) -> tuple[str, list[str]] | None:
+        """Responde de forma natural a saudações, dúvidas abertas, agradecimentos e resumo da sessão."""
+        raw_norm = normalize_pt_text(state.sanitized_input)
+        clean_norm = re.sub(
+            r"\(regiao do paciente:[^)]*\)", "", raw_norm
+        ).strip()
+        if not clean_norm:
+            return (
+                "Olá! Estou te ouvindo. Como posso ajudar você hoje com seus remédios, receitas ou exames no SUS?",
+                [
+                    "Onde retiro metformina 850 mg de graça?",
+                    "Preciso de jejum para ultrassom de abdômen?",
+                    "Quais documentos levar para renovar receita?",
+                ],
+            )
+
+        if any(ex in clean_norm for ex in MultiAgentOrchestrator._UNLISTED_EXCLUSION_CUES):
+            return None
+        if re.search(r"\b\d+\s*(?:mg|mcg|g|ml|ui|%)\b", clean_norm):
+            return None
+
+        ra_label = state.detected_ra
+        ra_suffix = (
+            ""
+            if ra_label.startswith("Distrito Federal")
+            else f" na região de {ra_label}"
+        )
+        known_meds = state.session_known_medications
+        known_exams = state.session_known_exams
+
+        has_greeting = bool(
+            re.search(
+                r"\b(?:oi|ola|bom dia|boa tarde|boa noite|tudo bem|td bem|como vai|e ai|alo|opa|comecar)\b",
+                clean_norm,
+            )
+        )
+        has_thanks = bool(
+            re.search(
+                r"\b(?:obrigad\w*|valeu|agradec\w*|perfeito|entendi|otimo|otima|tchau|ate logo|ate mais)\b",
+                clean_norm,
+            )
+        )
+        has_help_or_identity = bool(
+            re.search(
+                r"\b(?:quem e voce|quem fala|o que voce faz|como voce funciona|como funciona|me ajuda\w*|preciso de ajuda|pode ajudar|tirar duvida|tenho uma duvida|quero conversar|conversar com voce|falar com voce|o que ja conversamos|o que eu perguntei|quais remedios|quais exames|minha regiao)\b",
+                clean_norm,
+            )
+        )
+        has_vague_intent = len(clean_norm.split()) <= 10 and bool(
+            re.search(
+                r"\b(?:quero|gostaria|preciso|saber|consultar|ver|sobre|fazer|pegar)\b.*?\b(?:remedio|medicamento|receita|exame|exames)\b",
+                clean_norm,
+            )
+        )
+
+        if not (has_greeting or has_thanks or has_help_or_identity or has_vague_intent):
+            return None
+
+        if has_thanks and not (has_greeting or has_help_or_identity):
+            return (
+                "Por nada! Fico muito feliz em ajudar. Se surgir outra dúvida sobre seus medicamentos, "
+                "farmácias próximas ou preparo de exames no SUS, é só falar que eu continuo por aqui.",
+                [
+                    "Consultar outro medicamento",
+                    "Ver preparo de exame",
+                    "Quais documentos levar para o atendimento?",
+                ],
+            )
+
+        if any(tok in clean_norm for tok in ("ja conversamos", "eu perguntei", "quais remedios", "quais exames", "minha regiao")):
+            mem_parts: list[str] = []
+            if known_meds:
+                mem_parts.append(f"medicamentos já citados: {', '.join(known_meds)}")
+            if known_exams:
+                mem_parts.append(f"exames já citados: {', '.join(known_exams)}")
+            resumo = "; ".join(mem_parts) if mem_parts else "ainda não consultamos nenhum medicamento ou exame específico nesta conversa"
+            return (
+                f"Estou acompanhando sua conversa considerando {ra_label}. Até agora, {resumo}. "
+                "Sobre qual deles você quer continuar ou qual novo item deseja consultar?",
+                [
+                    "Quais documentos preciso levar?",
+                    "Onde fica a farmácia ou UBS mais próxima?",
+                ],
+            )
+
+        if has_vague_intent and "exame" in clean_norm:
+            return (
+                "Claro! Eu posso explicar o preparo — como tempo de jejum, água ou objetos metálicos — e como funciona o agendamento pelo SISREG no DF. "
+                "Qual é o exame que está no seu pedido médico?",
+                [
+                    "Ultrassom de abdômen total",
+                    "Endoscopia digestiva alta",
+                    "Coleta de exame de sangue",
+                ],
+            )
+
+        if has_vague_intent and any(w in clean_norm for w in ("remedio", "medicamento", "receita")):
+            return (
+                "Com certeza! Me diga o nome do medicamento e a dosagem que estão na sua receita — por exemplo, Metformina 850 mg ou Losartana 50 mg — "
+                f"que eu confiro na hora onde você retira gratuitamente{ra_suffix}.",
+                [
+                    "Losartana potássica 50 mg",
+                    "Metformina 850 mg",
+                    "Adalimumabe 40 mg no Alto Custo",
+                ],
+            )
+
+        if has_help_or_identity:
+            return (
+                "Eu sou a Zelo, sua assistente de voz do SUS Digital no Distrito Federal! "
+                "Posso verificar onde retirar remédios gratuitos na Farmácia Popular, UBS ou Alto Custo (CEAF), "
+                "conferir validade e documentos da sua receita, consultar procuração para terceiros e explicar o preparo de exames. "
+                "O que você gostaria de ver agora?",
+                [
+                    "Onde retiro losartana 50 mg de graça?",
+                    "Preciso de jejum para ultrassom de abdômen?",
+                    "Posso retirar fralda por procuração?",
+                ],
+            )
+
+        # Saudação padrão (com contexto de sessão se já houver histórico)
+        if known_meds or known_exams:
+            ctx_items = ", ".join([*known_meds, *known_exams][:3])
+            return (
+                f"Olá! Que bom falar com você novamente{ra_suffix}! "
+                f"Continuo lembrando que já falamos sobre {ctx_items}. "
+                "Quer tirar mais alguma dúvida sobre isso ou consultar outro medicamento ou exame?",
+                [
+                    "Quais documentos preciso levar?",
+                    "Consultar outro medicamento ou exame",
+                ],
+            )
+
+        return (
+            f"Olá! Que bom conversar com você{ra_suffix}! "
+            "Sou a Zelo e estou pronta para te ajudar pelo microfone com seus remédios gratuitos do SUS, "
+            "validade de receitas ou preparo de exames. O que você precisa consultar hoje?",
+            [
+                "Onde retiro metformina 850 mg?",
+                "Preciso de jejum para exame de abdômen?",
+                "Como funciona o Alto Custo (CEAF)?",
+            ],
+        )
+
     def _agent_4_synthesize(self, state: OrchestratorState) -> CitizenGuidanceResponse:
         if state.is_clinical_blocked:
             state.agent_trace.append(
@@ -890,6 +1039,42 @@ class MultiAgentOrchestrator:
             and not state.retrieved_hits
             and not state.normative_notes
         ):
+            conv = self._build_conversational_reply(state)
+            if conv is not None:
+                conv_text, conv_followups = conv
+                if not isinstance(self.generator_port, DeterministicCitizenGenerator):
+                    try:
+                        cand = self.generator_port.generate(state.sanitized_input, conv_text)
+                        cand_pii = self.guardrail_port.mask(cand).detected_pii_types
+                        if (
+                            cand.strip()
+                            and validar_saida(cand, ids_contexto=(), detected_pii_types=cand_pii).aprovada
+                        ):
+                            conv_text = cand.strip()
+                    except Exception:
+                        if self.strict_generator:
+                            raise
+                state.agent_trace.append(
+                    "[Agente 4: Sintetizador] Turno conversacional acolhedor respondido sem acionar abstenção."
+                )
+                return CitizenGuidanceResponse(
+                    primary_route="CONVERSA_ACOLHIMENTO",
+                    sanitized_query=state.sanitized_input,
+                    detected_ra=state.detected_ra,
+                    is_clinical_block=False,
+                    abstained=False,
+                    audited_medications=[],
+                    sisreg_guidance=[],
+                    checklist_documents=[],
+                    validity_alerts=[],
+                    citations=[],
+                    retrieved_chunks=[],
+                    synthesized_guidance=conv_text,
+                    agent_trace=list(state.agent_trace),
+                    spoken_guidance=self._clean_for_speech(conv_text),
+                    follow_up_suggestions=conv_followups,
+                )
+
             abstention_msg = (
                 "ABSTENÇÃO SEGURA: Não foram encontradas evidências nas bases oficiais auditadas "
                 "(RENAME 2024, Programa Farmácia Popular do Brasil, REME-DF, Protocolos SISREG-DF ou Guia de Pré-Exames SUS-DF) "
