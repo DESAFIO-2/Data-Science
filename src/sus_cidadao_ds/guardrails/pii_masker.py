@@ -35,6 +35,50 @@ _TERMOS_NAO_PESSOA: frozenset[str] = frozenset(
     }
 )
 
+_PALAVRAS_NAO_PESSOA: frozenset[str] = frozenset(
+    {
+        "ecocardiograma",
+        "transtoracico",
+        "ultrassom",
+        "ultrassonografia",
+        "tomografia",
+        "ressonancia",
+        "endoscopia",
+        "colonoscopia",
+        "mamografia",
+        "eletrocardiograma",
+        "densitometria",
+        "espirometria",
+        "radiografia",
+        "cintilografia",
+        "audiometria",
+        "hemograma",
+        "glicemia",
+        "exame",
+        "exames",
+        "preparo",
+        "farmacia",
+        "programa",
+        "unidade",
+        "policlinica",
+        "hospital",
+        "hospitalar",
+        "sisreg",
+        "ceaf",
+        "pfpb",
+        "reme",
+        "rename",
+        "ubs",
+        "componente",
+        "dignidade",
+        "menstrual",
+        "federal",
+        "distrito",
+        "publico",
+        "publica",
+    }
+)
+
 
 @dataclass(frozen=True)
 class PIIMaskingResult:
@@ -78,7 +122,8 @@ class PIIMasker:
         nome_ascii = (
             unicodedata.normalize("NFKD", nome).encode("ascii", "ignore").decode().lower()
         )
-        if nome_ascii in _TERMOS_NAO_PESSOA:
+        tokens = set(nome_ascii.split())
+        if nome_ascii in _TERMOS_NAO_PESSOA or (tokens & _PALAVRAS_NAO_PESSOA):
             return match.group(0)
         cont[0] += 1
         return f"{match.group('prefixo')}[PACIENTE_DESIDENTIFICADO_LGPD]"

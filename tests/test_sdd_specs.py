@@ -799,6 +799,14 @@ class TestSDDSpecifications(unittest.TestCase):
         )
         self.assertFalse(ok_pdf.bloqueado)
 
+        mixed_spoken = lg_container.run(
+            "Receita: Losartana potassica 50 mg em Ceilandia e Ecocardiograma"
+        )
+        self.assertIn("ecocardiograma transtorácico", mixed_spoken.spoken_guidance.lower())
+        self.assertIn("losartana potássica", mixed_spoken.spoken_guidance.lower())
+        real_mask = PIIMasker().mask("Pedido para o João Silva")
+        self.assertIn("[PACIENTE_DESIDENTIFICADO_LGPD]", real_mask.sanitized_text)
+
 
 if __name__ == "__main__":
     unittest.main()
