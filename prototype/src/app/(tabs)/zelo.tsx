@@ -17,6 +17,7 @@ import { AppHeader } from '@/components/layout/app-header';
 import { Icon } from '@/components/ui/icon';
 import { Button, IconButton, Image, LinearGradient, Pill, PulseDot } from '@/components/ui/primitives';
 import { Txt } from '@/components/ui/txt';
+import { ZeloLiveModal } from '@/components/zelo-live-modal';
 import {
   sendVoiceTurn,
   type ConversationTurnResponse,
@@ -156,6 +157,7 @@ export default function Zelo() {
   const [enviando, setEnviando] = useState(false);
   const [falandoId, setFalandoId] = useState<string | null>(null);
   const [expandedTraceId, setExpandedTraceId] = useState<string | null>(null);
+  const [liveOpen, setLiveOpen] = useState(false);
 
   // Carteira digital / foto local de receita ou pedido de exame (ADR-0002: zero OCR de caligrafia na nuvem)
   const [scanOpen, setScanOpen] = useState(false);
@@ -644,7 +646,9 @@ export default function Zelo() {
           </View>
 
           <Txt v="body-md" className="text-on-surface">
-            {p.synthesized_guidance}
+            {(p.audited_medications.length > 0 || p.sisreg_guidance.length > 0) && p.spoken_guidance
+              ? p.spoken_guidance
+              : p.synthesized_guidance}
           </Txt>
 
           {/* Medicamentos auditados via v9 + InfoSaúde */}
@@ -856,6 +860,25 @@ export default function Zelo() {
                 />
               </View>
             </View>
+            <View className="mt-3 flex-row items-center justify-between gap-2 rounded-xl bg-surface-container-low p-2.5">
+              <View className="flex-1 flex-row items-center gap-2">
+                <Icon name="graphic_eq" size={18} color="secondary" />
+                <Txt v="label-md" className="flex-1 text-primary" numberOfLines={1}>
+                  Conversa interativa contínua estilo Gemini
+                </Txt>
+              </View>
+              <Button
+                label="Modo Ao Vivo"
+                icon="graphic_eq"
+                variant="success"
+                size="sm"
+                onPress={() => {
+                  pararFala();
+                  pararCapturaVoz();
+                  setLiveOpen(true);
+                }}
+              />
+            </View>
           </View>
 
           {msgs.map(renderMsg)}
@@ -932,21 +955,37 @@ export default function Zelo() {
               />
               <IconButton
                 icon={ouvindo || gravandoAudio ? 'stop' : 'mic'}
-                label={ouvindo || gravandoAudio ? 'Parar gravação' : 'Falar com a Zelo'}
+                label={ouvindo || gravandoAudio ? 'Parar gravação' : 'Ditar pergunta'}
                 size={44}
                 iconSize={22}
                 color="on-primary"
-                className={`rounded-xl ${ouvindo || gravandoAudio ? 'bg-error' : 'bg-primary'}`}
+                className={`rounded-xl ${ouvindo || gravandoAudio ? 'bg-error' : 'bg-accent'}`}
                 onPress={() => void iniciarCapturaVoz()}
               />
-              <IconButton
-                icon="send"
-                label="Enviar mensagem"
-                size={44}
-                color="on-secondary"
-                className="rounded-xl bg-secondary"
-                onPress={() => enviarTexto()}
-              />
+              {texto.trim() ? (
+                <IconButton
+                  icon="send"
+                  label="Enviar mensagem"
+                  size={44}
+                  color="on-secondary"
+                  className="rounded-xl bg-secondary"
+                  onPress={() => enviarTexto()}
+                />
+              ) : (
+                <IconButton
+                  icon="graphic_eq"
+                  label="Iniciar conversa por voz ao vivo com a Zelo"
+                  size={44}
+                  iconSize={22}
+                  color="on-secondary"
+                  className="rounded-xl bg-secondary"
+                  onPress={() => {
+                    pararFala();
+                    pararCapturaVoz();
+                    setLiveOpen(true);
+                  }}
+                />
+              )}
             </View>
             <View className="flex-row items-center justify-between px-1">
               <View className="flex-row items-center gap-1">
@@ -1044,6 +1083,27 @@ export default function Zelo() {
           </View>
         </View>
       </Modal>
+
+      <ZeloLiveModal
+        visible={liveOpen}
+        onClose={() => setLiveOpen(false)}
+        sessionId={zeloSessionId}
+        regiaoAdministrativa={regiaoAdministrativa}
+        apiBaseUrl={apiBaseUrl}
+        onToast={toast}
+        onTurnComplete={(userText, resp) => {
+          if (resp.detected_ra && resp.detected_ra !== 'Distrito Federal (Geral)') {
+            setRegiaoAdministrativa(resp.detected_ra);
+          }
+          const stamp = horaAgora();
+          setMsgs((m) => [
+            ...m,
+            { id: `u-live-${Date.now()}`, de: 'eu', texto: userText, hora: stamp, viaVoz: true },
+            { id: `ia-live-${Date.now() + 1}`, de: 'zelo', tipo: 'ia', hora: stamp, payload: resp },
+          ]);
+          setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 100);
+        }}
+      />
     </View>
   );
 }

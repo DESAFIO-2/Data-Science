@@ -699,6 +699,11 @@ class TestSDDSpecifications(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             strict_eval_orch.run("Onde retiro losartana potássica 50 mg?")
 
+        # Deduplicação por subsunção estrita: "insulina humana nph" não deve duplicar "insulina humana"
+        nph_resp = lg.run("Tenho receita de Insulina Humana NPH 100 UI/mL")
+        self.assertEqual(len(nph_resp.audited_medications), 1)
+        self.assertEqual(nph_resp.audited_medications[0].dcb_name, "insulina humana nph")
+
 
 if __name__ == "__main__":
     unittest.main()

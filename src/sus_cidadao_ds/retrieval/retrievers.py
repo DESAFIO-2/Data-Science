@@ -465,6 +465,7 @@ class TabularDCBMatcher:
             filtered.append((score, med))
 
         # 2. Deduplica por núcleo ativo normalizado (colapsa acentos/formatos tipo "losartana potássica" vs "losartana potassica")
+        # e suprime subconjunto estrito quando forma mais específica aparece literalmente (ex.: "insulina humana" sob "insulina humana nph")
         seen_cores: set[tuple[str, ...]] = set()
         unique_matches: list[tuple[float, CanonicalMedication]] = []
         for score, med in filtered:
@@ -476,6 +477,33 @@ class TabularDCBMatcher:
             if core_key not in seen_cores:
                 seen_cores.add(core_key)
                 unique_matches.append((score, med))
+
+        if len(unique_matches) > 1:
+            core_sets = [
+                set(
+                    [
+                        t
+                        for t in normalize_pt_text(m.dcb_name).split()
+                        if len(t) > 2 and t not in self._IGNORED_SALTS
+                    ]
+                    or [t for t in normalize_pt_text(m.dcb_name).split() if len(t) > 2]
+                )
+                for _, m in unique_matches
+            ]
+            non_subsumed: list[tuple[float, CanonicalMedication]] = []
+            for idx, (score, med) in enumerate(unique_matches):
+                cur_set = core_sets[idx]
+                is_subsumed = any(
+                    j != idx
+                    and cur_set
+                    and cur_set < other_set
+                    and f" {normalize_pt_text(unique_matches[j][1].dcb_name)} "
+                    in f" {norm_query} "
+                    for j, other_set in enumerate(core_sets)
+                )
+                if not is_subsumed:
+                    non_subsumed.append((score, med))
+            unique_matches = non_subsumed
 
         # 3. Se usuário listou monoterapias separadas sem '+', evita duplicar combinação fixa redundante
         if "+" not in query:
