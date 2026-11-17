@@ -576,7 +576,7 @@ export function ZeloLiveModal({
           <View className="flex-row items-center gap-2">
             <View className="h-2.5 w-2.5 rounded-full bg-secondary-fixed" />
             <Txt v="label-md" upper className="text-primary-fixed">
-              Zelo Ao Vivo • {regiaoAdministrativa.replace(' - DF', '')}
+              {`Zelo Ao Vivo • ${regiaoAdministrativa.replace(' - DF', '')}`}
             </Txt>
           </View>
           <Pressable
@@ -645,15 +645,15 @@ export function ZeloLiveModal({
             </Txt>
 
             {liveTranscript ? (
-              <Txt v="body-lg" className="text-center text-secondary-fixed">
-                “{liveTranscript}”
+              <Txt key="live-transcript" v="body-lg" className="text-center text-secondary-fixed">
+                {`“${liveTranscript}”`}
               </Txt>
             ) : lastUserText && phase !== 'listening' ? (
-              <Txt v="body-sm" className="text-center text-primary-fixed">
-                Você disse: “{lastUserText}”
+              <Txt key="last-user" v="body-sm" className="text-center text-primary-fixed">
+                {`Você disse: “${lastUserText}”`}
               </Txt>
             ) : (
-              <Txt v="body-sm" className="text-center text-primary-fixed">
+              <Txt key="idle-prompt" v="body-sm" className="text-center text-primary-fixed">
                 Fale sobre seu remédio, receita, farmácia ou preparo pré-exame.
               </Txt>
             )}
@@ -688,7 +688,7 @@ export function ZeloLiveModal({
                   }
                 />
                 <Txt v="label-sm" w="medium" className="text-on-surface-variant">
-                  Turno {lastResponse.turn_count}
+                  {`Turno ${lastResponse.turn_count}`}
                 </Txt>
               </View>
 
@@ -703,7 +703,7 @@ export function ZeloLiveModal({
                   </Txt>
                   {lastResponse.preparation_tips.slice(0, 2).map((tip, i) => (
                     <Txt key={i} v="body-sm" className="text-on-surface">
-                      • {tip}
+                      {`• ${tip}`}
                     </Txt>
                   ))}
                 </View>
@@ -712,7 +712,7 @@ export function ZeloLiveModal({
               {lastResponse.audited_medications.length > 0 && (
                 <View className="gap-1 rounded-xl bg-surface-container-low p-3">
                   <Txt v="label-sm" upper className="text-primary">
-                    Onde retirar ({lastResponse.audited_medications[0].validity_days}d)
+                    {`Onde retirar (${lastResponse.audited_medications[0].validity_days}d)`}
                   </Txt>
                   <Txt v="body-sm" className="text-on-surface">
                     {lastResponse.audited_medications[0].where_to_collect}

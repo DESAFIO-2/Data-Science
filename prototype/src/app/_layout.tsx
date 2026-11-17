@@ -25,6 +25,58 @@ import { shadow } from '@/theme/shadows';
 
 SplashScreen.preventAutoHideAsync();
 
+let webGuardInstalled = false;
+
+/** Evita que extensões/Google Translate quebrem a árvore DOM do React (NotFoundError removeChild). */
+function installWebTranslationAndDomGuard() {
+  if (webGuardInstalled || Platform.OS !== 'web' || typeof document === 'undefined' || typeof Node === 'undefined') {
+    return;
+  }
+  webGuardInstalled = true;
+
+  const html = document.documentElement;
+  if (html) {
+    html.lang = 'pt-BR';
+    html.setAttribute('translate', 'no');
+    html.classList.add('notranslate');
+  }
+  if (document.body) {
+    document.body.setAttribute('translate', 'no');
+    document.body.classList.add('notranslate');
+  }
+  if (!document.querySelector('meta[name="google"][content="notranslate"]')) {
+    const meta = document.createElement('meta');
+    meta.name = 'google';
+    meta.content = 'notranslate';
+    document.head?.appendChild(meta);
+  }
+
+  const origRemoveChild = Node.prototype.removeChild;
+  Node.prototype.removeChild = function guardedRemoveChild<T extends Node>(this: Node, child: T): T {
+    if (child.parentNode !== this) {
+      if (child.parentNode) {
+        return origRemoveChild.call(child.parentNode, child) as T;
+      }
+      return child;
+    }
+    return origRemoveChild.call(this, child) as T;
+  };
+
+  const origInsertBefore = Node.prototype.insertBefore;
+  Node.prototype.insertBefore = function guardedInsertBefore<T extends Node>(
+    this: Node,
+    newNode: T,
+    referenceNode: Node | null,
+  ): T {
+    if (referenceNode && referenceNode.parentNode !== this) {
+      return this.appendChild(newNode);
+    }
+    return origInsertBefore.call(this, newNode, referenceNode) as T;
+  };
+}
+
+installWebTranslationAndDomGuard();
+
 function RootNavigator() {
   const { usuario, registrarDose, adiarDose } = useApp();
   const logado = usuario !== null;

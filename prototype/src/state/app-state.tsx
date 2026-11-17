@@ -288,23 +288,38 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     <Ctx.Provider value={value}>
       <FontScaleContext.Provider value={letrasMaiores ? 1.16 : 1}>
         {children}
-        {toastMsg && (
-          <Animated.View
-            key={toastMsg.id}
-            entering={FadeInDown}
-            exiting={FadeOutDown}
-            pointerEvents="none"
-            className="absolute inset-x-4 bottom-24 z-50 items-center">
+        {toastMsg &&
+          (Platform.OS === 'web' ? (
             <View
-              className="flex-row items-center gap-2 rounded-full bg-inverse-surface px-4 py-2.5"
-              style={shadow.xl}>
-              <Icon name={toastMsg.icone} size={18} color="secondary-fixed" />
-              <Txt v="label-md" className="shrink text-inverse-on-surface">
-                {toastMsg.texto}
-              </Txt>
+              key={toastMsg.id}
+              pointerEvents="none"
+              className="absolute inset-x-4 bottom-24 z-50 items-center">
+              <View
+                className="flex-row items-center gap-2 rounded-full bg-inverse-surface px-4 py-2.5"
+                style={shadow.xl}>
+                <Icon name={toastMsg.icone} size={18} color="secondary-fixed" />
+                <Txt v="label-md" className="shrink text-inverse-on-surface">
+                  {toastMsg.texto}
+                </Txt>
+              </View>
             </View>
-          </Animated.View>
-        )}
+          ) : (
+            <Animated.View
+              key={toastMsg.id}
+              entering={FadeInDown}
+              exiting={FadeOutDown}
+              pointerEvents="none"
+              className="absolute inset-x-4 bottom-24 z-50 items-center">
+              <View
+                className="flex-row items-center gap-2 rounded-full bg-inverse-surface px-4 py-2.5"
+                style={shadow.xl}>
+                <Icon name={toastMsg.icone} size={18} color="secondary-fixed" />
+                <Txt v="label-md" className="shrink text-inverse-on-surface">
+                  {toastMsg.texto}
+                </Txt>
+              </View>
+            </Animated.View>
+          ))}
       </FontScaleContext.Provider>
     </Ctx.Provider>
   );
