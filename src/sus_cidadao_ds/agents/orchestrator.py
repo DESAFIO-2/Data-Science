@@ -26,10 +26,12 @@ from sus_cidadao_ds.agents.ports import (
     GuardrailPort,
     HybridRetrieverAdapter,
     InfoSaudeStockPort,
-    LocalCEAFStockRepository,
     LocalGuardrailAdapter,
+    LocalPharmacyRepository,
     MedicationRepositoryPort,
+    PharmacyRepositoryPort,
     RetrieverPort,
+    ServiceContainer,
     TabularMedicationAdapter,
     trace_operation,
 )
@@ -248,44 +250,81 @@ class MultiAgentOrchestrator:
         evidence_repo: EvidenceRepositoryPort | None = None,
         retriever_port: RetrieverPort | None = None,
         stock_repository: InfoSaudeStockPort | None = None,
+        pharmacy_repo: PharmacyRepositoryPort | None = None,
         generator_port: GeneratorPort | None = None,
         strict_generator: bool = False,
         gold_dir: Path | None = None,
+        container: ServiceContainer | None = None,
     ) -> None:
         self.medications = medications
         self.chunks = chunks
         self.min_score = min_score
         self.vectorstore_manager = vectorstore_manager
-        self.pii_masker = PIIMasker()
-        self.clinical_blocker = ClinicalBlocker()
-        self.guardrail_port: GuardrailPort = guardrail_port or LocalGuardrailAdapter(
-            masker=self.pii_masker, blocker=self.clinical_blocker
+
+        if container is not None:
+            resolved_container = container
+        else:
+            resolved_container = ServiceContainer.build(
+                medications=medications,
+                chunks=chunks,
+                evidences_v2=evidences_v2,
+                guardrail_port=guardrail_port,
+                medication_repo=medication_repo,
+                evidence_repo=evidence_repo,
+                retriever_port=retriever_port,
+                stock_repository=stock_repository,
+                pharmacy_repository=pharmacy_repo,
+                generator_port=generator_port,
+                strict_generator=strict_generator,
+                gold_dir=gold_dir,
+            )
+
+        self.container = resolved_container
+        self.guardrail_port: GuardrailPort = resolved_container.guardrail
+        self.pii_masker: PIIMasker = (
+            self.guardrail_port.masker
+            if isinstance(self.guardrail_port, LocalGuardrailAdapter)
+            else PIIMasker()
+        )
+        self.clinical_blocker: ClinicalBlocker = (
+            self.guardrail_port.blocker
+            if isinstance(self.guardrail_port, LocalGuardrailAdapter)
+            else ClinicalBlocker()
         )
 
-        med_adapter = TabularMedicationAdapter(medications)
-        self.tabular_matcher: TabularDCBMatcher = med_adapter.matcher
-        self.medication_repo: MedicationRepositoryPort = medication_repo or med_adapter
-
-        ev_adapter = EvidenceV2Adapter(evidences_v2 or [])
-        self.evidence_v2_retriever: EvidenceV2Retriever = ev_adapter.retriever
-        self.evidence_repo: EvidenceRepositoryPort = evidence_repo or ev_adapter
-
-        hybrid_adapter = HybridRetrieverAdapter(
-            medications=medications,
-            chunks=chunks,
-            tabular_matcher=self.tabular_matcher,
+        self.medication_repo: MedicationRepositoryPort = resolved_container.medication_repo
+        self.tabular_matcher: TabularDCBMatcher = (
+            self.medication_repo.matcher
+            if isinstance(self.medication_repo, TabularMedicationAdapter)
+            else TabularDCBMatcher(medications)
         )
-        self.hybrid_retriever: HybridRetriever = hybrid_adapter.retriever
-        self.retriever_port: RetrieverPort = retriever_port or hybrid_adapter
 
-        stock_file = (gold_dir / "ceaf_live_stock.json") if gold_dir else None
-        self.stock_repository: InfoSaudeStockPort = (
-            stock_repository or LocalCEAFStockRepository(stock_path=stock_file)
+        self.evidence_repo: EvidenceRepositoryPort = resolved_container.evidence_repo
+        self.evidence_v2_retriever: EvidenceV2Retriever = (
+            self.evidence_repo.retriever
+            if isinstance(self.evidence_repo, EvidenceV2Adapter)
+            else EvidenceV2Retriever(evidences_v2 or [])
         )
-        self.generator_port: GeneratorPort = (
-            generator_port or DeterministicCitizenGenerator()
+
+        self.retriever_port: RetrieverPort = resolved_container.retriever
+        self.hybrid_retriever: HybridRetriever = (
+            self.retriever_port.retriever
+            if isinstance(self.retriever_port, HybridRetrieverAdapter)
+            else HybridRetriever(
+                medications=medications,
+                chunks=chunks,
+                tabular_matcher=self.tabular_matcher,
+            )
         )
-        self.strict_generator = strict_generator
+
+        self.stock_repository: InfoSaudeStockPort = resolved_container.stock_repo
+        self.pharmacy_repo: PharmacyRepositoryPort = (
+            resolved_container.pharmacy_repo
+            if resolved_container.pharmacy_repo is not None
+            else LocalPharmacyRepository()
+        )
+        self.generator_port: GeneratorPort = resolved_container.generator
+        self.strict_generator = resolved_container.strict_generator
 
     def run(
         self,
@@ -506,14 +545,17 @@ class MultiAgentOrchestrator:
                 ]
             )
         elif med.dispensation_route == "UBS_ATENCAO_PRIMARIA":
+            ra_unit_hint = self.pharmacy_repo.hint_for_ra(
+                detected_ra, route="UBS_ATENCAO_PRIMARIA"
+            )
             if med.df_channels:
                 where = (
-                    f"Canal registrado na REME-DF para {detected_ra}: {'; '.join(med.df_channels)}. "
+                    f"Canal registrado na REME-DF para {detected_ra}: {'; '.join(med.df_channels)}.{ra_unit_hint} "
                     "Confirme as condições de atendimento com a unidade."
                 )
             else:
                 where = (
-                    f"Farmácia da Unidade Básica de Saúde (UBS) de referência em {detected_ra} "
+                    f"Farmácia da Unidade Básica de Saúde (UBS) de referência em {detected_ra}{ra_unit_hint} "
                     "(item exclusivo da Atenção Primária/REME-DF — não disponível na rede privada Farmácia Popular)."
                 )
             default_docs = (
@@ -1264,6 +1306,8 @@ class MultiAgentOrchestrator:
                 )
                 if cand_check.aprovada and candidate.strip():
                     synthesized = candidate.strip()
+                    if citations and "[Fonte:" not in synthesized:
+                        synthesized = f"{synthesized}\nReferências oficiais: {' '.join(citations)}"
                 elif self.strict_generator:
                     raise RuntimeError(
                         f"Saída LLM bloqueada por validar_saida: {cand_check.motivos}"

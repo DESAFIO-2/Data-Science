@@ -11,7 +11,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from sus_cidadao_ds.contracts.schemas import (
     CanonicalMedication,
@@ -22,6 +22,7 @@ from sus_cidadao_ds.contracts.schemas import (
 from sus_cidadao_ds.core.config import ProjectPaths
 from sus_cidadao_ds.guardrails.clinical_blocker import ClinicalBlocker, ClinicalCheckResult
 from sus_cidadao_ds.guardrails.pii_masker import PIIMasker, PIIMaskingResult
+from sus_cidadao_ds.ingestion.infosaude_client import haversine_km
 from sus_cidadao_ds.retrieval.retrievers import (
     EvidenceV2Retriever,
     HybridRetriever,
@@ -101,6 +102,23 @@ class GeneratorPort(Protocol):
     """Porta de geração humanizada opcional no Agente 4 (Sintetizador Cidadão)."""
 
     def generate(self, user_query: str, grounded_facts: str) -> str: ...
+
+
+@runtime_checkable
+class PharmacyRepositoryPort(Protocol):
+    """Porta determinística para estabelecimentos geolocalizados (CEAF / Policlínicas / UBS DF)."""
+
+    def find_nearby(
+        self,
+        *,
+        ra: str = "",
+        q: str = "",
+        lat: float | None = None,
+        lng: float | None = None,
+        limit: int = 8,
+    ) -> tuple[int, list[dict[str, Any]]]: ...
+
+    def hint_for_ra(self, detected_ra: str, *, route: str = "") -> str: ...
 
 
 class LocalGuardrailAdapter:
@@ -315,3 +333,148 @@ class GeminiGeneratorAdapter:
         if not text:
             raise RuntimeError("Resposta vazia retornada pelo Gemini REST.")
         return text
+
+
+class LocalPharmacyRepository:
+    """Repositório determinístico sobre `data/gold/df_pharmacies_geolocated.json` (231 unidades)."""
+
+    def __init__(self, pharmacies_path: Path | None = None) -> None:
+        resolved = pharmacies_path or (
+            ProjectPaths.from_root().gold_dir / "df_pharmacies_geolocated.json"
+        )
+        self.pharmacies_path = resolved
+        self._rows: list[dict[str, Any]] | None = None
+
+    def _load(self) -> list[dict[str, Any]]:
+        if self._rows is not None:
+            return self._rows
+        if not self.pharmacies_path.exists():
+            self._rows = []
+            return self._rows
+        raw = json.loads(self.pharmacies_path.read_text(encoding="utf-8"))
+        self._rows = list(raw.get("pharmacies", []))
+        return self._rows
+
+    def find_nearby(
+        self,
+        *,
+        ra: str = "",
+        q: str = "",
+        lat: float | None = None,
+        lng: float | None = None,
+        limit: int = 8,
+    ) -> tuple[int, list[dict[str, Any]]]:
+        rows = self._load()
+        if not rows:
+            return 0, []
+
+        norm_ra = normalize_pt_text(ra.replace(" - DF", ""))
+        norm_q = normalize_pt_text(q)
+        scored: list[tuple[float, dict[str, Any]]] = []
+        for row in rows:
+            hay = normalize_pt_text(
+                " ".join(
+                    [
+                        str(row.get("name", "")),
+                        str(row.get("address", "")),
+                        str(row.get("neighborhood_or_ra", "")),
+                        str(row.get("pharmacy_type") or ""),
+                        " ".join(str(x) for x in (row.get("covered_ras") or [])),
+                    ]
+                )
+            )
+            match_score = 0.0
+            if norm_ra and norm_ra in hay:
+                match_score += 5.0
+            if norm_q and norm_q in hay:
+                match_score += 4.0
+            if "alto custo" in str(row.get("pharmacy_type", "")).lower():
+                match_score += 1.0
+
+            dist_km: float | None = None
+            if lat is not None and lng is not None and row.get("latitude") and row.get("longitude"):
+                dist_km = round(
+                    haversine_km(lat, lng, float(row["latitude"]), float(row["longitude"])),
+                    2,
+                )
+                match_score += max(0.0, 4.0 - dist_km * 0.1)
+
+            item_copy = dict(row)
+            if dist_km is not None:
+                item_copy["distance_km"] = dist_km
+            if (norm_ra or norm_q) and match_score == 0.0:
+                continue
+            scored.append((match_score, item_copy))
+
+        if not scored:
+            scored = [(0.0, dict(r)) for r in rows[:limit]]
+        scored.sort(key=lambda pair: pair[0], reverse=True)
+        return len(scored), [item for _, item in scored[:limit]]
+
+    def hint_for_ra(self, detected_ra: str, *, route: str = "") -> str:
+        clean_ra = detected_ra.replace(" - DF", "").strip()
+        if not clean_ra or "geral" in clean_ra.lower():
+            return ""
+        q = "alto custo" if route == "ALTO_CUSTO_CEAF" else "ubs"
+        total, items = self.find_nearby(ra=clean_ra, q=q, limit=1)
+        if total == 0 or not items:
+            total, items = self.find_nearby(ra=clean_ra, limit=1)
+        if total == 0 or not items:
+            return ""
+        top = items[0]
+        name = str(top.get("name", "")).strip()
+        addr = str(top.get("address", "")).strip()
+        if name and addr:
+            return f" [Unidade mapeada na RA: {name} — {addr}]"
+        return f" [Unidade mapeada na RA: {name}]" if name else ""
+
+
+@dataclass(frozen=True)
+class ServiceContainer:
+    """Contêiner de dependências da Arquitetura Limpa injetado nos 4 agentes LangGraph."""
+
+    guardrail: GuardrailPort
+    medication_repo: MedicationRepositoryPort
+    evidence_repo: EvidenceRepositoryPort
+    retriever: RetrieverPort
+    stock_repo: InfoSaudeStockPort
+    pharmacy_repo: PharmacyRepositoryPort
+    generator: GeneratorPort
+    strict_generator: bool = False
+
+    @classmethod
+    def build(
+        cls,
+        medications: list[CanonicalMedication],
+        chunks: list[NormativeChunk],
+        *,
+        evidences_v2: list[EvidenceChunkV2] | None = None,
+        guardrail_port: GuardrailPort | None = None,
+        medication_repo: MedicationRepositoryPort | None = None,
+        evidence_repo: EvidenceRepositoryPort | None = None,
+        retriever_port: RetrieverPort | None = None,
+        stock_repository: InfoSaudeStockPort | None = None,
+        pharmacy_repository: PharmacyRepositoryPort | None = None,
+        generator_port: GeneratorPort | None = None,
+        strict_generator: bool = False,
+        gold_dir: Path | None = None,
+    ) -> ServiceContainer:
+        med_adapter = TabularMedicationAdapter(medications)
+        hybrid_adapter = HybridRetrieverAdapter(
+            medications=medications,
+            chunks=chunks,
+            tabular_matcher=med_adapter.matcher,
+        )
+        stock_file = (gold_dir / "ceaf_live_stock.json") if gold_dir else None
+        pharm_file = (gold_dir / "df_pharmacies_geolocated.json") if gold_dir else None
+        return cls(
+            guardrail=guardrail_port or LocalGuardrailAdapter(),
+            medication_repo=medication_repo or med_adapter,
+            evidence_repo=evidence_repo or EvidenceV2Adapter(evidences_v2 or []),
+            retriever=retriever_port or hybrid_adapter,
+            stock_repo=stock_repository or LocalCEAFStockRepository(stock_path=stock_file),
+            pharmacy_repo=pharmacy_repository or LocalPharmacyRepository(pharmacies_path=pharm_file),
+            generator=generator_port or DeterministicCitizenGenerator(),
+            strict_generator=strict_generator,
+        )
+

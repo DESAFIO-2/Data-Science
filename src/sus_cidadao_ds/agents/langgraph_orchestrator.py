@@ -30,6 +30,9 @@ from sus_cidadao_ds.agents.ports import (
     GeneratorPort,
     GuardrailPort,
     InfoSaudeStockPort,
+    PharmacyRepositoryPort,
+    ServiceContainer,
+    trace_operation,
 )
 from sus_cidadao_ds.agents.session_memory import SessionContext, SQLiteSessionStore
 from sus_cidadao_ds.contracts.schemas import (
@@ -123,9 +126,11 @@ class LangGraphMultiAgentOrchestrator:
         *,
         guardrail_port: GuardrailPort | None = None,
         stock_repository: InfoSaudeStockPort | None = None,
+        pharmacy_repo: PharmacyRepositoryPort | None = None,
         generator_port: GeneratorPort | None = None,
         strict_generator: bool = False,
         gold_dir: Path | None = None,
+        container: ServiceContainer | None = None,
     ) -> None:
         self.medications = medications
         self.chunks = chunks
@@ -140,10 +145,13 @@ class LangGraphMultiAgentOrchestrator:
             evidences_v2=evidences_v2,
             guardrail_port=guardrail_port,
             stock_repository=stock_repository,
+            pharmacy_repo=pharmacy_repo,
             generator_port=generator_port,
             strict_generator=strict_generator,
             gold_dir=gold_dir,
+            container=container,
         )
+        self.container = self._core.container
         self.checkpointer = MemorySaver()
         self.session_store = SQLiteSessionStore(db_path=session_db_path)
         self.app = self._build_graph()
@@ -182,31 +190,32 @@ class LangGraphMultiAgentOrchestrator:
         return any(cue in norm for cue in self._FOLLOWUP_CUES)
 
     def _node_extractor_triage(self, state: MultiAgentGraphState) -> MultiAgentGraphState:
-        """Nó do Agente 1: Extrator & Triador com PII Masking, Bloqueio Clínico e Herança de RA."""
-        orch_state = OrchestratorState(
-            raw_input=state["raw_input"],
-            days_since_emission=state.get("days_since_emission", 166),
-        )
-        self._core._agent_1_extractor_triage(orch_state)
+        """Nó do Agente 1 (Node_Triagem_Seguranca): PII Masking, Bloqueio Clínico e Herança de RA."""
+        with trace_operation("Node_Triagem_Seguranca") as tr:
+            orch_state = OrchestratorState(
+                raw_input=state["raw_input"],
+                days_since_emission=state.get("days_since_emission", 166),
+            )
+            self._core._agent_1_extractor_triage(orch_state)
 
-        prior_ra = state.get("prior_ra", "Distrito Federal (Geral)")
-        inherited_ra = False
-        if (
-            orch_state.detected_ra == "Distrito Federal (Geral)"
-            and prior_ra != "Distrito Federal (Geral)"
-        ):
-            orch_state.detected_ra = prior_ra
-            inherited_ra = True
+            prior_ra = state.get("prior_ra", "Distrito Federal (Geral)")
+            inherited_ra = False
+            if (
+                orch_state.detected_ra == "Distrito Federal (Geral)"
+                and prior_ra != "Distrito Federal (Geral)"
+            ):
+                orch_state.detected_ra = prior_ra
+                inherited_ra = True
 
-        prior_exams = list(state.get("known_exams", []))
-        merged_exams = list(prior_exams)
-        for exam in orch_state.detected_exams:
-            if exam not in merged_exams:
-                merged_exams.append(exam)
+            prior_exams = list(state.get("known_exams", []))
+            merged_exams = list(prior_exams)
+            for exam in orch_state.detected_exams:
+                if exam not in merged_exams:
+                    merged_exams.append(exam)
 
-        turn_count = int(state.get("turn_count", 0)) + 1
-        history = list(state.get("sanitized_history", []))
-        history.append(f"Turno {turn_count}: {orch_state.sanitized_input}")
+            turn_count = int(state.get("turn_count", 0)) + 1
+            history = list(state.get("sanitized_history", []))
+            history.append(f"Turno {turn_count}: {orch_state.sanitized_input}")
 
         ra_note = f"{orch_state.detected_ra} [herdado da sessão]" if inherited_ra else orch_state.detected_ra
         return {
@@ -221,40 +230,42 @@ class LangGraphMultiAgentOrchestrator:
             "sanitized_history": history,
             "turn_count": turn_count,
             "agent_trace": [
-                f"[LangGraph: Node 1] Turno {turn_count} triado (PII={orch_state.pii_redactions}, RA={ra_note})"
+                f"[LangGraph: Node 1 | Node_Triagem_Seguranca ({tr.elapsed_ms:.1f} ms)] "
+                f"Turno {turn_count} triado (PII={orch_state.pii_redactions}, RA={ra_note})"
             ],
         }
 
     def _node_pharmaceutical_auditor(self, state: MultiAgentGraphState) -> MultiAgentGraphState:
-        """Nó do Agente 2 (em paralelo ao Agente 3): Auditor Farmacêutico + Memória de Fármacos."""
-        sanitized_query = state["sanitized_input"]
-        prior_meds = list(state.get("known_medications", []))
-        prior_exams = list(state.get("known_exams", []))
-        current_exams = list(state.get("detected_exams", []))
-        direct_matches = self._core.tabular_matcher.match_medications(sanitized_query)
+        """Nó do Agente 2 (Node_Auditor_Farmaceutico): Auditoria paralela + Memória de Fármacos."""
+        with trace_operation("Node_Auditor_Farmaceutico") as tr:
+            sanitized_query = state["sanitized_input"]
+            prior_meds = list(state.get("known_medications", []))
+            prior_exams = list(state.get("known_exams", []))
+            current_exams = list(state.get("detected_exams", []))
+            direct_matches = self._core.medication_repo.match_medications(sanitized_query)
 
-        effective_query = sanitized_query
-        inherited_context = False
-        if not direct_matches and self._is_followup_query(sanitized_query):
-            if prior_meds and not current_exams:
-                effective_query = f"{sanitized_query} {' '.join(prior_meds)}"
-                inherited_context = True
-            elif prior_exams and not current_exams:
-                effective_query = f"{sanitized_query} {' '.join(prior_exams)}"
-                inherited_context = True
+            effective_query = sanitized_query
+            inherited_context = False
+            if not direct_matches and self._is_followup_query(sanitized_query):
+                if prior_meds and not current_exams:
+                    effective_query = f"{sanitized_query} {' '.join(prior_meds)}"
+                    inherited_context = True
+                elif prior_exams and not current_exams:
+                    effective_query = f"{sanitized_query} {' '.join(prior_exams)}"
+                    inherited_context = True
 
-        orch_state = OrchestratorState(
-            raw_input=state["raw_input"],
-            days_since_emission=state.get("days_since_emission", 166),
-            sanitized_input=effective_query,
-            detected_ra=state["detected_ra"],
-        )
-        self._core._agent_2_pharmaceutical_auditor(orch_state)
+            orch_state = OrchestratorState(
+                raw_input=state["raw_input"],
+                days_since_emission=state.get("days_since_emission", 166),
+                sanitized_input=effective_query,
+                detected_ra=state["detected_ra"],
+            )
+            self._core._agent_2_pharmaceutical_auditor(orch_state)
 
-        merged_meds = list(prior_meds)
-        for med in orch_state.audited_medications:
-            if med.dcb_name not in merged_meds:
-                merged_meds.append(med.dcb_name)
+            merged_meds = list(prior_meds)
+            for med in orch_state.audited_medications:
+                if med.dcb_name not in merged_meds:
+                    merged_meds.append(med.dcb_name)
 
         mem_note = " | contexto herdado da sessão" if inherited_context else ""
         return {
@@ -289,37 +300,38 @@ class LangGraphMultiAgentOrchestrator:
                 for h in orch_state.retrieved_hits
             ],
             "agent_trace": [
-                f"[LangGraph: Node 2] Auditoria Farmacêutica (Meds={len(orch_state.audited_medications)}, "
-                f"Hits={len(orch_state.retrieved_hits)}{mem_note})"
+                f"[LangGraph: Node 2 | Node_Auditor_Farmaceutico ({tr.elapsed_ms:.1f} ms)] "
+                f"Meds={len(orch_state.audited_medications)}, Hits={len(orch_state.retrieved_hits)}{mem_note}"
             ],
         }
 
     def _node_sisreg_consultant(self, state: MultiAgentGraphState) -> MultiAgentGraphState:
-        """Nó do Agente 3 (em paralelo ao Agente 2): Consultor Normativo & Regulação SISREG."""
-        sanitized_input = state.get("sanitized_input", "")
-        current_exams = list(state.get("detected_exams", []))
-        prior_exams = list(state.get("known_exams", []))
-        prior_meds = list(state.get("known_medications", []))
-        direct_med_matches = self._core.tabular_matcher.match_medications(sanitized_input)
+        """Nó do Agente 3 (Node_Consultor_SISREG_Normas): Regulação SISREG & Normas paralela."""
+        with trace_operation("Node_Consultor_SISREG_Normas") as tr:
+            sanitized_input = state.get("sanitized_input", "")
+            current_exams = list(state.get("detected_exams", []))
+            prior_exams = list(state.get("known_exams", []))
+            prior_meds = list(state.get("known_medications", []))
+            direct_med_matches = self._core.medication_repo.match_medications(sanitized_input)
 
-        effective_exams = current_exams
-        if (
-            not current_exams
-            and not direct_med_matches
-            and not prior_meds
-            and prior_exams
-            and self._is_followup_query(sanitized_input)
-        ):
-            effective_exams = prior_exams
+            effective_exams = current_exams
+            if (
+                not current_exams
+                and not direct_med_matches
+                and not prior_meds
+                and prior_exams
+                and self._is_followup_query(sanitized_input)
+            ):
+                effective_exams = prior_exams
 
-        orch_state = OrchestratorState(
-            raw_input=state["raw_input"],
-            days_since_emission=state.get("days_since_emission", 166),
-            sanitized_input=sanitized_input,
-            detected_ra=state["detected_ra"],
-            detected_exams=effective_exams,
-        )
-        self._core._agent_3_sisreg_consultant(orch_state)
+            orch_state = OrchestratorState(
+                raw_input=state["raw_input"],
+                days_since_emission=state.get("days_since_emission", 166),
+                sanitized_input=sanitized_input,
+                detected_ra=state["detected_ra"],
+                detected_exams=effective_exams,
+            )
+            self._core._agent_3_sisreg_consultant(orch_state)
 
         return {
             "sisreg_items": [
@@ -350,82 +362,88 @@ class LangGraphMultiAgentOrchestrator:
                 for h in orch_state.retrieved_hits
             ],
             "agent_trace": [
-                f"[LangGraph: Node 3] Consultor SISREG & Normas (Procedimentos={len(orch_state.sisreg_items)}, "
-                f"Normas={len(orch_state.normative_notes)})"
+                f"[LangGraph: Node 3 | Node_Consultor_SISREG_Normas ({tr.elapsed_ms:.1f} ms)] "
+                f"Procedimentos={len(orch_state.sisreg_items)}, Normas={len(orch_state.normative_notes)}"
             ],
         }
 
     def _node_citizen_synthesizer(self, state: MultiAgentGraphState) -> MultiAgentGraphState:
-        """Nó do Agente 4: Sintetizador do Roteiro Cidadão + Validação de Saída + Sessão."""
-        meds = [
-            MedicationAuditItem(
-                dcb_name=m["dcb_name"],
-                concentration=m["concentration"],
-                rename_component=m["rename_component"],
-                dispensation_route=m["dispensation_route"],
-                requires_lme=m["requires_lme"],
-                validity_days=m["validity_days"],
-                where_to_collect=m["where_to_collect"],
-                required_documents=m["required_documents"],
-                source_citation=m["source_citation"],
-            )
-            for m in state.get("audited_medications", [])
-        ]
-        sisreg = [
-            SISREGGuidanceItem(
-                procedure_name=it["procedure_name"],
-                regulation_channel=it["regulation_channel"],
-                required_documents=it["required_documents"],
-                priority_rule=it["priority_rule"],
-                source_citation=it["source_citation"],
-                preparation_tips=list(it.get("preparation_tips", [])),
-            )
-            for it in state.get("sisreg_items", [])
-        ]
-
-        seen_hits: set[str] = set()
-        hits: list[RetrievalHit] = []
-        for h in state.get("retrieved_hits", []):
-            cid = str(h["chunk_id"])
-            if cid in seen_hits:
-                continue
-            seen_hits.add(cid)
-            hits.append(
-                RetrievalHit(
-                    chunk_id=cid,
-                    score=float(h["score"]),
-                    source_id=str(h["source_id"]),
-                    document_title=str(h["document_title"]),
-                    section=str(h["section"]),
-                    page_number=int(h["page_number"]),
-                    route_category=str(h["route_category"]),
-                    text=str(h["text"]),
-                    matched_dcb=h.get("matched_dcb"),
-                    retriever_name=str(h.get("retriever_name", "langgraph_retriever")),
+        """Nó do Agente 4 (Node_Sintetizador_Cidadao): Consolidação, GeneratorPort & Saída."""
+        with trace_operation("Node_Sintetizador_Cidadao") as tr:
+            meds = [
+                MedicationAuditItem(
+                    dcb_name=m["dcb_name"],
+                    concentration=m["concentration"],
+                    rename_component=m["rename_component"],
+                    dispensation_route=m["dispensation_route"],
+                    requires_lme=m["requires_lme"],
+                    validity_days=m["validity_days"],
+                    where_to_collect=m["where_to_collect"],
+                    required_documents=m["required_documents"],
+                    source_citation=m["source_citation"],
                 )
+                for m in state.get("audited_medications", [])
+            ]
+            sisreg = [
+                SISREGGuidanceItem(
+                    procedure_name=it["procedure_name"],
+                    regulation_channel=it["regulation_channel"],
+                    required_documents=it["required_documents"],
+                    priority_rule=it["priority_rule"],
+                    source_citation=it["source_citation"],
+                    preparation_tips=list(it.get("preparation_tips", [])),
+                )
+                for it in state.get("sisreg_items", [])
+            ]
+
+            seen_hits: set[str] = set()
+            hits: list[RetrievalHit] = []
+            for h in state.get("retrieved_hits", []):
+                cid = str(h["chunk_id"])
+                if cid in seen_hits:
+                    continue
+                seen_hits.add(cid)
+                hits.append(
+                    RetrievalHit(
+                        chunk_id=cid,
+                        score=float(h["score"]),
+                        source_id=str(h["source_id"]),
+                        document_title=str(h["document_title"]),
+                        section=str(h["section"]),
+                        page_number=int(h["page_number"]),
+                        route_category=str(h["route_category"]),
+                        text=str(h["text"]),
+                        matched_dcb=h.get("matched_dcb"),
+                        retriever_name=str(h.get("retriever_name", "langgraph_retriever")),
+                    )
+                )
+
+            orch_state = OrchestratorState(
+                raw_input=state["raw_input"],
+                days_since_emission=state.get("days_since_emission", 166),
+                sanitized_input=state.get("sanitized_input", state["raw_input"]),
+                pii_redactions=state.get("pii_redactions", 0),
+                detected_pii_types=state.get("detected_pii_types", []),
+                is_clinical_blocked=state.get("is_clinical_blocked", False),
+                clinical_block_message=state.get("clinical_block_message", ""),
+                detected_ra=state.get("detected_ra", "Distrito Federal (Geral)"),
+                detected_exams=state.get("detected_exams", []),
+                audited_medications=meds,
+                sisreg_items=sisreg,
+                retrieved_hits=hits,
+                normative_notes=list(state.get("normative_notes", [])),
+                session_known_medications=list(state.get("known_medications", [])),
+                session_known_exams=list(state.get("known_exams", [])),
+                agent_trace=list(state.get("agent_trace", [])),
             )
 
-        orch_state = OrchestratorState(
-            raw_input=state["raw_input"],
-            days_since_emission=state.get("days_since_emission", 166),
-            sanitized_input=state.get("sanitized_input", state["raw_input"]),
-            pii_redactions=state.get("pii_redactions", 0),
-            detected_pii_types=state.get("detected_pii_types", []),
-            is_clinical_blocked=state.get("is_clinical_blocked", False),
-            clinical_block_message=state.get("clinical_block_message", ""),
-            detected_ra=state.get("detected_ra", "Distrito Federal (Geral)"),
-            detected_exams=state.get("detected_exams", []),
-            audited_medications=meds,
-            sisreg_items=sisreg,
-            retrieved_hits=hits,
-            normative_notes=list(state.get("normative_notes", [])),
-            session_known_medications=list(state.get("known_medications", [])),
-            session_known_exams=list(state.get("known_exams", [])),
-            agent_trace=list(state.get("agent_trace", [])),
+            resp = self._core._agent_4_synthesize(orch_state)
+        trace_list = list(resp.agent_trace)
+        trace_list.append(
+            f"[LangGraph: Node 4 | Node_Sintetizador_Cidadao ({tr.elapsed_ms:.1f} ms)] Roteiro={resp.primary_route}"
         )
-
-        resp = self._core._agent_4_synthesize(orch_state)
         resp_dict = resp.to_dict()
+        resp_dict["agent_trace"] = trace_list
         resp_dict["session_id"] = state.get("session_id") or None
         resp_dict["turn_count"] = int(state.get("turn_count", 1))
         resp_dict["remembered_history"] = list(state.get("sanitized_history", []))

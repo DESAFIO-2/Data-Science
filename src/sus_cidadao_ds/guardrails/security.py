@@ -14,6 +14,7 @@ import unicodedata
 from collections.abc import Collection
 from dataclasses import dataclass
 from enum import StrEnum
+from pathlib import Path
 
 logger = logging.getLogger("sus_cidadao_ds.seguranca")
 
@@ -259,4 +260,28 @@ def validar_saida(
         if any(cid not in permitidos for cid in citados):
             motivos.append("CITACAO_FORA_DO_CONTEXTO")
     return ResultadoSaida(aprovada=not motivos, motivos=tuple(motivos))
+
+
+EXTENSOES_ARQUIVO_PERMITIDAS: frozenset[str] = frozenset(
+    {".pdf", ".jpg", ".jpeg", ".png", ".webp", ".webm", ".m4a", ".wav", ".ogg", ".mp3"}
+)
+TAMANHO_MAXIMO_ARQUIVO_BYTES: int = 10 * 1024 * 1024
+
+
+def validar_arquivo_entrada(
+    nome_arquivo: str,
+    tamanho_bytes: int,
+    texto_extraido: str = "",
+    canal: Canal | str = Canal.PDF,
+) -> ResultadoInjecao:
+    """Valida extensão, tamanho e conteúdo extraído de anexo PDF/áudio (preparo Semana 5)."""
+    ext = Path(nome_arquivo or "").suffix.lower()
+    if ext and ext not in EXTENSOES_ARQUIVO_PERMITIDAS:
+        return ResultadoInjecao(bloqueado=True, motivos=("EXTENSAO_NAO_PERMITIDA",))
+    if tamanho_bytes < 0 or tamanho_bytes > TAMANHO_MAXIMO_ARQUIVO_BYTES:
+        return ResultadoInjecao(bloqueado=True, motivos=("ARQUIVO_EXCEDE_LIMITE",))
+    if texto_extraido:
+        return inspecionar_entrada(texto_extraido, canal=canal)
+    return ResultadoInjecao(bloqueado=False, motivos=())
+
 

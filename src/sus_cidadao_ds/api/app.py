@@ -22,7 +22,7 @@ from sus_cidadao_ds.agents.ports import (
     GeneratorPort,
 )
 from sus_cidadao_ds.core.config import ProjectPaths
-from sus_cidadao_ds.ingestion.infosaude_client import haversine_km
+from sus_cidadao_ds.guardrails.security import validar_saida
 from sus_cidadao_ds.retrieval.embeddings import PortugueseClinicalEmbeddingFunction
 from sus_cidadao_ds.retrieval.retrievers import TabularDCBMatcher, normalize_pt_text
 from sus_cidadao_ds.sync.data_sync import DataSynchronizer
@@ -321,6 +321,12 @@ def create_app(
             "status": "ok",
             "service": "sus-cidadao-navegasus-api",
             "rag_runtime_engine": "deterministic_tabular_tfidf_bm25_rrf_v9",
+            "architecture_nodes": [
+                "Node_Triagem_Seguranca",
+                "Node_Auditor_Farmaceutico",
+                "Node_Consultor_SISREG_Normas",
+                "Node_Sintetizador_Cidadao",
+            ],
             "embedding_profile": PortugueseClinicalEmbeddingFunction().get_config(),
             "chroma_collections": chroma_stats,
             "stt_provider_configured": voice.stt_provider_configured(),
@@ -476,14 +482,14 @@ def create_app(
 
     @application.post("/api/v1/prescriptions/audit", response_model=PrescriptionAuditResponseDTO)
     def audit_prescription(payload: PrescriptionAuditRequestDTO) -> PrescriptionAuditResponseDTO:
-        """Audita receita estruturada via RAG híbrido v9 + Guardrail clínico + Validade RF08."""
+        """Audita receita estruturada via ServiceContainer (Ports RAG v9 + Guardrail + ValidarSaida)."""
+        container = orch.container
         core = orch._core
-        masker = core.pii_masker
-        blocker = core.clinical_blocker
-        matcher = core.tabular_matcher
-        retriever = core.hybrid_retriever
+        guardrail = container.guardrail
+        med_repo = container.medication_repo
+        retriever = container.retriever
 
-        regiao = masker.mask(payload.regiao_administrativa).sanitized_text
+        regiao = guardrail.mask(payload.regiao_administrativa).sanitized_text
         raw_fields = [
             v
             for item in payload.itens
@@ -498,7 +504,7 @@ def create_app(
             if v
         ] + [payload.pergunta_adicional or "", payload.regiao_administrativa]
 
-        blocks = [res for field_val in raw_fields if (res := blocker.inspect(field_val)).is_blocked]
+        blocks = [res for field_val in raw_fields if (res := guardrail.inspect(field_val)).is_blocked]
         if blocks:
             chosen = next((b for b in blocks if b.has_red_flag_emergency), blocks[0])
             return PrescriptionAuditResponseDTO(
@@ -516,12 +522,13 @@ def create_app(
         base_date = payload.data_emissao or today
         ceaf_unit = core._resolve_ceaf_unit(regiao)
         audited_items: list[ItemRoteiroDTO] = []
+        allowed_ids: set[str] = set()
 
         for item in payload.itens:
-            nome = masker.mask(item.nome_digitado).sanitized_text
-            dcb = masker.mask(item.principio_ativo_dcb or "").sanitized_text
-            forma = masker.mask(item.forma_farmaceutica or "").sanitized_text
-            doses = matcher.doses_no_texto(nome)
+            nome = guardrail.mask(item.nome_digitado).sanitized_text
+            dcb = guardrail.mask(item.principio_ativo_dcb or "").sanitized_text
+            forma = guardrail.mask(item.forma_farmaceutica or "").sanitized_text
+            doses = TabularDCBMatcher.doses_no_texto(nome)
             dose = item.concentracao or (next(iter(doses)) if len(doses) == 1 else "")
             dose_ambigua = (
                 TabularDCBMatcher.tem_numero_nao_interpretado(nome)
@@ -534,7 +541,7 @@ def create_app(
             )
             consulta = dcb or nome
             matches = (
-                matcher.match_medications(
+                med_repo.match_medications(
                     consulta,
                     concentracao=dose,
                     forma=forma,
@@ -559,6 +566,7 @@ def create_app(
                 val_days = None if med.item_type == "supply" else med.prescription_validity_days
                 dt_limit = base_date + timedelta(days=val_days) if val_days is not None else None
                 days_left = max(0, (dt_limit - today).days) if dt_limit else None
+                allowed_ids.add(med.source_id)
                 audited_items.append(
                     ItemRoteiroDTO(
                         medicamento=nome,
@@ -589,6 +597,8 @@ def create_app(
                     "UBS_ATENCAO_PRIMARIA",
                 }:
                     hit = hits[0]
+                    allowed_ids.add(hit.chunk_id)
+                    allowed_ids.add(hit.source_id)
                     val_days = 90 if hit.route_category in {"SISREG_EXAME_CONSULTA", "ALTO_CUSTO_CEAF"} else 180
                     dt_limit = base_date + timedelta(days=val_days)
                     days_left = max(0, (dt_limit - today).days)
@@ -637,7 +647,7 @@ def create_app(
         if total_ceaf:
             summary_parts.append(f"{total_ceaf} item(ns) no Alto Custo (CEAF) com exigência de LME.")
 
-        extra_question = masker.mask(payload.pergunta_adicional or "").sanitized_text.strip()
+        extra_question = guardrail.mask(payload.pergunta_adicional or "").sanitized_text.strip()
         if extra_question:
             extra_resp = orch.run(
                 user_input=f"{extra_question} (Região do paciente: {regiao})",
@@ -655,6 +665,9 @@ def create_app(
                     ),
                     solicitou_automedicacao=True,
                 )
+            for cit in extra_resp.citations:
+                if "|" in cit:
+                    allowed_ids.add(cit.split(":", 1)[1].split("|", 1)[0].strip())
             if not extra_resp.abstained and extra_resp.synthesized_guidance:
                 summary_parts.append(f"Sobre sua dúvida adicional: {extra_resp.synthesized_guidance}")
             else:
@@ -662,11 +675,28 @@ def create_app(
                     "Sobre sua dúvida adicional: não encontramos norma específica além dos itens listados; confirme no acolhimento da sua UBS."
                 )
 
+        deterministic_summary = " ".join(summary_parts)
+        final_summary = deterministic_summary
+        if not isinstance(container.generator, DeterministicCitizenGenerator):
+            try:
+                candidate = container.generator.generate(extra_question or regiao, deterministic_summary)
+                cand_pii = guardrail.mask(candidate).detected_pii_types
+                if (
+                    candidate.strip()
+                    and validar_saida(candidate, ids_contexto=allowed_ids, detected_pii_types=cand_pii).aprovada
+                ):
+                    final_summary = candidate.strip()
+                elif container.strict_generator:
+                    raise RuntimeError("Saída LLM bloqueada por validar_saida em /api/v1/prescriptions/audit.")
+            except Exception:
+                if container.strict_generator:
+                    raise
+
         return PrescriptionAuditResponseDTO(
             sucesso=True,
             regiao_administrativa=regiao,
             itens=audited_items,
-            resumo_acolhedor=" ".join(summary_parts),
+            resumo_acolhedor=final_summary,
             aviso_preservacao_ato_medico=(
                 "Aviso Importante: Orientação exclusivamente administrativa e documental no SUS. "
                 "Não substitui consulta ou prescrição médica."
@@ -682,58 +712,14 @@ def create_app(
         lng: float | None = None,
         limite: Annotated[int, Query(ge=1, le=25)] = 8,
     ) -> dict[str, Any]:
-        """Lista farmácias CEAF, Policlínicas e UBSs geolocalizadas do InfoSaúde-DF."""
-        pharm_path = resolved_paths.gold_dir / "df_pharmacies_geolocated.json"
-        if not pharm_path.exists():
-            return {"ra": ra, "total": 0, "items": []}
-        raw = json.loads(pharm_path.read_text(encoding="utf-8"))
-        rows: list[dict[str, Any]] = list(raw.get("pharmacies", []))
-
-        norm_ra = normalize_pt_text(ra)
-        norm_q = normalize_pt_text(q)
-        scored: list[tuple[float, dict[str, Any]]] = []
-        for row in rows:
-            hay = normalize_pt_text(
-                " ".join(
-                    [
-                        str(row.get("name", "")),
-                        str(row.get("address", "")),
-                        str(row.get("neighborhood_or_ra", "")),
-                        str(row.get("pharmacy_type") or ""),
-                        " ".join(str(x) for x in (row.get("covered_ras") or [])),
-                    ]
-                )
-            )
-            match_score = 0.0
-            if norm_ra and norm_ra in hay:
-                match_score += 5.0
-            if norm_q and norm_q in hay:
-                match_score += 4.0
-            if "alto custo" in str(row.get("pharmacy_type", "")).lower():
-                match_score += 1.0
-
-            dist_km: float | None = None
-            if lat is not None and lng is not None and row.get("latitude") and row.get("longitude"):
-                dist_km = round(
-                    haversine_km(lat, lng, float(row["latitude"]), float(row["longitude"])),
-                    2,
-                )
-                match_score += max(0.0, 4.0 - dist_km * 0.1)
-
-            item_copy = dict(row)
-            if dist_km is not None:
-                item_copy["distance_km"] = dist_km
-            if (norm_ra or norm_q) and match_score == 0.0:
-                continue
-            scored.append((match_score, item_copy))
-
-        if not scored and rows:
-            scored = [(0.0, dict(r)) for r in rows[:limite]]
-        scored.sort(key=lambda pair: pair[0], reverse=True)
+        """Lista farmácias CEAF, Policlínicas e UBSs geolocalizadas via PharmacyRepositoryPort."""
+        total, items = orch.container.pharmacy_repo.find_nearby(
+            ra=ra, q=q, lat=lat, lng=lng, limit=limite
+        )
         return {
             "ra": ra or "Distrito Federal",
-            "total": len(scored),
-            "items": [item for _, item in scored[:limite]],
+            "total": total,
+            "items": items,
         }
 
     @application.get("/v1/ceaf-stock")
