@@ -31,7 +31,7 @@ serve:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m sus_cidadao_ds.cli serve --host 127.0.0.1 --port 8000
 
 prototype-web:
-	cd prototype && npx expo start --web
+	cd prototype && npx expo start --web --clear
 
 prototype-check:
 	cd prototype && npx tsc --noEmit && npm run lint

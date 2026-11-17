@@ -179,7 +179,8 @@ export function getDefaultApiBaseUrl(): string {
   const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
   if (envUrl) return envUrl.replace(/\/+$/, '');
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
-    const host = window.location.hostname || '127.0.0.1';
+    const rawHost = window.location.hostname || '127.0.0.1';
+    const host = rawHost === 'localhost' ? '127.0.0.1' : rawHost;
     return `http://${host}:8000`;
   }
   return 'http://127.0.0.1:8000';
