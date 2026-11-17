@@ -16,6 +16,7 @@ from pathlib import Path
 from sus_cidadao_ds.contracts.schemas import (
     CanonicalMedication,
     DataManifest,
+    EvidenceChunkV2,
     NormativeChunk,
     compute_sha256,
 )
@@ -757,33 +758,69 @@ class DataSynchronizer:
         self.paths.ensure_dirs()
 
     def sync(self, engineering_dir: Path | None = None) -> DataManifest:
-        """Sincroniza artefatos de `engineering_dir` (se disponível) ou materializa a base canônica."""
+        """Sincroniza artefatos de `engineering_dir` / corpus v9 consolidado ou materializa a base."""
         engineering_source = "canonical_materialization_v2024.2"
+        gold_path = self.paths.gold_dir / "medicamentos_sus_canonical.json"
+        silver_path = self.paths.silver_dir / "normative_chunks.json"
+        evidence_v2_path = self.paths.silver_dir / "evidence_chunks_v2.json"
 
         imported = False
         if engineering_dir is not None and engineering_dir.exists():
             eng_gold = engineering_dir / "data" / "gold" / "medicamentos_sus_canonical.json"
             eng_silver = engineering_dir / "data" / "silver" / "normative_chunks.json"
+            if not eng_gold.exists():
+                eng_gold = engineering_dir / "data" / "processed" / "medicamentos_sus_canonical.json"
+            if not eng_silver.exists():
+                eng_silver = engineering_dir / "data" / "processed" / "normative_chunks.json"
             if eng_gold.exists() and eng_silver.exists():
-                shutil.copy2(eng_gold, self.paths.gold_dir / "medicamentos_sus_canonical.json")
-                shutil.copy2(eng_silver, self.paths.silver_dir / "normative_chunks.json")
+                shutil.copy2(eng_gold, gold_path)
+                shutil.copy2(eng_silver, silver_path)
+                eng_ev = engineering_dir / "data" / "processed" / "evidence_chunks_v2.json"
+                if eng_ev.exists():
+                    shutil.copy2(eng_ev, evidence_v2_path)
                 engineering_source = f"imported_from:{engineering_dir.resolve()}"
                 imported = True
 
-        gold_path = self.paths.gold_dir / "medicamentos_sus_canonical.json"
-        silver_path = self.paths.silver_dir / "normative_chunks.json"
-
         if not imported:
-            meds = _build_canonical_medications()
-            chunks = _build_normative_chunks()
-            gold_payload = [m.to_dict() for m in meds]
-            silver_payload = [c.to_dict() for c in chunks]
-            gold_path.write_text(
-                json.dumps(gold_payload, ensure_ascii=False, indent=2),
-                encoding="utf-8",
-            )
+            # Preserva corpus v9 consolidado (> 100 itens canônicos) quando já presente em data/gold
+            if gold_path.exists():
+                existing_gold = json.loads(gold_path.read_text(encoding="utf-8"))
+                if isinstance(existing_gold, list) and len(existing_gold) >= 100:
+                    engineering_source = "corpus-consolidado-v9-aprovado-2026-11-12"
+                else:
+                    meds = _build_canonical_medications()
+                    gold_path.write_text(
+                        json.dumps([m.to_dict() for m in meds], ensure_ascii=False, indent=2),
+                        encoding="utf-8",
+                    )
+            else:
+                meds = _build_canonical_medications()
+                gold_path.write_text(
+                    json.dumps([m.to_dict() for m in meds], ensure_ascii=False, indent=2),
+                    encoding="utf-8",
+                )
+
+        # Preserva chunks v9 existentes (20+ chunks) e garante presença dos chunks pré-exame
+        canonical_chunks = _build_normative_chunks()
+        if silver_path.exists():
+            existing_silver = json.loads(silver_path.read_text(encoding="utf-8"))
+            if isinstance(existing_silver, list) and len(existing_silver) >= len(canonical_chunks):
+                existing_by_id = {str(c["chunk_id"]): c for c in existing_silver}
+                for c in canonical_chunks:
+                    if c.chunk_id.startswith("CHK-PREEXAM-") or c.chunk_id not in existing_by_id:
+                        existing_by_id[c.chunk_id] = c.to_dict()
+                silver_path.write_text(
+                    json.dumps(list(existing_by_id.values()), ensure_ascii=False, indent=2),
+                    encoding="utf-8",
+                )
+            elif not imported:
+                silver_path.write_text(
+                    json.dumps([c.to_dict() for c in canonical_chunks], ensure_ascii=False, indent=2),
+                    encoding="utf-8",
+                )
+        else:
             silver_path.write_text(
-                json.dumps(silver_payload, ensure_ascii=False, indent=2),
+                json.dumps([c.to_dict() for c in canonical_chunks], ensure_ascii=False, indent=2),
                 encoding="utf-8",
             )
 
@@ -791,6 +828,14 @@ class DataSynchronizer:
         silver_raw = silver_path.read_text(encoding="utf-8")
         gold_items = json.loads(gold_raw)
         silver_items = json.loads(silver_raw)
+        evidence_count = 0
+        if evidence_v2_path.exists():
+            try:
+                evidence_items = json.loads(evidence_v2_path.read_text(encoding="utf-8"))
+                if isinstance(evidence_items, list):
+                    evidence_count = len(evidence_items)
+            except Exception:
+                evidence_count = 0
 
         # Exporta também a versão CSV tabular canônica (Base de Conhecimento Tabular)
         csv_gold_path = self.paths.gold_dir / "medicamentos_sus_canonical.csv"
@@ -808,6 +853,8 @@ class DataSynchronizer:
                 "available_reme_df",
                 "dispensation_route",
                 "requires_lme",
+                "item_type",
+                "df_channels",
                 "icd10_codes",
                 "prescription_validity_days",
                 "source_id",
@@ -821,23 +868,30 @@ class DataSynchronizer:
                     row_copy = dict(row)
                     if isinstance(row_copy.get("icd10_codes"), list):
                         row_copy["icd10_codes"] = ";".join(row_copy["icd10_codes"])
+                    if isinstance(row_copy.get("df_channels"), list):
+                        row_copy["df_channels"] = ";".join(row_copy["df_channels"])
                     writer.writerow(row_copy)
 
         gold_sha = compute_sha256(gold_raw)
         silver_sha = compute_sha256(silver_raw)
         combined_sha = compute_sha256(f"{gold_sha}:{silver_sha}")
 
+        record_counts = {
+            "canonical_medications": len(gold_items),
+            "normative_chunks": len(silver_items),
+        }
+        if evidence_count > 0:
+            record_counts["evidence_chunks_v2"] = evidence_count
+
+        manifest_version = "2026.4.0" if len(gold_items) >= 100 else "2024.2.0"
         manifest = DataManifest(
-            manifest_version="2024.2.0",
+            manifest_version=manifest_version,
             generated_at_utc=datetime.now(UTC).isoformat(),
             engineering_source=engineering_source,
             canonical_medications_sha256=gold_sha,
             normative_chunks_sha256=silver_sha,
             combined_sha256=combined_sha,
-            record_counts={
-                "canonical_medications": len(gold_items),
-                "normative_chunks": len(silver_items),
-            },
+            record_counts=record_counts,
         )
         manifest_path = self.paths.manifests_dir / "manifest.json"
         manifest_path.write_text(
@@ -845,6 +899,14 @@ class DataSynchronizer:
             encoding="utf-8",
         )
         return manifest
+
+    def load_evidence_chunks_v2(self) -> list[EvidenceChunkV2]:
+        """Carrega os chunks literais 1:1 (evidence_chunks_v2.json) do corpus v9, se presentes."""
+        evidence_path = self.paths.silver_dir / "evidence_chunks_v2.json"
+        if not evidence_path.exists():
+            return []
+        raw_list = json.loads(evidence_path.read_text(encoding="utf-8"))
+        return [EvidenceChunkV2.from_dict(item) for item in raw_list]
 
     def load_medications(self) -> list[CanonicalMedication]:
         """Carrega a camada Gold de medicamentos canônicos."""

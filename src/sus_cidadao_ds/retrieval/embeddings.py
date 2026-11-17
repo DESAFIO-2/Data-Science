@@ -122,10 +122,10 @@ class PortugueseClinicalEmbeddingFunction(EmbeddingFunction[Documents]):
 
         output: list[list[float]] = []
         for idx, text in enumerate(texts):
-            pt_vec = _encode_pt_clinical_subspace(text, total_dims=128)
+            pt_vec = _encode_pt_clinical_subspace(text, total_dims=256)
             if onnx_vecs is not None and idx < len(onnx_vecs):
                 onnx_norm = _l2_normalize(onnx_vecs[idx])
-                combined = [0.55 * v for v in onnx_norm] + [0.45 * v for v in pt_vec]
+                combined = [0.35 * v for v in onnx_norm] + [0.65 * v for v in pt_vec]
                 output.append(_l2_normalize(combined))
             else:
                 padded = pt_vec + [0.0] * 384
@@ -178,7 +178,7 @@ class PortugueseClinicalEmbeddingFunction(EmbeddingFunction[Documents]):
 
     @staticmethod
     def name() -> str:
-        return "sus_cidadao_pt_br_clinical_v1"
+        return "sus_cidadao_pt_br_clinical_v2"
 
     def get_config(self) -> dict[str, Any]:
         return {"provider": self.provider}

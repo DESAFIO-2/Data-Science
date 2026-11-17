@@ -327,6 +327,7 @@ def main(argv: list[str] | None = None) -> int:
             medications=meds,
             chunks=chunks,
             vectorstore_manager=chroma_mgr,
+            evidences_v2=syncer.load_evidence_chunks_v2(),
         )
         if args.reset_session and args.session_id:
             orchestrator.clear_session(args.session_id)
@@ -476,6 +477,7 @@ def main(argv: list[str] | None = None) -> int:
             medications=meds,
             chunks=chunks,
             vectorstore_manager=chroma_mgr_v,
+            evidences_v2=syncer.load_evidence_chunks_v2(),
         )
         engine = VoiceEngine()
 

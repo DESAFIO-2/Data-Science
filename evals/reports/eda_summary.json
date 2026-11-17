@@ -1,39 +1,51 @@
 {
-  "manifest_sha256": "6aad97cb7ce99495baecca22a0218e750fa43d222e106e6b47904095ba44795d",
-  "total_medications": 24,
-  "unique_dcbs": 23,
+  "manifest_sha256": "6cdf0a15b12bd78da37c7d38d2975c677d6fdc5dea77a521762c86b9f90bd511",
+  "total_medications": 1775,
+  "unique_dcbs": 960,
   "by_rename_component": {
-    "Básico": 17,
-    "Especializado": 7
+    "Básico": 749,
+    "Especializado": 488,
+    "Hospitalar": 318,
+    "Estratégico": 220
   },
   "by_dispensation_route": {
-    "FARMACIA_POPULAR": 13,
-    "UBS_ATENCAO_PRIMARIA": 5,
-    "ALTO_CUSTO_CEAF": 6
+    "FARMACIA_POPULAR": 51,
+    "UBS_ATENCAO_PRIMARIA": 919,
+    "ALTO_CUSTO_CEAF": 487,
+    "HOSPITALAR": 318
   },
-  "pfpb_free_count": 13,
-  "pfpb_free_rate": 0.5417,
-  "requires_lme_count": 6,
-  "requires_lme_rate": 0.25,
-  "total_chunks": 13,
+  "pfpb_free_count": 51,
+  "pfpb_free_rate": 0.0287,
+  "requires_lme_count": 487,
+  "requires_lme_rate": 0.2744,
+  "total_chunks": 24,
   "chunks_by_source": {
-    "PFPB_2024": 2,
+    "PFPB_2024": 3,
     "RENAME_2024": 3,
-    "REME_DF_2024": 2,
+    "REME_DF_2024": 3,
     "SISREG_CPPAS_DF": 2,
+    "PNAB_SES_DF": 1,
+    "ANVISA_PORTARIA_344": 1,
+    "PFPB_C01_2026": 1,
+    "SES_DF_C02_2026": 1,
+    "SES_DF_C03_2026": 1,
+    "SES_DF_C04_2026": 1,
+    "INFOSAUDE_DF_C06_C07": 1,
+    "MS_CEAF_C09_C10": 1,
+    "MS_CESAF_C14": 1,
     "PRE_EXAME_SESDF_HUB": 4
   },
   "chunks_by_route_category": {
-    "FARMACIA_POPULAR": 2,
-    "UBS_ATENCAO_PRIMARIA": 2,
-    "ALTO_CUSTO_CEAF": 2,
+    "FARMACIA_POPULAR": 4,
+    "UBS_ATENCAO_PRIMARIA": 7,
+    "ALTO_CUSTO_CEAF": 5,
     "SISREG_EXAME_CONSULTA": 2,
-    "GERAL": 1,
+    "GERAL": 2,
     "PRE_EXAME_PREPARO": 4
   },
-  "avg_chunk_words": 87.92,
-  "median_chunk_words": 86.0,
+  "avg_chunk_words": 93.08,
+  "median_chunk_words": 88.0,
   "min_chunk_words": 72,
-  "max_chunk_words": 109,
-  "dcb_chunk_coverage_rate": 1.0
+  "max_chunk_words": 142,
+  "dcb_chunk_coverage_rate": 0.0344
 }

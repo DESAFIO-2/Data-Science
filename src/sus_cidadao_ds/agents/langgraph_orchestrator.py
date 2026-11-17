@@ -24,7 +24,12 @@ from sus_cidadao_ds.agents.orchestrator import (
     SISREGGuidanceItem,
 )
 from sus_cidadao_ds.agents.session_memory import SessionContext, SQLiteSessionStore
-from sus_cidadao_ds.contracts.schemas import CanonicalMedication, NormativeChunk, RetrievalHit
+from sus_cidadao_ds.contracts.schemas import (
+    CanonicalMedication,
+    EvidenceChunkV2,
+    NormativeChunk,
+    RetrievalHit,
+)
 from sus_cidadao_ds.retrieval.chroma_indexer import ChromaVectorStoreManager
 from sus_cidadao_ds.retrieval.retrievers import normalize_pt_text
 
@@ -92,6 +97,10 @@ class LangGraphMultiAgentOrchestrator:
         "contraste",
         "creatinina",
         "exame",
+        "procuracao",
+        "terceiro",
+        "representante",
+        "declaracao",
     )
 
     def __init__(
@@ -101,6 +110,7 @@ class LangGraphMultiAgentOrchestrator:
         min_score: float = 0.18,
         vectorstore_manager: ChromaVectorStoreManager | None = None,
         session_db_path: Path | None = None,
+        evidences_v2: list[EvidenceChunkV2] | None = None,
     ) -> None:
         self.medications = medications
         self.chunks = chunks
@@ -112,6 +122,7 @@ class LangGraphMultiAgentOrchestrator:
             chunks=chunks,
             min_score=min_score,
             vectorstore_manager=vectorstore_manager,
+            evidences_v2=evidences_v2,
         )
         self.checkpointer = MemorySaver()
         self.session_store = SQLiteSessionStore(db_path=session_db_path)

@@ -1,0 +1,49 @@
+{
+  "repository": "https://github.com/DESAFIO-2/data-engineering.git",
+  "commit": "8d76f923354a4707810be38e238a8a3ea035554e",
+  "base_tracked_release_path": "data/releases/corpus-consolidado-v9-claritromicina-normalizada-2026-11-12",
+  "base_tracked_release_manifest_sha256": "60e8218b7968103940894ed513b062f988b085b0e7b01bcdd65a464442f34614",
+  "release_path": "data/releases/corpus-consolidado-v9-aprovado-2026-11-12",
+  "release_version": "corpus-consolidado-v9-aprovado-2026-11-12",
+  "schema_version": "consolidated-release-v2",
+  "release_status_origin_git": "pending_review",
+  "release_status_reproduced": "approved",
+  "approval_reproduction_script": "scripts/approve_v9_release.py",
+  "release_manifest_sha256": "a31a695cca85237aa94e52b6fa3211ef140361f0ac9cd47b9985d93f6e0761ae",
+  "corpus_fingerprint": "99d4fb04a74463b9cfdd4ea9c08b51a0ef39bb5631be58964209d6041f9e1b20",
+  "approval_scope": "Indexação e recuperação de presença documental de medicamentos, apresentações e insumos nas edições congeladas F01 (RENAME 2024), F03 (REME-DF 2026) e F04 (Farmácia Popular 2026), com proveniência e limites da fonte.",
+  "review_reference": {
+    "path": "docs/reports/v9/revisao-claritromicina-v9-jhiovana.md",
+    "scope": "Aprovação humana da normalização da linha F03 249; gate RAG separado.",
+    "sha256": "acd85a4445f3220aacfd0e0fd5dea18e901751c25bbcbff181ea6eab452c714a"
+  },
+  "source_files_sha256": {
+    "audit_log.jsonl": "c7ecba2511d8aa23ac4fcac72237820f05d3aede985bde94be7425b690251302",
+    "catalog.jsonl": "c40cea12df845208193f5654bc0c3c514dcbe2da5ad72d25eed89de4096879d1",
+    "domain_review.json": "65707093f50bb5476a25dc13c9ad293c040dfed4177dec1999d1e24ef2a8febe",
+    "evidencias.jsonl": "95319e1a7ec6d31a2683a64fa62bc0f3960eaddba15c24dcac20560e1484a65f",
+    "exclusions.jsonl": "fcd2fa50a461109fc4759fa2bbe4f7f51b4e652c166f6cdec4439b7efe225383",
+    "f03_descriptions.json": "6959c908e0fc21a96b31f965eb156f7b1503c8b5a3bfbdbe118285ce7932cec4",
+    "occurrences.jsonl": "d6fb343e6fbeea8cf33fdc91473ddd85231d20c1ad57c801f39a25c2722a3e7f",
+    "quality_report.json": "5e6e7fcbd8ecd4f9c73103997f50d47c2b5c305aab9e1644541b2e25ac022664"
+  },
+  "staging_files_sha256": {
+    "curated_occurrences_v9.jsonl": "d6fb343e6fbeea8cf33fdc91473ddd85231d20c1ad57c801f39a25c2722a3e7f",
+    "curated_evidencias_v9.jsonl": "95319e1a7ec6d31a2683a64fa62bc0f3960eaddba15c24dcac20560e1484a65f"
+  },
+  "excluded_occurrences": [
+    {
+      "occurrence_id": "occ-dd3666cce6867d6246aae72f",
+      "raw_text": "987.",
+      "reason": "Linha numerada sem item na célula DESCRIÇÃO; excluída da publicação",
+      "source": {
+        "page": 55,
+        "sha256": "299ff632a4e55d1dabbc953dc9c9e09f1cf6bbe2cabef8bf45fec5fbd5139fb6",
+        "source_id": "F03",
+        "url": "https://www.saude.df.gov.br/documents/d/saude/reme_df___29_10_2026___final-pdf",
+        "version": "REME-DF 2026-10-29"
+      },
+      "source_row_number": 987
+    }
+  ]
+}

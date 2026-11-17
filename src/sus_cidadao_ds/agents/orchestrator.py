@@ -19,13 +19,16 @@ from typing import Any
 
 from sus_cidadao_ds.contracts.schemas import (
     CanonicalMedication,
+    EvidenceChunkV2,
     NormativeChunk,
     RetrievalHit,
 )
 from sus_cidadao_ds.guardrails.clinical_blocker import ClinicalBlocker
 from sus_cidadao_ds.guardrails.pii_masker import PIIMasker
+from sus_cidadao_ds.guardrails.security import validar_saida
 from sus_cidadao_ds.retrieval.chroma_indexer import ChromaVectorStoreManager
 from sus_cidadao_ds.retrieval.retrievers import (
+    EvidenceV2Retriever,
     HybridRetriever,
     TabularDCBMatcher,
     normalize_pt_text,
@@ -184,6 +187,7 @@ class MultiAgentOrchestrator:
         chunks: list[NormativeChunk],
         min_score: float = 0.18,
         vectorstore_manager: ChromaVectorStoreManager | None = None,
+        evidences_v2: list[EvidenceChunkV2] | None = None,
     ) -> None:
         self.medications = medications
         self.chunks = chunks
@@ -192,7 +196,10 @@ class MultiAgentOrchestrator:
         self.pii_masker = PIIMasker()
         self.clinical_blocker = ClinicalBlocker()
         self.tabular_matcher = TabularDCBMatcher(medications)
-        self.hybrid_retriever = HybridRetriever(medications, chunks)
+        self.hybrid_retriever = HybridRetriever(
+            medications, chunks, tabular_matcher=self.tabular_matcher
+        )
+        self.evidence_v2_retriever = EvidenceV2Retriever(evidences_v2 or [])
 
     def run(
         self,
@@ -352,42 +359,17 @@ class MultiAgentOrchestrator:
             except Exception:
                 pass
 
-        state.retrieved_hits = hits
-
+        seen_hit_ids = {h.chunk_id for h in hits}
         ceaf_unit = self._resolve_ceaf_unit(state.detected_ra)
 
         for _, med in med_matches:
-            if med.dispensation_route == "FARMACIA_POPULAR":
-                where = (
-                    "Programa Farmácia Popular do Brasil (qualquer drogaria privada credenciada "
-                    f"'Aqui Tem Farmácia Popular' em {state.detected_ra} com 100% de gratuidade via CPF) "
-                    "ou Farmácia da UBS de referência."
-                )
-            elif med.dispensation_route == "UBS_ATENCAO_PRIMARIA":
-                where = (
-                    f"Farmácia da Unidade Básica de Saúde (UBS) de referência em {state.detected_ra} "
-                    "(item exclusivo da Atenção Primária — não disponível na rede privada Farmácia Popular)."
-                )
-            else:
-                live_stock_info = ""
-                if self.vectorstore_manager is not None:
-                    try:
-                        stock_hits = self.vectorstore_manager.search(
-                            query=f"{med.dcb_name} {ceaf_unit}",
-                            collection_name=self.vectorstore_manager.COLLECTION_STOCK,
-                            top_k=1,
-                        )
-                        if stock_hits and stock_hits[0].relevance_score > 0.40:
-                            live_disp = stock_hits[0].metadata.get("disp_estoque", "")
-                            if live_disp:
-                                live_stock_info = f" [InfoSaúde em Tempo Real: {live_disp}]"
-                    except Exception:
-                        pass
-
-                where = (
-                    f"{ceaf_unit} — Componente Especializado da Assistência Farmacêutica (CEAF){live_stock_info}, "
-                    "mediante abertura/renovação de processo com LME."
-                )
+            where, req_docs = self._resolve_medication_channel(
+                med=med, detected_ra=state.detected_ra, ceaf_unit=ceaf_unit
+            )
+            for ev_hit in self.evidence_v2_retriever.lookup_for_medication(med, limit=1):
+                if ev_hit.chunk_id not in seen_hit_ids:
+                    seen_hit_ids.add(ev_hit.chunk_id)
+                    hits.append(ev_hit)
 
             citation = f"{med.source_id} (pág. {med.source_page})"
             state.audited_medications.append(
@@ -399,15 +381,98 @@ class MultiAgentOrchestrator:
                     requires_lme=med.requires_lme,
                     validity_days=med.prescription_validity_days,
                     where_to_collect=where,
-                    required_documents=list(med.required_documents),
+                    required_documents=req_docs,
                     source_citation=citation,
                 )
             )
 
+        state.retrieved_hits = hits
         state.agent_trace.append(
             f"[Agente 2: Auditor Farmacêutico] Medicamentos auditados={len(state.audited_medications)} "
-            f"| Chunks normativos recuperados={len(state.retrieved_hits)}"
+            f"| Chunks/Evidências recuperados={len(state.retrieved_hits)}"
         )
+
+    def _resolve_medication_channel(
+        self,
+        med: CanonicalMedication,
+        detected_ra: str,
+        ceaf_unit: str,
+    ) -> tuple[str, list[str]]:
+        """Resolve local de retirada e documentos padrão para qualquer rota do corpus v9."""
+        is_supply = med.item_type == "supply"
+        if med.dispensation_route == "FARMACIA_POPULAR":
+            where = (
+                "Drogarias privadas credenciadas ao Programa Farmácia Popular do Brasil "
+                f"em {detected_ra} (100% gratuito via CPF) ou Farmácia da UBS de referência."
+            )
+            default_docs = (
+                [
+                    "Prescrição/laudo e documento oficial com foto e CPF (ou autorização do programa, se aplicável)",
+                ]
+                if is_supply
+                else [
+                    "Documento oficial com foto e CPF",
+                    "Receita médica válida (SUS ou particular) com CRM, carimbo e data",
+                ]
+            )
+        elif med.dispensation_route == "UBS_ATENCAO_PRIMARIA":
+            if med.df_channels:
+                where = (
+                    f"Canal registrado na REME-DF para {detected_ra}: {'; '.join(med.df_channels)}. "
+                    "Confirme as condições de atendimento com a unidade."
+                )
+            else:
+                where = (
+                    f"Farmácia da Unidade Básica de Saúde (UBS) de referência em {detected_ra} "
+                    "(item exclusivo da Atenção Primária/REME-DF — não disponível na rede privada Farmácia Popular)."
+                )
+            default_docs = (
+                ["Confira a documentação e os critérios do programa na UBS para este insumo."]
+                if is_supply
+                else [
+                    "Receita médica original válida",
+                    "Cartão Nacional de Saúde (CNS)",
+                    "Documento oficial com foto e CPF",
+                ]
+            )
+        elif med.dispensation_route == "HOSPITALAR":
+            where = (
+                f"Atendimento em serviço hospitalar da rede pública SUS em {detected_ra} "
+                "(uso restrito hospitalar — consulte o hospital ou núcleo farmacêutico responsável)."
+            )
+            default_docs = [
+                "Solicitação médica hospitalar / prontuário do atendimento",
+                "Cartão Nacional de Saúde (CNS), documento oficial com foto e CPF",
+            ]
+        else:
+            live_stock_info = ""
+            if self.vectorstore_manager is not None:
+                try:
+                    stock_hits = self.vectorstore_manager.search(
+                        query=f"{med.dcb_name} {ceaf_unit}",
+                        collection_name=self.vectorstore_manager.COLLECTION_STOCK,
+                        top_k=1,
+                    )
+                    if stock_hits and stock_hits[0].relevance_score > 0.40:
+                        live_disp = stock_hits[0].metadata.get("disp_estoque", "")
+                        if live_disp:
+                            live_stock_info = f" [InfoSaúde em Tempo Real: {live_disp}]"
+                except Exception:
+                    pass
+
+            where = (
+                f"{ceaf_unit} — Componente Especializado da Assistência Farmacêutica (CEAF){live_stock_info}, "
+                "mediante abertura/renovação de processo com LME."
+            )
+            default_docs = [
+                "Laudo de Solicitação, Avaliação e Autorização de Medicamento(s) (LME) preenchido com CID-10",
+                "Receita médica em duas vias com DCB (nome genérico)",
+                "Exames laboratoriais/imagem exigidos pelo PCDT",
+                "Cartão Nacional de Saúde (CNS), documento com foto, CPF e comprovante de residência no DF",
+            ]
+
+        docs = list(med.required_documents) if med.required_documents else default_docs
+        return where, docs
 
     @staticmethod
     def _resolve_procedure_guidance(
@@ -779,6 +844,12 @@ class MultiAgentOrchestrator:
                 if len({m.dispensation_route for m in state.audited_medications}) == 1
                 else "ROTEIRO_MISTO_MULTICANAL"
             )
+        elif any(m.dispensation_route == "HOSPITALAR" for m in state.audited_medications):
+            primary_route = (
+                "HOSPITALAR"
+                if len({m.dispensation_route for m in state.audited_medications}) == 1
+                else "ROTEIRO_MISTO_MULTICANAL"
+            )
         elif state.audited_medications:
             primary_route = "FARMACIA_POPULAR"
         elif top_hit_is_pre_exam:
@@ -862,6 +933,13 @@ class MultiAgentOrchestrator:
             validity_alerts=validity_alerts,
             synthesized_text=synthesized,
         )
+        # Portão de validação de saída (OWASP LLM02/LLM05/LLM09) antes da entrega ao cidadão
+        out_check = validar_saida(spoken_guidance)
+        if not out_check.aprovada:
+            spoken_guidance = (
+                "Encontrei orientações administrativas nas bases oficiais do SUS para sua consulta. "
+                "Confira o roteiro documental na tela e confirme detalhes com sua UBS."
+            )
         state.agent_trace.append(
             f"[Agente 4: Sintetizador] Roteiro Cidadão gerado com rota={primary_route} e {len(citations)} citações."
         )
