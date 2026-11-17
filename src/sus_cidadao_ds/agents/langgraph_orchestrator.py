@@ -1,17 +1,20 @@
-"""Orquestrador Multiagentes baseado em LangGraph (StateGraph) com Memória Persistente por Sessão.
+"""Orquestrador Multiagentes baseado em LangGraph (StateGraph) com Fan-out Paralelo e Memória Persistente LGPD.
 
-Implementa formalmente o Grafo de Estado Colaborativo entre os 4 agentes:
-1. `node_extractor_triage`: Agente 1 (Extrator & Triador Multimodal + PII Masking LGPD + Bloqueio Clínico CFM + Herança de RA)
-2. `node_pharmaceutical_auditor`: Agente 2 (Auditor Farmacêutico via RAG Híbrido: CSV Tabular + Chunks Geográficos no ChromaDB)
-3. `node_sisreg_consultant`: Agente 3 (Consultor SISREG III / CPPAS da SES-DF)
-4. `node_citizen_synthesizer`: Agente 4 (Sintetizador do Roteiro Cidadão + Persistência SQLite LGPD + Alertas RF08)
+Implementa o Grafo de Estado Colaborativo entre os 4 agentes especializados:
+1. `extractor_triage` (Agente 1): PII Masking LGPD + Guardrail Clínico + Anti-Injection + Herança de RA.
+   - Se bloqueado, aborta imediatamente para `citizen_synthesizer` (zero gasto de RAG/LLM).
+2. `pharmaceutical_auditor` (Agente 2) || `sisreg_consultant` (Agente 3): executam em PARALELO via fan-out!
+   - Agente 2: Auditor Farmacêutico (`TabularDCBMatcher` + `EvidenceV2Retriever` + Estoque CEAF local + RAG lexical).
+   - Agente 3: Consultor Normativo & Regulação SISREG III (exames/pré-exames e regras administrativas DF).
+3. `citizen_synthesizer` (Agente 4): consolida evidências, aciona `GeneratorPort` e valida saída via `validar_saida`.
 """
 
 from __future__ import annotations
 
+import operator
 import uuid
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Annotated, Any, TypedDict
 
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
@@ -22,6 +25,11 @@ from sus_cidadao_ds.agents.orchestrator import (
     MultiAgentOrchestrator,
     OrchestratorState,
     SISREGGuidanceItem,
+)
+from sus_cidadao_ds.agents.ports import (
+    GeneratorPort,
+    GuardrailPort,
+    InfoSaudeStockPort,
 )
 from sus_cidadao_ds.agents.session_memory import SessionContext, SQLiteSessionStore
 from sus_cidadao_ds.contracts.schemas import (
@@ -54,13 +62,14 @@ class MultiAgentGraphState(TypedDict, total=False):
     sanitized_history: list[str]
     audited_medications: list[dict[str, Any]]
     sisreg_items: list[dict[str, Any]]
-    retrieved_hits: list[dict[str, Any]]
-    agent_trace: list[str]
+    normative_notes: list[str]
+    retrieved_hits: Annotated[list[dict[str, Any]], operator.add]
+    agent_trace: Annotated[list[str], operator.add]
     final_response: dict[str, Any]
 
 
 class LangGraphMultiAgentOrchestrator:
-    """Implementação do Orquestrador Multiagentes com StateGraph, Checkpointer e Memória em SQLite."""
+    """Orquestrador Multiagentes com StateGraph paralelo, Checkpointer e Memória em SQLite."""
 
     _FOLLOWUP_CUES: tuple[str, ...] = (
         "documento",
@@ -111,6 +120,12 @@ class LangGraphMultiAgentOrchestrator:
         vectorstore_manager: ChromaVectorStoreManager | None = None,
         session_db_path: Path | None = None,
         evidences_v2: list[EvidenceChunkV2] | None = None,
+        *,
+        guardrail_port: GuardrailPort | None = None,
+        stock_repository: InfoSaudeStockPort | None = None,
+        generator_port: GeneratorPort | None = None,
+        strict_generator: bool = False,
+        gold_dir: Path | None = None,
     ) -> None:
         self.medications = medications
         self.chunks = chunks
@@ -123,13 +138,18 @@ class LangGraphMultiAgentOrchestrator:
             min_score=min_score,
             vectorstore_manager=vectorstore_manager,
             evidences_v2=evidences_v2,
+            guardrail_port=guardrail_port,
+            stock_repository=stock_repository,
+            generator_port=generator_port,
+            strict_generator=strict_generator,
+            gold_dir=gold_dir,
         )
         self.checkpointer = MemorySaver()
         self.session_store = SQLiteSessionStore(db_path=session_db_path)
         self.app = self._build_graph()
 
     def _build_graph(self) -> Any:
-        """Constrói e compila o StateGraph do LangGraph com MemorySaver."""
+        """Constrói e compila o StateGraph paralelo: Agente 1 -> (Agente 2 || Agente 3) -> Agente 4."""
         workflow = StateGraph(MultiAgentGraphState)
 
         workflow.add_node("extractor_triage", self._node_extractor_triage)
@@ -139,21 +159,18 @@ class LangGraphMultiAgentOrchestrator:
 
         workflow.add_edge(START, "extractor_triage")
 
-        def route_after_triage(state: MultiAgentGraphState) -> str:
+        def route_after_triage(state: MultiAgentGraphState) -> str | list[str]:
             if state.get("is_clinical_blocked", False):
                 return "citizen_synthesizer"
-            return "pharmaceutical_auditor"
+            return ["pharmaceutical_auditor", "sisreg_consultant"]
 
         workflow.add_conditional_edges(
             "extractor_triage",
             route_after_triage,
-            {
-                "citizen_synthesizer": "citizen_synthesizer",
-                "pharmaceutical_auditor": "pharmaceutical_auditor",
-            },
+            ["citizen_synthesizer", "pharmaceutical_auditor", "sisreg_consultant"],
         )
 
-        workflow.add_edge("pharmaceutical_auditor", "sisreg_consultant")
+        workflow.add_edge("pharmaceutical_auditor", "citizen_synthesizer")
         workflow.add_edge("sisreg_consultant", "citizen_synthesizer")
         workflow.add_edge("citizen_synthesizer", END)
 
@@ -209,7 +226,7 @@ class LangGraphMultiAgentOrchestrator:
         }
 
     def _node_pharmaceutical_auditor(self, state: MultiAgentGraphState) -> MultiAgentGraphState:
-        """Nó do Agente 2: Auditor Farmacêutico com RAG Híbrido + Memória de Medicamentos da Sessão."""
+        """Nó do Agente 2 (em paralelo ao Agente 3): Auditor Farmacêutico + Memória de Fármacos."""
         sanitized_query = state["sanitized_input"]
         prior_meds = list(state.get("known_medications", []))
         prior_exams = list(state.get("known_exams", []))
@@ -239,13 +256,7 @@ class LangGraphMultiAgentOrchestrator:
             if med.dcb_name not in merged_meds:
                 merged_meds.append(med.dcb_name)
 
-        trace = list(state.get("agent_trace", []))
         mem_note = " | contexto herdado da sessão" if inherited_context else ""
-        trace.append(
-            f"[LangGraph: Node 2] Auditoria Farmacêutica (Meds={len(orch_state.audited_medications)}, "
-            f"Hits={len(orch_state.retrieved_hits)}{mem_note})"
-        )
-
         return {
             "known_medications": merged_meds,
             "audited_medications": [
@@ -272,41 +283,43 @@ class LangGraphMultiAgentOrchestrator:
                     "page_number": h.page_number,
                     "route_category": h.route_category,
                     "text": h.text,
+                    "matched_dcb": h.matched_dcb,
                     "retriever_name": h.retriever_name,
                 }
                 for h in orch_state.retrieved_hits
             ],
-            "agent_trace": trace,
+            "agent_trace": [
+                f"[LangGraph: Node 2] Auditoria Farmacêutica (Meds={len(orch_state.audited_medications)}, "
+                f"Hits={len(orch_state.retrieved_hits)}{mem_note})"
+            ],
         }
 
     def _node_sisreg_consultant(self, state: MultiAgentGraphState) -> MultiAgentGraphState:
-        """Nó do Agente 3: Consultor SISREG / SES-DF com reaproveitamento de exames na sessão."""
+        """Nó do Agente 3 (em paralelo ao Agente 2): Consultor Normativo & Regulação SISREG."""
+        sanitized_input = state.get("sanitized_input", "")
         current_exams = list(state.get("detected_exams", []))
         prior_exams = list(state.get("known_exams", []))
-        has_new_meds = bool(state.get("audited_medications", []))
+        prior_meds = list(state.get("known_medications", []))
+        direct_med_matches = self._core.tabular_matcher.match_medications(sanitized_input)
 
         effective_exams = current_exams
         if (
             not current_exams
-            and not has_new_meds
+            and not direct_med_matches
+            and not prior_meds
             and prior_exams
-            and self._is_followup_query(state.get("sanitized_input", ""))
+            and self._is_followup_query(sanitized_input)
         ):
             effective_exams = prior_exams
 
         orch_state = OrchestratorState(
             raw_input=state["raw_input"],
             days_since_emission=state.get("days_since_emission", 166),
-            sanitized_input=state["sanitized_input"],
+            sanitized_input=sanitized_input,
             detected_ra=state["detected_ra"],
             detected_exams=effective_exams,
         )
         self._core._agent_3_sisreg_consultant(orch_state)
-
-        trace = list(state.get("agent_trace", []))
-        trace.append(
-            f"[LangGraph: Node 3] Consultor SISREG (Procedimentos={len(orch_state.sisreg_items)})"
-        )
 
         return {
             "sisreg_items": [
@@ -320,11 +333,30 @@ class LangGraphMultiAgentOrchestrator:
                 }
                 for it in orch_state.sisreg_items
             ],
-            "agent_trace": trace,
+            "normative_notes": list(orch_state.normative_notes),
+            "retrieved_hits": [
+                {
+                    "chunk_id": h.chunk_id,
+                    "score": h.score,
+                    "source_id": h.source_id,
+                    "document_title": h.document_title,
+                    "section": h.section,
+                    "page_number": h.page_number,
+                    "route_category": h.route_category,
+                    "text": h.text,
+                    "matched_dcb": h.matched_dcb,
+                    "retriever_name": h.retriever_name,
+                }
+                for h in orch_state.retrieved_hits
+            ],
+            "agent_trace": [
+                f"[LangGraph: Node 3] Consultor SISREG & Normas (Procedimentos={len(orch_state.sisreg_items)}, "
+                f"Normas={len(orch_state.normative_notes)})"
+            ],
         }
 
     def _node_citizen_synthesizer(self, state: MultiAgentGraphState) -> MultiAgentGraphState:
-        """Nó do Agente 4: Sintetizador do Roteiro Cidadão e persistência da sessão."""
+        """Nó do Agente 4: Sintetizador do Roteiro Cidadão + Validação de Saída + Sessão."""
         meds = [
             MedicationAuditItem(
                 dcb_name=m["dcb_name"],
@@ -350,20 +382,28 @@ class LangGraphMultiAgentOrchestrator:
             )
             for it in state.get("sisreg_items", [])
         ]
-        hits = [
-            RetrievalHit(
-                chunk_id=h["chunk_id"],
-                score=h["score"],
-                source_id=h["source_id"],
-                document_title=h["document_title"],
-                section=h["section"],
-                page_number=h["page_number"],
-                route_category=h["route_category"],
-                text=h["text"],
-                retriever_name=h.get("retriever_name", "langgraph_retriever"),
+
+        seen_hits: set[str] = set()
+        hits: list[RetrievalHit] = []
+        for h in state.get("retrieved_hits", []):
+            cid = str(h["chunk_id"])
+            if cid in seen_hits:
+                continue
+            seen_hits.add(cid)
+            hits.append(
+                RetrievalHit(
+                    chunk_id=cid,
+                    score=float(h["score"]),
+                    source_id=str(h["source_id"]),
+                    document_title=str(h["document_title"]),
+                    section=str(h["section"]),
+                    page_number=int(h["page_number"]),
+                    route_category=str(h["route_category"]),
+                    text=str(h["text"]),
+                    matched_dcb=h.get("matched_dcb"),
+                    retriever_name=str(h.get("retriever_name", "langgraph_retriever")),
+                )
             )
-            for h in state.get("retrieved_hits", [])
-        ]
 
         orch_state = OrchestratorState(
             raw_input=state["raw_input"],
@@ -378,6 +418,7 @@ class LangGraphMultiAgentOrchestrator:
             audited_medications=meds,
             sisreg_items=sisreg,
             retrieved_hits=hits,
+            normative_notes=list(state.get("normative_notes", [])),
             agent_trace=list(state.get("agent_trace", [])),
         )
 
@@ -398,7 +439,7 @@ class LangGraphMultiAgentOrchestrator:
         days_since_emission: int = 166,
         session_id: str | None = None,
     ) -> CitizenGuidanceResponse:
-        """Executa o grafo LangGraph com memória persistente opcional por `session_id`."""
+        """Executa o grafo LangGraph paralelo com memória persistente opcional por `session_id`."""
         is_persistent_session = bool(session_id)
         effective_thread_id = session_id or f"ephemeral-{uuid.uuid4().hex}"
 
@@ -407,6 +448,7 @@ class LangGraphMultiAgentOrchestrator:
             if session_id
             else SessionContext(session_id=effective_thread_id)
         )
+        turn_thread_id = f"{effective_thread_id}::turn-{prior_ctx.turn_count + 1}"
 
         initial_state: MultiAgentGraphState = {
             "raw_input": user_input,
@@ -419,12 +461,14 @@ class LangGraphMultiAgentOrchestrator:
             "sanitized_history": list(prior_ctx.sanitized_history),
             "audited_medications": [],
             "sisreg_items": [],
+            "normative_notes": [],
             "retrieved_hits": [],
+            "agent_trace": [],
         }
 
         output_state = self.app.invoke(
             initial_state,
-            config={"configurable": {"thread_id": effective_thread_id}},
+            config={"configurable": {"thread_id": turn_thread_id}},
         )
 
         if is_persistent_session and session_id:
@@ -479,6 +523,7 @@ class LangGraphMultiAgentOrchestrator:
                 page_number=h["page_number"],
                 route_category=h["route_category"],
                 text=h["text"],
+                matched_dcb=h.get("matched_dcb"),
                 retriever_name=h.get("retriever_name", "langgraph_retriever"),
             )
             for h in final_dict["retrieved_chunks"]

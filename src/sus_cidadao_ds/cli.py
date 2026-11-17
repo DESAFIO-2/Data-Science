@@ -317,17 +317,12 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "audit":
-        chroma_mgr: ChromaVectorStoreManager | None
-        try:
-            chroma_mgr = ChromaVectorStoreManager(vectorstore_dir=paths.data_dir / "vectorstore")
-        except Exception:
-            chroma_mgr = None
-
         orchestrator = LangGraphMultiAgentOrchestrator(
             medications=meds,
             chunks=chunks,
-            vectorstore_manager=chroma_mgr,
+            vectorstore_manager=None,
             evidences_v2=syncer.load_evidence_chunks_v2(),
+            gold_dir=paths.gold_dir,
         )
         if args.reset_session and args.session_id:
             orchestrator.clear_session(args.session_id)
@@ -467,17 +462,12 @@ def main(argv: list[str] | None = None) -> int:
 
         from sus_cidadao_ds.voice.audio_engine import VoiceEngine
 
-        chroma_mgr_v: ChromaVectorStoreManager | None
-        try:
-            chroma_mgr_v = ChromaVectorStoreManager(vectorstore_dir=paths.data_dir / "vectorstore")
-        except Exception:
-            chroma_mgr_v = None
-
         v_orch = LangGraphMultiAgentOrchestrator(
             medications=meds,
             chunks=chunks,
-            vectorstore_manager=chroma_mgr_v,
+            vectorstore_manager=None,
             evidences_v2=syncer.load_evidence_chunks_v2(),
+            gold_dir=paths.gold_dir,
         )
         engine = VoiceEngine()
 

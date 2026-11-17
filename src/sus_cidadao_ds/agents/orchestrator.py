@@ -15,8 +15,24 @@ import re
 import urllib.error
 import urllib.request
 from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from typing import Any
 
+from sus_cidadao_ds.agents.ports import (
+    DeterministicCitizenGenerator,
+    EvidenceRepositoryPort,
+    EvidenceV2Adapter,
+    GeneratorPort,
+    GuardrailPort,
+    HybridRetrieverAdapter,
+    InfoSaudeStockPort,
+    LocalCEAFStockRepository,
+    LocalGuardrailAdapter,
+    MedicationRepositoryPort,
+    RetrieverPort,
+    TabularMedicationAdapter,
+    trace_operation,
+)
 from sus_cidadao_ds.contracts.schemas import (
     CanonicalMedication,
     EvidenceChunkV2,
@@ -78,6 +94,7 @@ class OrchestratorState:
     audited_medications: list[MedicationAuditItem] = field(default_factory=list)
     sisreg_items: list[SISREGGuidanceItem] = field(default_factory=list)
     retrieved_hits: list[RetrievalHit] = field(default_factory=list)
+    normative_notes: list[str] = field(default_factory=list)
     agent_trace: list[str] = field(default_factory=list)
 
 
@@ -181,6 +198,41 @@ class MultiAgentOrchestrator:
         "encaminhamento",
     )
 
+    _NORMATIVE_RULE_CUES: tuple[str, ...] = (
+        "procuracao",
+        "terceiro",
+        "acamad",
+        "representante",
+        "declaracao autorizadora",
+        "dignidade menstrual",
+        "absorvente",
+        "fralda",
+        "policlinica",
+        "caps",
+        "cedin",
+        "cesaf",
+        "hub",
+        "regionalizacao",
+        "lme",
+        "portaria 344",
+        "psicotropico",
+        "controle especial",
+        "antimicrobiano",
+        "antibiotico",
+    )
+
+    _UNLISTED_EXCLUSION_CUES: tuple[str, ...] = (
+        "tirzepatida",
+        "mounjaro",
+        "ozempic",
+        "semaglutida",
+        "wegovy",
+        "liraglutida",
+        "cintilografia",
+        "pet ct",
+        "pet-ct",
+    )
+
     def __init__(
         self,
         medications: list[CanonicalMedication],
@@ -188,6 +240,15 @@ class MultiAgentOrchestrator:
         min_score: float = 0.18,
         vectorstore_manager: ChromaVectorStoreManager | None = None,
         evidences_v2: list[EvidenceChunkV2] | None = None,
+        *,
+        guardrail_port: GuardrailPort | None = None,
+        medication_repo: MedicationRepositoryPort | None = None,
+        evidence_repo: EvidenceRepositoryPort | None = None,
+        retriever_port: RetrieverPort | None = None,
+        stock_repository: InfoSaudeStockPort | None = None,
+        generator_port: GeneratorPort | None = None,
+        strict_generator: bool = False,
+        gold_dir: Path | None = None,
     ) -> None:
         self.medications = medications
         self.chunks = chunks
@@ -195,11 +256,34 @@ class MultiAgentOrchestrator:
         self.vectorstore_manager = vectorstore_manager
         self.pii_masker = PIIMasker()
         self.clinical_blocker = ClinicalBlocker()
-        self.tabular_matcher = TabularDCBMatcher(medications)
-        self.hybrid_retriever = HybridRetriever(
-            medications, chunks, tabular_matcher=self.tabular_matcher
+        self.guardrail_port: GuardrailPort = guardrail_port or LocalGuardrailAdapter(
+            masker=self.pii_masker, blocker=self.clinical_blocker
         )
-        self.evidence_v2_retriever = EvidenceV2Retriever(evidences_v2 or [])
+
+        med_adapter = TabularMedicationAdapter(medications)
+        self.tabular_matcher: TabularDCBMatcher = med_adapter.matcher
+        self.medication_repo: MedicationRepositoryPort = medication_repo or med_adapter
+
+        ev_adapter = EvidenceV2Adapter(evidences_v2 or [])
+        self.evidence_v2_retriever: EvidenceV2Retriever = ev_adapter.retriever
+        self.evidence_repo: EvidenceRepositoryPort = evidence_repo or ev_adapter
+
+        hybrid_adapter = HybridRetrieverAdapter(
+            medications=medications,
+            chunks=chunks,
+            tabular_matcher=self.tabular_matcher,
+        )
+        self.hybrid_retriever: HybridRetriever = hybrid_adapter.retriever
+        self.retriever_port: RetrieverPort = retriever_port or hybrid_adapter
+
+        stock_file = (gold_dir / "ceaf_live_stock.json") if gold_dir else None
+        self.stock_repository: InfoSaudeStockPort = (
+            stock_repository or LocalCEAFStockRepository(stock_path=stock_file)
+        )
+        self.generator_port: GeneratorPort = (
+            generator_port or DeterministicCitizenGenerator()
+        )
+        self.strict_generator = strict_generator
 
     def run(
         self,
@@ -226,33 +310,36 @@ class MultiAgentOrchestrator:
         return self._agent_4_synthesize(state)
 
     def _agent_1_extractor_triage(self, state: OrchestratorState) -> None:
-        mask_res = self.pii_masker.mask(state.raw_input)
-        state.sanitized_input = mask_res.sanitized_text
-        state.pii_redactions = mask_res.redaction_count
-        state.detected_pii_types = mask_res.detected_pii_types
+        with trace_operation("agente_1_triador_seguranca") as tr:
+            mask_res = self.guardrail_port.mask(state.raw_input)
+            state.sanitized_input = mask_res.sanitized_text
+            state.pii_redactions = mask_res.redaction_count
+            state.detected_pii_types = mask_res.detected_pii_types
 
-        clin_res = self.clinical_blocker.inspect(state.sanitized_input)
-        if clin_res.is_blocked:
-            state.is_clinical_blocked = True
-            state.clinical_block_message = clin_res.safe_response
-            state.agent_trace.append(
-                f"[Agente 1: Extrator & Triador] BLOQUEIO ÉTICO ACIONADO ({clin_res.reason})."
-            )
-            return
+            clin_res = self.guardrail_port.inspect(state.sanitized_input)
+            if clin_res.is_blocked:
+                state.is_clinical_blocked = True
+                state.clinical_block_message = clin_res.safe_response
+                state.agent_trace.append(
+                    f"[Agente 1: Extrator & Triador] BLOQUEIO ÉTICO ACIONADO ({clin_res.reason}) "
+                    f"({tr.elapsed_ms:.1f} ms)."
+                )
+                return
 
-        norm_text = normalize_pt_text(state.sanitized_input)
-        for token, ra_label, _ in self._DF_RAS:
-            if token in norm_text:
-                state.detected_ra = ra_label
-                break
+            norm_text = normalize_pt_text(state.sanitized_input)
+            for token, ra_label, _ in self._DF_RAS:
+                if token in norm_text:
+                    state.detected_ra = ra_label
+                    break
 
-        for token, proc_label in self._SISREG_PROCEDURES:
-            if token in norm_text and proc_label not in state.detected_exams:
-                state.detected_exams.append(proc_label)
+            for token, proc_label in self._SISREG_PROCEDURES:
+                if token in norm_text and proc_label not in state.detected_exams:
+                    state.detected_exams.append(proc_label)
 
         state.agent_trace.append(
             f"[Agente 1: Extrator & Triador] PII redigidos={state.pii_redactions} "
-            f"| RA={state.detected_ra} | Exames/Consultas detectados={len(state.detected_exams)}"
+            f"| RA={state.detected_ra} | Exames/Consultas detectados={len(state.detected_exams)} "
+            f"({tr.elapsed_ms:.1f} ms)"
         )
 
     def _resolve_ceaf_unit(self, ra_label: str) -> str:
@@ -310,86 +397,87 @@ class MultiAgentOrchestrator:
     )
 
     def _agent_2_pharmaceutical_auditor(self, state: OrchestratorState) -> None:
-        med_matches = self.tabular_matcher.match_medications(state.sanitized_input)
-        hits = self.hybrid_retriever.search(
-            state.sanitized_input, top_k=3, min_score=self.min_score
-        )
+        with trace_operation("agente_2_auditor_farmaceutico") as tr:
+            med_matches = self.medication_repo.match_medications(state.sanitized_input)
+            hits = self.retriever_port.search(
+                state.sanitized_input, top_k=3, min_score=self.min_score
+            )
 
-        # Se houver gerenciador vetorial ChromaDB, enriquece com busca semântica fundamentada
-        if self.vectorstore_manager is not None:
-            try:
-                chroma_hits = self.vectorstore_manager.search_unified_corpus(
-                    state.sanitized_input, top_k=3
-                )
-                norm_q = normalize_pt_text(state.sanitized_input)
-                sig_tokens = [
-                    tok
-                    for tok in norm_q.split()
-                    if len(tok) >= 5
-                    and not tok.isdigit()
-                    and tok not in self._GENERIC_QUERY_TOKENS
-                ]
-                has_prior_grounding = bool(med_matches or hits)
+            # ChromaDB só entra quando injetado explicitamente (runtime API usa Python puro determinístico)
+            if self.vectorstore_manager is not None:
+                try:
+                    chroma_hits = self.vectorstore_manager.search_unified_corpus(
+                        state.sanitized_input, top_k=3
+                    )
+                    norm_q = normalize_pt_text(state.sanitized_input)
+                    sig_tokens = [
+                        tok
+                        for tok in norm_q.split()
+                        if len(tok) >= 5
+                        and not tok.isdigit()
+                        and tok not in self._GENERIC_QUERY_TOKENS
+                    ]
+                    has_prior_grounding = bool(med_matches or hits)
 
-                for ch in chroma_hits:
-                    norm_doc = normalize_pt_text(ch.document)
-                    if has_prior_grounding:
-                        is_grounded = ch.relevance_score >= 0.25
-                    elif sig_tokens:
-                        matched = sum(1 for tok in sig_tokens if tok in norm_doc)
-                        needed = max(1, (len(sig_tokens) + 1) // 2)
-                        is_grounded = ch.relevance_score >= 0.35 and matched >= needed
-                    else:
-                        is_grounded = False
+                    for ch in chroma_hits:
+                        norm_doc = normalize_pt_text(ch.document)
+                        if has_prior_grounding:
+                            is_grounded = ch.relevance_score >= 0.25
+                        elif sig_tokens:
+                            matched = sum(1 for tok in sig_tokens if tok in norm_doc)
+                            needed = max(1, (len(sig_tokens) + 1) // 2)
+                            is_grounded = ch.relevance_score >= 0.35 and matched >= needed
+                        else:
+                            is_grounded = False
 
-                    if is_grounded:
-                        hits.append(
-                            RetrievalHit(
-                                chunk_id=ch.id,
-                                score=ch.relevance_score,
-                                source_id="CHROMA_PDF_CORPUS",
-                                document_title=str(ch.metadata.get("source_pdf", "PDF Oficial SUS")),
-                                section=f"Pág. {ch.metadata.get('page_number', 1)} ({ch.metadata.get('category', 'normativo')})",
-                                page_number=int(ch.metadata.get("page_number", 1)),
-                                route_category=str(ch.metadata.get("category", "normativo")),
-                                text=ch.document,
-                                retriever_name="chroma_dense",
+                        if is_grounded:
+                            hits.append(
+                                RetrievalHit(
+                                    chunk_id=ch.id,
+                                    score=ch.relevance_score,
+                                    source_id="CHROMA_PDF_CORPUS",
+                                    document_title=str(ch.metadata.get("source_pdf", "PDF Oficial SUS")),
+                                    section=f"Pág. {ch.metadata.get('page_number', 1)} ({ch.metadata.get('category', 'normativo')})",
+                                    page_number=int(ch.metadata.get("page_number", 1)),
+                                    route_category=str(ch.metadata.get("category", "normativo")),
+                                    text=ch.document,
+                                    retriever_name="chroma_dense",
+                                )
                             )
-                        )
-            except Exception:
-                pass
+                except Exception:
+                    pass
 
-        seen_hit_ids = {h.chunk_id for h in hits}
-        ceaf_unit = self._resolve_ceaf_unit(state.detected_ra)
+            seen_hit_ids = {h.chunk_id for h in hits}
+            ceaf_unit = self._resolve_ceaf_unit(state.detected_ra)
 
-        for _, med in med_matches:
-            where, req_docs = self._resolve_medication_channel(
-                med=med, detected_ra=state.detected_ra, ceaf_unit=ceaf_unit
-            )
-            for ev_hit in self.evidence_v2_retriever.lookup_for_medication(med, limit=1):
-                if ev_hit.chunk_id not in seen_hit_ids:
-                    seen_hit_ids.add(ev_hit.chunk_id)
-                    hits.append(ev_hit)
-
-            citation = f"{med.source_id} (pág. {med.source_page})"
-            state.audited_medications.append(
-                MedicationAuditItem(
-                    dcb_name=med.dcb_name,
-                    concentration=med.concentration,
-                    rename_component=med.rename_component,
-                    dispensation_route=med.dispensation_route,
-                    requires_lme=med.requires_lme,
-                    validity_days=med.prescription_validity_days,
-                    where_to_collect=where,
-                    required_documents=req_docs,
-                    source_citation=citation,
+            for _, med in med_matches:
+                where, req_docs = self._resolve_medication_channel(
+                    med=med, detected_ra=state.detected_ra, ceaf_unit=ceaf_unit
                 )
-            )
+                for ev_hit in self.evidence_repo.lookup_for_medication(med, limit=1):
+                    if ev_hit.chunk_id not in seen_hit_ids:
+                        seen_hit_ids.add(ev_hit.chunk_id)
+                        hits.append(ev_hit)
 
-        state.retrieved_hits = hits
+                citation = f"[Fonte: {med.source_id} | Catálogo {med.source_id}, p. {med.source_page}]"
+                state.audited_medications.append(
+                    MedicationAuditItem(
+                        dcb_name=med.dcb_name,
+                        concentration=med.concentration,
+                        rename_component=med.rename_component,
+                        dispensation_route=med.dispensation_route,
+                        requires_lme=med.requires_lme,
+                        validity_days=med.prescription_validity_days,
+                        where_to_collect=where,
+                        required_documents=req_docs,
+                        source_citation=citation,
+                    )
+                )
+
+            state.retrieved_hits = hits
         state.agent_trace.append(
             f"[Agente 2: Auditor Farmacêutico] Medicamentos auditados={len(state.audited_medications)} "
-            f"| Chunks/Evidências recuperados={len(state.retrieved_hits)}"
+            f"| Chunks/Evidências recuperados={len(state.retrieved_hits)} ({tr.elapsed_ms:.1f} ms)"
         )
 
     def _resolve_medication_channel(
@@ -445,8 +533,10 @@ class MultiAgentOrchestrator:
                 "Cartão Nacional de Saúde (CNS), documento oficial com foto e CPF",
             ]
         else:
-            live_stock_info = ""
-            if self.vectorstore_manager is not None:
+            live_stock_info = self.stock_repository.lookup_stock(
+                med.dcb_name, ceaf_unit
+            )
+            if not live_stock_info and self.vectorstore_manager is not None:
                 try:
                     stock_hits = self.vectorstore_manager.search(
                         query=f"{med.dcb_name} {ceaf_unit}",
@@ -487,7 +577,7 @@ class MultiAgentOrchestrator:
                     "Eletrocardiograma (ECG) prévio anexado",
                     "Cartão Nacional de Saúde (CNS) e CPF atualizados na UBS",
                 ],
-                "SISREG_CPPAS_DF — Cap. 4 Cardiologia (pág. 21)",
+                "[Fonte: SISREG_CPPAS_DF | SISREG CPPAS DF — Cap. 4 Cardiologia, p. 21]",
                 [
                     "Não há necessidade de jejum para o Ecocardiograma Transtorácico padrão.",
                     "Vista roupa confortável de duas peças para facilitar o exame e leve ECG prévio.",
@@ -501,7 +591,7 @@ class MultiAgentOrchestrator:
                     "Eletrocardiograma (ECG) prévio anexado",
                     "Cartão Nacional de Saúde (CNS) e CPF atualizados na UBS",
                 ],
-                "SISREG_CPPAS_DF — Cap. 4 Cardiologia (pág. 21)",
+                "[Fonte: SISREG_CPPAS_DF | SISREG CPPAS DF — Cap. 4 Cardiologia, p. 21]",
                 [
                     "Leve eletrocardiograma (ECG), exames recentes e a lista dos medicamentos de uso contínuo.",
                     "Não altere ou suspenda medicações antes da consulta sem orientação médica.",
@@ -514,7 +604,7 @@ class MultiAgentOrchestrator:
                     "Presença obrigatória de acompanhante maior de 18 anos no dia do exame",
                     "Documento oficial com foto, CPF e Cartão Nacional de Saúde (CNS)",
                 ],
-                "PRE_EXAME_SESDF_HUB — Endoscopia (pág. 1)",
+                "[Fonte: PRE_EXAME_SESDF_HUB | Guia Pré-Exame SES-DF — Endoscopia, p. 1]",
                 [
                     "Jejum alimentar padrão de referência em torno de 8 horas antes do horário marcado (conforme orientação da unidade).",
                     "Compareça obrigatoriamente com acompanhante adulto devido à sedação e não dirija após o procedimento.",
@@ -528,7 +618,7 @@ class MultiAgentOrchestrator:
                     "Exames de imagem ou laboratoriais prévios (se houver)",
                     "Documento oficial com foto, CPF e Cartão Nacional de Saúde (CNS)",
                 ],
-                "PRE_EXAME_SESDF_HUB — Ultrassonografia (pág. 2)",
+                "[Fonte: PRE_EXAME_SESDF_HUB | Guia Pré-Exame SES-DF — Ultrassonografia, p. 2]",
                 [
                     "Para Ultrassonografia de Abdome Total (exame da barriga): jejum alimentar padrão de referência entre 6 e 8 horas antes do horário marcado.",
                     "Para Ultrassonografia Pélvica, Próstata ou Vias Urinárias: comparecer com bexiga cheia (tomar água cerca de 1 hora antes e não urinar até o exame).",
@@ -542,7 +632,7 @@ class MultiAgentOrchestrator:
                     "Exame recente de creatinina (quando houver indicação de contraste)",
                     "Documento oficial com foto, CPF, Cartão Nacional de Saúde (CNS) e exames prévios",
                 ],
-                "PRE_EXAME_SESDF_HUB — Ressonância/Tomografia (pág. 3)",
+                "[Fonte: PRE_EXAME_SESDF_HUB | Guia Pré-Exame SES-DF — Ressonância/Tomografia, p. 3]",
                 [
                     "Retire todos os objetos metálicos (brincos, alianças, piercings, relógio, celular, fivelas e cartões magnéticos) antes de entrar na sala.",
                     "Avise obrigatoriamente a equipe no agendamento e na recepção caso possua marcapasso, implantes metálicos, clipes ou claustrofobia.",
@@ -555,7 +645,7 @@ class MultiAgentOrchestrator:
                     "Pedido médico dos exames laboratoriais e comprovante de agendamento",
                     "Documento oficial com foto, CPF e Cartão Nacional de Saúde (CNS)",
                 ],
-                "PRE_EXAME_SESDF_HUB — Coleta Laboratorial (pág. 4)",
+                "[Fonte: PRE_EXAME_SESDF_HUB | Guia Pré-Exame SES-DF — Coleta Laboratorial, p. 4]",
                 [
                     "Evite bebida alcoólica nas 72 horas anteriores e exercícios físicos intensos na véspera da coleta de sangue.",
                     "Confirme diretamente no laboratório ou UBS se o exame solicitado exige jejum (ex.: 8 a 12h) ou se o jejum é dispensado.",
@@ -568,49 +658,71 @@ class MultiAgentOrchestrator:
                 "Resultados de exames laboratoriais prévios obrigatórios do protocolo CPPAS",
                 "Cartão Nacional de Saúde (CNS), CPF e telefone atualizado para contato de regulação",
             ],
-            "SISREG_CPPAS_DF — Cap. 7 Protocolos de Regulação (pág. 38)",
+            "[Fonte: SISREG_CPPAS_DF | SISREG CPPAS DF — Cap. 7 Protocolos de Regulação, p. 38]",
             [
                 "Confirme eventuais exigências de preparo no comprovante da unidade executante ou na recepção da sua UBS.",
             ],
         )
 
     def _agent_3_sisreg_consultant(self, state: OrchestratorState) -> None:
-        norm_text = normalize_pt_text(state.sanitized_input)
-        is_sisreg_query = bool(state.detected_exams) or "sisreg" in norm_text
+        with trace_operation("agente_3_consultor_sisreg_normas") as tr:
+            norm_text = normalize_pt_text(state.sanitized_input)
+            is_sisreg_query = bool(state.detected_exams) or "sisreg" in norm_text
+            has_unlisted_drug = any(
+                cue in norm_text for cue in self._UNLISTED_EXCLUSION_CUES
+            )
+            is_normative_rule_query = (not has_unlisted_drug) and any(
+                cue in norm_text for cue in self._NORMATIVE_RULE_CUES
+            )
 
-        if not is_sisreg_query:
+            if is_sisreg_query:
+                procedures = state.detected_exams or ["Exame / Consulta Especializada via SISREG"]
+                for proc in procedures:
+                    docs, citation, prep_tips = self._resolve_procedure_guidance(proc)
+                    state.sisreg_items.append(
+                        SISREGGuidanceItem(
+                            procedure_name=proc,
+                            regulation_channel=(
+                                f"Sala de Regulação / Acolhimento da UBS de referência em {state.detected_ra} "
+                                "(inserção no sistema SISREG III / Complexo Regulador DF)"
+                            ),
+                            required_documents=docs,
+                            priority_rule="Classificação de risco regulatório: P1 (Vermelha/Urgente), P2 (Amarela), P3 (Verde)",
+                            source_citation=citation,
+                            preparation_tips=prep_tips,
+                        )
+                    )
+
+            if is_normative_rule_query:
+                norm_hits = self.retriever_port.search(
+                    state.sanitized_input, top_k=3, min_score=self.min_score
+                )
+                existing_ids = {h.chunk_id for h in state.retrieved_hits}
+                for nh in norm_hits:
+                    if nh.chunk_id not in existing_ids:
+                        existing_ids.add(nh.chunk_id)
+                        state.retrieved_hits.append(nh)
+                    cit = f"[Fonte: {nh.chunk_id} | {nh.document_title}, p. {nh.page_number}]"
+                    note = f"• Regra Normativa ({nh.section}): {nh.text} {cit}"
+                    if note not in state.normative_notes:
+                        state.normative_notes.append(note)
+
+        if not is_sisreg_query and not is_normative_rule_query:
             state.agent_trace.append(
-                "[Agente 3: Consultor SISREG] Nenhum exame ou consulta especializada solicitado."
+                f"[Agente 3: Consultor SISREG & Normas] Nenhum exame ou norma adicional solicitado ({tr.elapsed_ms:.1f} ms)."
             )
             return
 
-        procedures = state.detected_exams or ["Exame / Consulta Especializada via SISREG"]
-        for proc in procedures:
-            docs, citation, prep_tips = self._resolve_procedure_guidance(proc)
-
-            state.sisreg_items.append(
-                SISREGGuidanceItem(
-                    procedure_name=proc,
-                    regulation_channel=(
-                        f"Sala de Regulação / Acolhimento da UBS de referência em {state.detected_ra} "
-                        "(inserção no sistema SISREG III / Complexo Regulador DF)"
-                    ),
-                    required_documents=docs,
-                    priority_rule="Classificação de risco regulatório: P1 (Vermelha/Urgente), P2 (Amarela), P3 (Verde)",
-                    source_citation=citation,
-                    preparation_tips=prep_tips,
-                )
-            )
-
         state.agent_trace.append(
-            f"[Agente 3: Consultor SISREG] Procedimentos regulados auditados={len(state.sisreg_items)}"
+            f"[Agente 3: Consultor SISREG & Normas] Procedimentos={len(state.sisreg_items)} "
+            f"| Normas={len(state.normative_notes)} ({tr.elapsed_ms:.1f} ms)"
         )
 
     @staticmethod
     def _clean_for_speech(text: str) -> str:
         """Remove marcações visuais/citações acadêmicas para leitura fluida em voz PT-BR."""
         cleaned = re.sub(r"\[[^\]]*\]", "", text)
-        cleaned = re.sub(r"\([^)]*pág\.[^)]*\)", "", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\([^)]*p(?:ág)?\.[^)]*\)", "", cleaned, flags=re.IGNORECASE)
         cleaned = re.sub(r"\s*•\s*", " ", cleaned)
         cleaned = re.sub(r"\s+", " ", cleaned)
         return cleaned.strip()
@@ -776,6 +888,7 @@ class MultiAgentOrchestrator:
             not state.audited_medications
             and not state.sisreg_items
             and not state.retrieved_hits
+            and not state.normative_notes
         ):
             abstention_msg = (
                 "ABSTENÇÃO SEGURA: Não foram encontradas evidências nas bases oficiais auditadas "
@@ -855,7 +968,11 @@ class MultiAgentOrchestrator:
         elif top_hit_is_pre_exam:
             primary_route = "PRE_EXAME_PREPARO"
         else:
-            primary_route = state.retrieved_hits[0].route_category
+            primary_route = (
+                state.retrieved_hits[0].route_category
+                if state.retrieved_hits
+                else "GERAL"
+            )
 
         # Consolida checklist documental sem duplicatas
         checklist: list[str] = []
@@ -889,59 +1006,107 @@ class MultiAgentOrchestrator:
                     f"VIGÊNCIA ATIVA: Receita de {med.dcb_name} válida por {med.validity_days} dias."
                 )
 
-        citations: list[str] = []
-        for hit in state.retrieved_hits:
-            cit = f"{hit.chunk_id} — {hit.document_title} (pág. {hit.page_number})"
-            if cit not in citations:
-                citations.append(cit)
-        for med in state.audited_medications:
-            if med.source_citation not in citations:
-                citations.append(med.source_citation)
-        for sis in state.sisreg_items:
-            if sis.source_citation not in citations:
-                citations.append(sis.source_citation)
+        with trace_operation("agente_4_sintetizador_cidadao") as tr:
+            citations: list[str] = []
+            allowed_ids: set[str] = set()
+            for hit in state.retrieved_hits:
+                cit = f"[Fonte: {hit.chunk_id} | {hit.document_title}, p. {hit.page_number}]"
+                allowed_ids.add(hit.chunk_id)
+                allowed_ids.add(hit.source_id)
+                if cit not in citations:
+                    citations.append(cit)
+            for med in state.audited_medications:
+                if med.source_citation not in citations:
+                    citations.append(med.source_citation)
+                if "|" in med.source_citation:
+                    allowed_ids.add(med.source_citation.split(":", 1)[1].split("|", 1)[0].strip())
+            for sis in state.sisreg_items:
+                if sis.source_citation not in citations:
+                    citations.append(sis.source_citation)
+                if "|" in sis.source_citation:
+                    allowed_ids.add(sis.source_citation.split(":", 1)[1].split("|", 1)[0].strip())
 
-        # Constrói texto sintetizado claro e fiel às evidências
-        parts: list[str] = []
-        for med in state.audited_medications:
-            parts.append(
-                f"• {med.dcb_name} ({med.concentration}) [{med.rename_component}]: "
-                f"Retirada em {med.where_to_collect} Documentos exigidos: {', '.join(med.required_documents)}. "
-                f"Validade da receita/LME: {med.validity_days} dias ({med.source_citation})."
-            )
-        for sis in state.sisreg_items:
-            if primary_route == "PRE_EXAME_PREPARO" and sis.preparation_tips:
+            # Constrói texto sintetizado claro e fiel às evidências (núcleo determinístico)
+            parts: list[str] = []
+            for med in state.audited_medications:
                 parts.append(
-                    f"• {sis.procedure_name} [Preparo Pré-Exame SUS-DF]: "
-                    f"{' '.join(sis.preparation_tips)} "
-                    f"Documentos para levar: {', '.join(sis.required_documents)} ({sis.source_citation})."
+                    f"• {med.dcb_name} ({med.concentration}) [{med.rename_component}]: "
+                    f"Retirada em {med.where_to_collect} Documentos exigidos: {', '.join(med.required_documents)}. "
+                    f"Validade da receita/LME: {med.validity_days} dias {med.source_citation}."
                 )
-            else:
+            for sis in state.sisreg_items:
+                if primary_route == "PRE_EXAME_PREPARO" and sis.preparation_tips:
+                    parts.append(
+                        f"• {sis.procedure_name} [Preparo Pré-Exame SUS-DF]: "
+                        f"{' '.join(sis.preparation_tips)} "
+                        f"Documentos para levar: {', '.join(sis.required_documents)} {sis.source_citation}."
+                    )
+                else:
+                    parts.append(
+                        f"• {sis.procedure_name} [Regulação SISREG III]: Solicitar na {sis.regulation_channel}. "
+                        f"Critério: {sis.priority_rule}. Documentos exigidos: {', '.join(sis.required_documents)} "
+                        f"{sis.source_citation}."
+                    )
+            for note in state.normative_notes:
+                if note not in parts:
+                    parts.append(note)
+            if not parts and state.retrieved_hits:
+                top_hit = state.retrieved_hits[0]
                 parts.append(
-                    f"• {sis.procedure_name} [Regulação SISREG III]: Solicitar na {sis.regulation_channel}. "
-                    f"Critério: {sis.priority_rule}. Documentos exigidos: {', '.join(sis.required_documents)} "
-                    f"({sis.source_citation})."
+                    f"{top_hit.text} [Fonte: {top_hit.chunk_id} | {top_hit.document_title}, p. {top_hit.page_number}]"
                 )
-        if not parts and state.retrieved_hits:
-            parts.append(state.retrieved_hits[0].text)
 
-        synthesized = "\n".join(parts)
-        spoken_guidance, follow_ups = self._build_spoken_and_followups(
-            state=state,
-            primary_route=primary_route,
-            checklist=checklist,
-            validity_alerts=validity_alerts,
-            synthesized_text=synthesized,
-        )
-        # Portão de validação de saída (OWASP LLM02/LLM05/LLM09) antes da entrega ao cidadão
-        out_check = validar_saida(spoken_guidance)
-        if not out_check.aprovada:
-            spoken_guidance = (
-                "Encontrei orientações administrativas nas bases oficiais do SUS para sua consulta. "
-                "Confira o roteiro documental na tela e confirme detalhes com sua UBS."
+            deterministic_synthesized = "\n".join(parts)
+            synthesized = deterministic_synthesized
+
+            if not isinstance(self.generator_port, DeterministicCitizenGenerator):
+                try:
+                    candidate = self.generator_port.generate(
+                        state.sanitized_input, deterministic_synthesized
+                    )
+                except Exception as exc:
+                    if self.strict_generator:
+                        raise RuntimeError(
+                            f"Falha no GeneratorPort em modo estrito (ADR 0004): {exc}"
+                        ) from exc
+                    candidate = deterministic_synthesized
+
+                cand_pii = self.guardrail_port.mask(candidate).detected_pii_types
+                cand_check = validar_saida(
+                    candidate,
+                    ids_contexto=allowed_ids,
+                    detected_pii_types=cand_pii,
+                )
+                if cand_check.aprovada and candidate.strip():
+                    synthesized = candidate.strip()
+                elif self.strict_generator:
+                    raise RuntimeError(
+                        f"Saída LLM bloqueada por validar_saida: {cand_check.motivos}"
+                    )
+
+            spoken_guidance, follow_ups = self._build_spoken_and_followups(
+                state=state,
+                primary_route=primary_route,
+                checklist=checklist,
+                validity_alerts=validity_alerts,
+                synthesized_text=synthesized,
             )
+            # Portão de validação de saída (OWASP LLM02/LLM05/LLM09) antes da entrega ao cidadão
+            spoken_pii = self.guardrail_port.mask(spoken_guidance).detected_pii_types
+            out_check = validar_saida(
+                spoken_guidance,
+                ids_contexto=allowed_ids,
+                detected_pii_types=spoken_pii,
+            )
+            if not out_check.aprovada:
+                spoken_guidance = (
+                    "Encontrei orientações administrativas nas bases oficiais do SUS para sua consulta. "
+                    "Confira o roteiro documental na tela e confirme detalhes com sua UBS."
+                )
+
         state.agent_trace.append(
-            f"[Agente 4: Sintetizador] Roteiro Cidadão gerado com rota={primary_route} e {len(citations)} citações."
+            f"[Agente 4: Sintetizador] Roteiro Cidadão gerado com rota={primary_route} "
+            f"e {len(citations)} citações ({tr.elapsed_ms:.1f} ms)."
         )
 
         return CitizenGuidanceResponse(

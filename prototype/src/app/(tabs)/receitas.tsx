@@ -191,6 +191,7 @@ export default function Receitas() {
   const [dataEmissao, setDataEmissao] = useState(todayIso());
   const [posologia, setPosologia] = useState('');
   const [medico, setMedico] = useState('');
+  const [perguntaAdicional, setPerguntaAdicional] = useState('');
   const [fotoUri, setFotoUri] = useState<string | undefined>(undefined);
   const [auditando, setAuditando] = useState(false);
   const [erroAuditoria, setErroAuditoria] = useState<string | null>(null);
@@ -235,6 +236,7 @@ export default function Receitas() {
           ],
           data_emissao: dataEmissao || undefined,
           regiao_administrativa: regiaoAdministrativa,
+          pergunta_adicional: perguntaAdicional.trim() || undefined,
         },
         apiBaseUrl,
       );
@@ -256,8 +258,14 @@ export default function Receitas() {
       setSelecionado(null);
       setPosologia('');
       setMedico('');
+      setPerguntaAdicional('');
       setFotoUri(undefined);
-      toast(`Receita auditada! ${adicionadas[0]?.viaRetirada?.replace(/_/g, ' ') ?? 'Adicionada'}.`, 'verified');
+      toast(
+        perguntaAdicional.trim()
+          ? resp.resumo_acolhedor
+          : `Receita auditada! ${adicionadas[0]?.viaRetirada?.replace(/_/g, ' ') ?? 'Adicionada'}.`,
+        'verified',
+      );
     } catch (err) {
       setErroAuditoria(err instanceof Error ? err.message : 'Erro ao auditar receita na API.');
     } finally {
@@ -556,6 +564,14 @@ export default function Receitas() {
                   className="h-11 flex-1 rounded-xl bg-surface-container-low px-3 font-sans text-body-sm text-primary"
                 />
               </View>
+
+              <TextInput
+                value={perguntaAdicional}
+                onChangeText={setPerguntaAdicional}
+                placeholder="Dúvida adicional? Ex.: Posso retirar por procuração?"
+                placeholderTextColor={colors['on-surface-variant']}
+                className="h-11 rounded-xl bg-surface-container-low px-3 font-sans text-body-sm text-primary"
+              />
 
               {Platform.OS === 'web' && (
                 <View className="gap-2">

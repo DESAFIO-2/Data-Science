@@ -17,7 +17,6 @@ from pydantic import BaseModel, Field
 from sus_cidadao_ds.agents.langgraph_orchestrator import LangGraphMultiAgentOrchestrator
 from sus_cidadao_ds.core.config import ProjectPaths
 from sus_cidadao_ds.ingestion.infosaude_client import haversine_km
-from sus_cidadao_ds.retrieval.chroma_indexer import ChromaVectorStoreManager
 from sus_cidadao_ds.retrieval.embeddings import PortugueseClinicalEmbeddingFunction
 from sus_cidadao_ds.retrieval.retrievers import TabularDCBMatcher, normalize_pt_text
 from sus_cidadao_ds.sync.data_sync import DataSynchronizer
@@ -134,7 +133,7 @@ class PrescriptionAuditResponseDTO(BaseModel):
 
 
 def _load_default_orchestrator(paths: ProjectPaths) -> LangGraphMultiAgentOrchestrator:
-    """Inicializa sincronizador Gold v9 + ChromaDB PT-BR + Orquestrador LangGraph."""
+    """Inicializa sincronizador Gold v9 + RAG Híbrido Puro Python + Orquestrador LangGraph paralelo."""
     paths.ensure_dirs()
     sync = DataSynchronizer(paths)
     try:
@@ -146,18 +145,13 @@ def _load_default_orchestrator(paths: ProjectPaths) -> LangGraphMultiAgentOrches
         chunks = sync.load_chunks()
     evidences_v2 = sync.load_evidence_chunks_v2()
 
-    vsm: ChromaVectorStoreManager | None = None
-    try:
-        vsm = ChromaVectorStoreManager(vectorstore_dir=paths.data_dir / "vectorstore")
-    except Exception:
-        vsm = None
-
     return LangGraphMultiAgentOrchestrator(
         medications=medications,
         chunks=chunks,
         min_score=0.18,
-        vectorstore_manager=vsm,
+        vectorstore_manager=None,
         evidences_v2=evidences_v2,
+        gold_dir=paths.gold_dir,
     )
 
 
@@ -267,6 +261,7 @@ def create_app(
         return {
             "status": "ok",
             "service": "sus-cidadao-navegasus-api",
+            "rag_runtime_engine": "deterministic_tabular_tfidf_bm25_rrf_v9",
             "embedding_profile": PortugueseClinicalEmbeddingFunction().get_config(),
             "chroma_collections": chroma_stats,
             "stt_provider_configured": voice.stt_provider_configured(),
@@ -496,7 +491,7 @@ def create_app(
                         data_limite_validade=dt_limit,
                         dias_restantes=days_left,
                         alerta_vencimento_proximo=(days_left is not None and days_left <= 15),
-                        citacao_normativa=f"{med.source_id} (p. {med.source_page})",
+                        citacao_normativa=f"[Fonte: {med.source_id} | Catálogo {med.source_id}, p. {med.source_page}]",
                     )
                 )
             else:
@@ -533,7 +528,7 @@ def create_app(
                             data_limite_validade=dt_limit,
                             dias_restantes=days_left,
                             alerta_vencimento_proximo=(days_left <= 15),
-                            citacao_normativa=f"{hit.chunk_id} — {hit.document_title} (p. {hit.page_number})",
+                            citacao_normativa=f"[Fonte: {hit.chunk_id} | {hit.document_title}, p. {hit.page_number}]",
                         )
                     )
                 else:
@@ -562,6 +557,31 @@ def create_app(
             summary_parts.append(f"{total_ubs} item(ns) na rede pública DF (UBS/REME-DF).")
         if total_ceaf:
             summary_parts.append(f"{total_ceaf} item(ns) no Alto Custo (CEAF) com exigência de LME.")
+
+        extra_question = masker.mask(payload.pergunta_adicional or "").sanitized_text.strip()
+        if extra_question:
+            extra_resp = orch.run(
+                user_input=f"{extra_question} (Região do paciente: {regiao})",
+                days_since_emission=166,
+                session_id=None,
+            )
+            if extra_resp.is_clinical_block:
+                return PrescriptionAuditResponseDTO(
+                    sucesso=False,
+                    regiao_administrativa=regiao,
+                    itens=[],
+                    resumo_acolhedor=extra_resp.synthesized_guidance,
+                    aviso_preservacao_ato_medico=(
+                        "Preservação estrita do Ato Médico (Lei nº 12.842/2013): atuação limitada à navegação."
+                    ),
+                    solicitou_automedicacao=True,
+                )
+            if not extra_resp.abstained and extra_resp.synthesized_guidance:
+                summary_parts.append(f"Sobre sua dúvida adicional: {extra_resp.synthesized_guidance}")
+            else:
+                summary_parts.append(
+                    "Sobre sua dúvida adicional: não encontramos norma específica além dos itens listados; confirme no acolhimento da sua UBS."
+                )
 
         return PrescriptionAuditResponseDTO(
             sucesso=True,

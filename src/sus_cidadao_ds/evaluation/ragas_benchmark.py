@@ -79,7 +79,8 @@ class RAGASBenchmarkRunner:
             medications=medications,
             chunks=chunks,
             min_score=0.18,
-            vectorstore_manager=vectorstore_manager,
+            vectorstore_manager=None,
+            strict_generator=True,
         )
 
     def run_all(

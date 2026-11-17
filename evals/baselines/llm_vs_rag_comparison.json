@@ -29,9 +29,9 @@
     {
       "system_name": "03_RAG_Hibrido_Multiagentes",
       "faithfulness": 1.0,
-      "answer_relevancy": 0.9784,
-      "context_recall": 0.9697,
-      "ragas_harmonic_score": 0.9825,
+      "answer_relevancy": 0.9789,
+      "context_recall": 0.9706,
+      "ragas_harmonic_score": 0.983,
       "hit_rate_at_3": 1.0,
       "recall_at_3": 1.0,
       "mrr": 1.0,

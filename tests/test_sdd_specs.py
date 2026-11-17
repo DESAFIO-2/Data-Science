@@ -12,6 +12,7 @@ from fastapi.testclient import TestClient
 
 from sus_cidadao_ds.agents.langgraph_orchestrator import LangGraphMultiAgentOrchestrator
 from sus_cidadao_ds.agents.orchestrator import MultiAgentOrchestrator
+from sus_cidadao_ds.agents.ports import LocalCEAFStockRepository
 from sus_cidadao_ds.api.app import create_app
 from sus_cidadao_ds.calibration.threshold_optimizer import ThresholdCalibrator
 from sus_cidadao_ds.contracts.schemas import GoldenCase, compute_sha256
@@ -612,6 +613,91 @@ class TestSDDSpecifications(unittest.TestCase):
             self.assertIn("items", stock_data)
             if stock_data["total"] > 0:
                 self.assertIn("desc_produto", stock_data["items"][0])
+
+            audit_extra = client.post(
+                "/api/v1/prescriptions/audit",
+                json={
+                    "itens": [{"nome_digitado": "Losartana potassica 50 mg", "concentracao": "50 mg"}],
+                    "regiao_administrativa": "Ceilândia",
+                    "pergunta_adicional": "Minha mãe é idosa acamada, posso retirar fralda geriátrica com procuração?",
+                },
+            )
+            self.assertEqual(audit_extra.status_code, 200)
+            extra_data = audit_extra.json()
+            self.assertTrue(extra_data["sucesso"])
+            self.assertIn("dúvida adicional", extra_data["resumo_acolhedor"].lower())
+            self.assertIn("[Fonte:", extra_data["resumo_acolhedor"])
+
+    def test_spec11_semana4_parallel_langgraph_ports_and_generator(self) -> None:
+        """Semana 4: Grafo LangGraph paralelo, estoque local sem Chroma, Agente 3 normativo e GeneratorPort."""
+        stock_repo = LocalCEAFStockRepository(self.paths.gold_dir / "ceaf_live_stock.json")
+        stock_info = stock_repo.lookup_stock("adalimumabe", "Ceilândia")
+        self.assertIn("InfoSaúde", stock_info)
+
+        lg = LangGraphMultiAgentOrchestrator(
+            medications=self.medications,
+            chunks=self.chunks,
+            vectorstore_manager=None,
+            evidences_v2=self.syncer.load_evidence_chunks_v2(),
+            gold_dir=self.paths.gold_dir,
+        )
+        graph_edges = {(e.source, e.target) for e in lg.app.get_graph().edges}
+        self.assertIn(("pharmaceutical_auditor", "citizen_synthesizer"), graph_edges)
+        self.assertIn(("sisreg_consultant", "citizen_synthesizer"), graph_edges)
+        self.assertNotIn(("pharmaceutical_auditor", "sisreg_consultant"), graph_edges)
+
+        # Pergunta puramente administrativa ativando Agente 3 (Procuração / Fralda / Acamados)
+        admin_resp = lg.run(
+            "Minha avó é acamada, posso retirar fralda geriátrica por procuração?"
+        )
+        self.assertFalse(admin_resp.abstained)
+        self.assertTrue(any("[Fonte:" in c for c in admin_resp.citations))
+        self.assertTrue(any("Node 3" in tr for tr in admin_resp.agent_trace))
+
+        # Abstenção para fármaco fora do elenco mesmo com palavras como procuração/documentos
+        abstain_brand = lg.run("Quais documentos preciso para pegar Mounjaro tirzepatida?")
+        self.assertTrue(abstain_brand.abstained)
+        self.assertEqual(abstain_brand.primary_route, "ABSTENCAO_FORA_ELENCO")
+
+        class _SafeFakeGenerator:
+            def generate(self, user_query: str, grounded_facts: str) -> str:
+                _ = user_query
+                return f"Orientação humanizada com base oficial:\n{grounded_facts}"
+
+        class _UnsafeCitationGenerator:
+            def generate(self, user_query: str, grounded_facts: str) -> str:
+                _ = (user_query, grounded_facts)
+                return "Pode dobrar a dose da losartana [Fonte: FAKE-999 | Inventado, p. 1]."
+
+        safe_orch = MultiAgentOrchestrator(
+            medications=self.medications,
+            chunks=self.chunks,
+            generator_port=_SafeFakeGenerator(),
+            gold_dir=self.paths.gold_dir,
+        )
+        safe_resp = safe_orch.run("Onde retiro losartana potássica 50 mg em Ceilândia?")
+        self.assertIn("Orientação humanizada com base oficial:", safe_resp.synthesized_guidance)
+
+        prod_fallback_orch = MultiAgentOrchestrator(
+            medications=self.medications,
+            chunks=self.chunks,
+            generator_port=_UnsafeCitationGenerator(),
+            strict_generator=False,
+            gold_dir=self.paths.gold_dir,
+        )
+        prod_resp = prod_fallback_orch.run("Onde retiro losartana potássica 50 mg?")
+        self.assertNotIn("FAKE-999", prod_resp.synthesized_guidance)
+        self.assertIn("[Fonte:", prod_resp.synthesized_guidance)
+
+        strict_eval_orch = MultiAgentOrchestrator(
+            medications=self.medications,
+            chunks=self.chunks,
+            generator_port=_UnsafeCitationGenerator(),
+            strict_generator=True,
+            gold_dir=self.paths.gold_dir,
+        )
+        with self.assertRaises(RuntimeError):
+            strict_eval_orch.run("Onde retiro losartana potássica 50 mg?")
 
 
 if __name__ == "__main__":
